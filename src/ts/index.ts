@@ -41,7 +41,7 @@ function prepareLogger(): FwdLogger {
   const consoleCode = consoleDiv.children[0];
   const autoScroll = true;
 
-  if (consoleCode || consoleDiv) {
+  if (!consoleCode || !consoleDiv) {
     return { log: console.log };
   }
 
