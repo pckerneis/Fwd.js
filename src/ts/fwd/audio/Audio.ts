@@ -58,16 +58,51 @@ abstract class FwdAudioNodeWrapper<T extends AudioNode> {
 
   get fwdAudio(): FwdAudio { return this._fwdAudio; }
 
+  private tearedDownCalled = false;
+
   protected constructor(private _fwdAudio: FwdAudio, private _nativeNode: T) {
   }
 
   connect(destination: FwdAudioNodeWrapper<any>, output?: number, input?: number): FwdAudioNodeWrapper<any> {
+    if (this._nativeNode == null) {
+      throw new Error('Error while trying to connect the audio node');
+    }
+    
     this._nativeNode.connect(
       destination._nativeNode, 
       output, 
       input);
 
     return destination;
+  }
+
+  tearDown() {
+    if (this.tearedDownCalled) {
+      throw new Error('You cannot call tearDown more than once on the same audio node!');
+    }
+
+    this.tearedDownCalled = true;
+
+    const dueTime = this.fwdAudio.now();
+    const when = dueTime - this.fwdAudio.context.currentTime;
+
+    setTimeout(() => {
+      if (this._nativeNode != null) {
+        this._nativeNode.disconnect();
+  
+        if (this._nativeNode instanceof AudioScheduledSourceNode) {
+          this._nativeNode.stop();
+        }
+  
+        this._nativeNode = null;
+      }
+    }, when * 1000);
+  }
+
+  protected assertIsReady(context: string) {
+    if (this._nativeNode == null) {
+      throw new Error(context + ': this audio node was teared down or unproperly initialized.');
+    }
   }
 }
 

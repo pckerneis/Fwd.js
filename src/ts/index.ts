@@ -14,36 +14,36 @@ document.addEventListener('DOMContentLoaded', () => {
   prepareLayout();
   initializeHighlightJS();
 
-  document.getElementById(startButtonId).onclick = () => {
+  const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
+  const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
+  const stopButton = document.getElementById(stopButtonId) as HTMLButtonElement;
+
+  startButton.onclick = () => {
     if (fwd != null) {
       fwd.stop();
     }
 
     fwd = fwdInit({ fwdLogger: prepareLogger() });
+    applyMasterValue();
     initSketch(fwd);
     fwd.start();
   };
 
-  document.getElementById(stopButtonId).onclick = () => {
+  stopButton.onclick = () => {
     if (fwd != null) {
       fwd.stop();
     }
   };
 
-  const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
-  masterSlider.oninput = () => {
+  masterSlider.oninput = () => applyMasterValue();
+
+  function applyMasterValue() {
     if (fwd != null) {
       const v = parseNumber(masterSlider.value) / 100;
       fwd.audio.master.nativeNode.gain.linearRampToValueAtTime(v, 0);
-    }
-  };
+    }    
+  }
 });
-
-function parseNumber(number: string) {
-  return number == null ? 0 : 
-    (typeof number === 'number' ? number :
-      (typeof number === 'string' ? Number.parseFloat(number) : 0))
-}
 
 function initializeHighlightJS() {
   document.querySelectorAll('pre code').forEach((block) => {
@@ -94,4 +94,10 @@ function prepareLogger(): FwdLogger {
       }
     }
   };
+}
+
+function parseNumber(number: string) {
+  return number == null ? 0 : 
+    (typeof number === 'number' ? number :
+      (typeof number === 'string' ? Number.parseFloat(number) : 0));
 }
