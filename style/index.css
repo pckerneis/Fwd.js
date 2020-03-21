@@ -75,5 +75,122 @@ button {
   background: #F0F0F0;
 }
 
+#project-name {
+  font-weight: bold;
+  margin: 12px 20px;
+  flex-grow: 1;
+  white-space: nowrap;
+}
+
+.top-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#master-slider {
+  width: 100px;
+}
+
+.input[type=range].slider {
+  background: none;
+}
+
+.top-row img {
+  padding: 7px 8px;
+  opacity: 0.4;
+  width: auto;
+  height: auto;
+  max-height: 18px;
+}
+
 /* highlight.js */
 .hljs{display:block;overflow-x:auto;padding:.5em;background:#F0F0F0}.hljs,.hljs-subst{color:#444}.hljs-comment{color:#888888}.hljs-keyword,.hljs-attribute,.hljs-selector-tag,.hljs-meta-keyword,.hljs-doctag,.hljs-name{font-weight:bold}.hljs-type,.hljs-string,.hljs-number,.hljs-selector-id,.hljs-selector-class,.hljs-quote,.hljs-template-tag,.hljs-deletion{color:#880000}.hljs-title,.hljs-section{color:#880000;font-weight:bold}.hljs-regexp,.hljs-symbol,.hljs-variable,.hljs-template-variable,.hljs-link,.hljs-selector-attr,.hljs-selector-pseudo{color:#BC6060}.hljs-literal{color:#78A960}.hljs-built_in,.hljs-bullet,.hljs-code,.hljs-addition{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta-string{color:#4d99bf}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
+
+/* sliders */
+/* http://danielstern.ca/range.css/#/ */
+input[type=range].slider {
+  -webkit-appearance: none;
+  width: 100%;
+  margin: 5.9px 0;
+  background: none;
+}
+input[type=range].slider:focus {
+  outline: none;
+}
+input[type=range].slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 9.2px;
+  cursor: pointer;
+  box-shadow: 9.3px 9.3px 1px rgba(0, 0, 0, 0), 0px 0px 9.3px rgba(13, 13, 13, 0);
+  background: #a8a9b1;
+  border-radius: 12.2px;
+  border: 1px solid rgba(1, 1, 1, 0.49);
+}
+input[type=range].slider::-webkit-slider-thumb {
+  box-shadow: 1.8px 1.8px 3px rgba(0, 0, 0, 0.19), 0px 0px 1.8px rgba(13, 13, 13, 0.19);
+  border: 0.7px solid rgba(0, 0, 0, 0.53);
+  height: 21px;
+  width: 11px;
+  border-radius: 5px;
+  background: #ffffff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -6.9px;
+}
+input[type=range].slider:focus::-webkit-slider-runnable-track {
+  background: #b5b6bd;
+}
+input[type=range].slider::-moz-range-track {
+  width: 100%;
+  height: 9.2px;
+  cursor: pointer;
+  box-shadow: 9.3px 9.3px 1px rgba(0, 0, 0, 0), 0px 0px 9.3px rgba(13, 13, 13, 0);
+  background: #a8a9b1;
+  border-radius: 12.2px;
+  border: 1px solid rgba(1, 1, 1, 0.49);
+}
+input[type=range].slider::-moz-range-thumb {
+  box-shadow: 1.8px 1.8px 3px rgba(0, 0, 0, 0.19), 0px 0px 1.8px rgba(13, 13, 13, 0.19);
+  border: 0.7px solid rgba(0, 0, 0, 0.53);
+  height: 21px;
+  width: 11px;
+  border-radius: 5px;
+  background: #ffffff;
+  cursor: pointer;
+}
+input[type=range].slider::-ms-track {
+  width: 100%;
+  height: 9.2px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range].slider::-ms-fill-lower {
+  background: #9b9ca5;
+  border: 1px solid rgba(1, 1, 1, 0.49);
+  border-radius: 24.4px;
+  box-shadow: 9.3px 9.3px 1px rgba(0, 0, 0, 0), 0px 0px 9.3px rgba(13, 13, 13, 0);
+}
+input[type=range].slider::-ms-fill-upper {
+  background: #a8a9b1;
+  border: 1px solid rgba(1, 1, 1, 0.49);
+  border-radius: 24.4px;
+  box-shadow: 9.3px 9.3px 1px rgba(0, 0, 0, 0), 0px 0px 9.3px rgba(13, 13, 13, 0);
+}
+input[type=range].slider::-ms-thumb {
+  box-shadow: 1.8px 1.8px 3px rgba(0, 0, 0, 0.19), 0px 0px 1.8px rgba(13, 13, 13, 0.19);
+  border: 0.7px solid rgba(0, 0, 0, 0.53);
+  height: 21px;
+  width: 11px;
+  border-radius: 5px;
+  background: #ffffff;
+  cursor: pointer;
+  height: 9.2px;
+}
+input[type=range].slider:focus::-ms-fill-lower {
+  background: #a8a9b1;
+}
+input[type=range].slider:focus::-ms-fill-upper {
+  background: #b5b6bd;
+}

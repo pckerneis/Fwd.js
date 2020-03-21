@@ -1,28 +1,23 @@
 import {Fwd} from './fwd';
 
 export function init(fwd: Fwd) {
-  function beepLoop(
-      name: string,
-      itv: number = fwd.random(0.1, 0.5)) {
-    return () => {
-      const fq = fwd.random(220, 440);
-      beep(fq);
-      fwd.schedule(itv, beepLoop(name, itv));
-      fwd.log('bip', name, fq, itv);
-    }
+
+  for (let i = 0; i < 5; ++i) {
+    fwd.schedule(i * 5, loop);
   }
 
-  fwd.schedule(0, beepLoop('A'));
-  fwd.schedule(0, beepLoop('B'));
-  fwd.schedule(0, beepLoop('C'));
-  fwd.schedule(0, beepLoop('D'));
-  fwd.schedule(0, beepLoop('E'));
-  fwd.schedule(0, beepLoop('F'));
+  function loop() {
+    const fq = fwd.random(220, 880);
+    const itv = fwd.random(0.1, 0.5);
+
+    beep(fq);
+    fwd.schedule(itv, loop);
+  }
 
   function beep(fq: number) {
     let osc = fwd.audio.osc(fq);
     let gain = fwd.audio.gain();
-    osc.connect(gain).connect(fwd.audio.destination);
+    osc.connect(gain).connect(fwd.audio.master);
 
     gain.rampTo(0.035, 0.01);
     fwd.wait(0.5);

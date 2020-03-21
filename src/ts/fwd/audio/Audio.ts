@@ -6,15 +6,19 @@ export class FwdAudio {
 
   private _ctx: AudioContext = new AudioContext();
 
-  private _startOffset: Time;
+  private _masterGain: FwdGainNode;
+
+  private _startOffset: Time = 0;
 
   public get context(): AudioContext { return this._ctx; }
 
-  public get destination(): AudioDestinationNode {
-    return this._ctx.destination;
+  public get master(): FwdGainNode {
+    return this._masterGain;
   }
 
   constructor() {
+    this._masterGain = new FwdGainNode(this, 0.5);
+    this._masterGain.nativeNode.connect(this._ctx.destination);
   }
 
   initializeModule(fwd: Fwd) {
@@ -46,9 +50,7 @@ export class FwdAudio {
   }
 }
 
-
-
-
+//=========================================================================
 
 abstract class FwdAudioNodeWrapper<T extends AudioNode> {
 
@@ -59,30 +61,17 @@ abstract class FwdAudioNodeWrapper<T extends AudioNode> {
   protected constructor(private _fwdAudio: FwdAudio, private _nativeNode: T) {
   }
 
-  connect(destination: FwdAudioNodeWrapper<any> | AudioNode | AudioParam, output?: number, input?: number): AudioNode | null {
-    if (destination instanceof FwdAudioNodeWrapper) {
-      return this._nativeNode.connect(
-        destination._nativeNode, 
-        output, 
-        input);
-    } else if (destination instanceof AudioNode) {
-      return this._nativeNode.connect(
-        destination, 
-        output, 
-        input);
-    } else {
-      this._nativeNode.connect(
-        destination, 
-        output);
-      return null;
-    }
+  connect(destination: FwdAudioNodeWrapper<any>, output?: number, input?: number): FwdAudioNodeWrapper<any> {
+    this._nativeNode.connect(
+      destination._nativeNode, 
+      output, 
+      input);
+
+    return destination;
   }
 }
 
-
-
-
-
+//=========================================================================
 
 class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
   constructor(fwdAudio: FwdAudio, defaultValue: number = 0) {
@@ -97,8 +86,7 @@ class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
   }
 }
 
-
-
+//=========================================================================
 
 class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   set oscillatorType(type: OscillatorType) {

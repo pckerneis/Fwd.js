@@ -5,6 +5,7 @@ import hljs from 'highlightjs';
 
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
+const masterSliderId = 'master-slider';
 
 document.addEventListener('DOMContentLoaded', () => {
   let fwd: Fwd = null;
@@ -28,7 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
       fwd.stop();
     }
   };
+
+  const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
+  masterSlider.oninput = () => {
+    if (fwd != null) {
+      const v = parseNumber(masterSlider.value) / 100;
+      fwd.audio.master.nativeNode.gain.linearRampToValueAtTime(v, 0);
+    }
+  };
 });
+
+function parseNumber(number: string) {
+  return number == null ? 0 : 
+    (typeof number === 'number' ? number :
+      (typeof number === 'string' ? Number.parseFloat(number) : 0))
+}
 
 function initializeHighlightJS() {
   document.querySelectorAll('pre code').forEach((block) => {
