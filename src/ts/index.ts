@@ -2,6 +2,7 @@ import Split from 'split.js'
 import { fwdInit, FwdLogger, Fwd } from './fwd';
 import { init as initSketch } from './sketch';
 import hljs from 'highlightjs';
+import { Time } from './fwd/core';
 
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
@@ -83,10 +84,12 @@ function prepareLogger(): FwdLogger {
   }
 
   return { 
-    log(messages) {
-      console.log(...messages);
+    log(time, messages) {
+      const timeStr = formatTime(time);
 
-      consoleCode.innerHTML += messages.join(' ');
+      console.log(timeStr, ...messages);
+
+      consoleCode.innerHTML += [timeStr, ...messages].join(' ');
       consoleCode.innerHTML += '\n';
 
       if (autoScroll) {
@@ -100,4 +103,16 @@ function parseNumber(number: string) {
   return number == null ? 0 : 
     (typeof number === 'number' ? number :
       (typeof number === 'string' ? Number.parseFloat(number) : 0));
+}
+
+function formatTime(t: Time) {
+  const seconds = Math.floor((t / 1000) % 60);
+  const minutes = Math.floor((t / 1000 / 60));
+  const ms = Math.floor(t % 1000);
+
+  return [
+    minutes.toString().padStart(2, '0'),
+    seconds.toString().padStart(2, '0'),
+    ms.toString().padStart(3, '0').substr(0, 3)
+  ].join(':');
 }

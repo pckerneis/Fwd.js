@@ -7,6 +7,7 @@ import {
 } from '.';
 
 import { FwdAudio } from '../audio/Audio';
+import { FwdControls } from '../control/FwdControl';
 
 let NOW: Time = 0;
 
@@ -47,12 +48,13 @@ export interface Fwd {
   wait: (t: Time) => void;
 
   audio: FwdAudio;
+  controls: FwdControls;
 
   random: (a?: number, b?: number) => number;
 }
 
 export interface FwdLogger {
-  log: (...messages: any[]) => void;
+  log: (time: Time, ...messages: any[]) => void;
 }
 
 export interface FwdInitOptions {
@@ -83,7 +85,7 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
 
   const log = (...messages: any[]) => {
     if (options.fwdLogger != null) {
-      options.fwdLogger.log(messages);
+      options.fwdLogger.log(NOW, messages);
     }
   }
 
@@ -117,7 +119,8 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     log,
     audio,
     wait,
-    random
+    random,
+    controls: new FwdControls()
   };
   
   audio.initializeModule(fwd);
