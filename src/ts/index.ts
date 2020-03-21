@@ -1,18 +1,41 @@
-import { init } from './sketch';
-import { fwdInit } from './fwd';
 import Split from 'split.js'
-import { FwdLogger } from './fwd/core/fwd';
+import { fwdInit, FwdLogger, Fwd } from './fwd';
+import { init as initSketch } from './sketch';
+import hljs from 'highlightjs';
+
+const startButtonId = 'start-button';
+const stopButtonId = 'stop-button';
 
 document.addEventListener('DOMContentLoaded', () => {
+  let fwd: Fwd = null;
+
   loadScriptContent();
   prepareLayout();
+  initializeHighlightJS();
 
-  document.getElementById('start').onclick = () => {
-    const fwd = fwdInit({ fwdLogger: prepareLogger() });
-    init(fwd);
+  document.getElementById(startButtonId).onclick = () => {
+    if (fwd != null) {
+      fwd.stop();
+    }
+
+    fwd = fwdInit({ fwdLogger: prepareLogger() });
+    initSketch(fwd);
+    console.log(fwd);
     fwd.start();
   };
+
+  document.getElementById(stopButtonId).onclick = () => {
+    if (fwd != null) {
+      fwd.stop();
+    }
+  };
 });
+
+function initializeHighlightJS() {
+  document.querySelectorAll('pre code').forEach((block) => {
+    hljs.highlightBlock(block);
+  });
+}
 
 function loadScriptContent() {
   const xhr = new XMLHttpRequest();

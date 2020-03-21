@@ -38,6 +38,10 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this._lookAhead = Math.max(0, v);
   }
 
+  get eventQueue(): EventQueue<EventType> {
+    return this._eventQueue;
+  }
+
   constructor(
       private _interval: number,
       private _lookAhead: number,
@@ -54,12 +58,13 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this._timeProvider = _timeProvider || systemNow;
   }
 
-  start(): void {
+  start(position: Time): void {
     if (! this._running) {
       this._running = true;
       this._startTime = this._timeProvider();
     }
 
+    this._now = position;
     this.run();
   }
 
@@ -68,6 +73,10 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       this._running = false;
       clearTimeout(this._timeout);
     }
+  }
+
+  clearQueue(): void {
+    this._eventQueue.clear();
   }
 
   protected run(): void {

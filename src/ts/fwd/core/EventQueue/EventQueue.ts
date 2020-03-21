@@ -18,4 +18,6 @@ export abstract class EventQueue<EventType extends Event> {
     abstract add(time: Time, event: EventType): EventRef;
     abstract remove(eventRef: EventRef): void;
     abstract clear(): void;
+
+    public readonly events: ScheduledEvent<EventType>[];
 }

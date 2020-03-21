@@ -7,7 +7,7 @@ export abstract class Scheduler<EventType extends Event> {
     
     protected abstract run(): void;
 
-    abstract start(): void;
+    abstract start(position: Time): void;
     abstract stop(): void;
 
     abstract schedule(time: Time, event: EventType): EventRef;
