@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+
+body {
+  background: rgb(229, 230, 231);
+  font-family: 'Roboto';
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 8px 0;
+}
+
+button {
+  border: 1px solid black;
+  background: none;
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+#container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 20px 5px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+#container pre {
+  flex-grow: 1;
+  position: relative;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  margin: 0;
+}
+
+#container pre code {
+  position: absolute;
+  flex-grow: 1;
+  padding: 8px;
+}
+
+.splits {
+  flex-grow: 1;
+}
+
+.split-panel,
+.gutter {
+    float: top;
+}
+
+.gutter {
+    cursor: ns-resize;
+    background: rgba(128, 128, 128, 0.144);
+}
+
+.gutter:hover {
+    cursor: ns-resize;
+    background: rgba(128, 128, 128, 0.507);
+}
+
+#console {
+  color: white;
+  background: black;
+}
+
+#editor {
+  background: #F0F0F0;
+}

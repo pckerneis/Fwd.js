@@ -1,0 +1,1 @@
+export { fwdInit, Fwd } from './core/fwd'
