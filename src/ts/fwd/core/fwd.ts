@@ -6,6 +6,8 @@ import {
   Time
 } from '.';
 
+import { FwdAudio } from '../audio/Audio';
+
 let NOW: Time = 0;
 
 class FwdEvent extends Event {
@@ -42,6 +44,11 @@ export interface Fwd {
   start: () => void;
   stop: () => void;
   log: (...messages: any[]) => void;
+  wait: (t: Time) => void;
+
+  audio: FwdAudio;
+
+  random: (a?: number, b?: number) => number;
 }
 
 export interface FwdLogger {
@@ -52,29 +59,12 @@ export interface FwdInitOptions {
   interval: number,
   lookAhead: number,
   fwdLogger: FwdLogger,
-  timeTransform: TimeTransform
-}
-
-interface TimeTransform {
-  fromMs(ms: Time): any;
-  toMs(value: any): Time;
-}
-
-class SecondTransform implements TimeTransform{
-  fromMs(ms: number) {
-    return ms / 1000;
-  }
-
-  toMs(value: any): number {
-    return value * 1000;
-  }
 }
 
 const defaultOptions: FwdInitOptions = {
   interval: 5,
-  lookAhead: 40,
-  fwdLogger: { log: console.log },
-  timeTransform: new SecondTransform()
+  lookAhead: 100,
+  fwdLogger: { log: console.log }
 }
 
 export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
@@ -87,7 +77,7 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     time: Time,
     action: Function, 
     preventCancel?: boolean) {
-    const nextTime = NOW + options.timeTransform.toMs(time);
+    const nextTime = NOW + time * 1000;
     return scheduler.schedule(nextTime, new FwdEvent(nextTime, action, ! preventCancel));
   }
 
@@ -101,15 +91,48 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     scheduler.eventQueue.events.forEach((scheduledEvent) => {
       scheduledEvent.event.stop();
     });
+
+    NOW = 0;
   }
 
-  return {
-    now: () => options.timeTransform.fromMs(NOW),
+  function wait(time: Time) {
+    NOW += time * 1000;
+  }
+
+  const audio = new FwdAudio();
+
+  const start = () => {
+    NOW = 0;
+    audio.start();
+    scheduler.start(0);
+  }
+
+  const fwd = {
+    now: () => NOW / 1000,
     scheduler,
     schedule,
-    cancel : (ref) => scheduler.cancel(ref),
-    start: () => scheduler.start(0),
+    cancel : (ref: EventRef) => scheduler.cancel(ref),
+    start,
     stop,
-    log
+    log,
+    audio,
+    wait,
+    random
   };
+  
+  audio.initializeModule(fwd);
+
+  return fwd;
+}
+
+function random(a: number, b: number): number {
+  if (a == null && b == null) {
+    return Math.random();
+  }
+
+  if (b == null) {
+    return a * Math.random();
+  }
+
+  return a + (b * Math.random());
 }

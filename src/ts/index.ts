@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fwd = fwdInit({ fwdLogger: prepareLogger() });
     initSketch(fwd);
-    console.log(fwd);
     fwd.start();
   };
 
