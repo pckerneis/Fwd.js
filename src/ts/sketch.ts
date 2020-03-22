@@ -4,7 +4,8 @@ export function init(fwd: Fwd) {
   fwd.controls.addSlider('base', {
     defaultValue: 500,
     min: 0,
-    max: 1000
+    max: 1000,
+    step: 1
   });
 
   for (let i = 0; i < 5; ++i) {
@@ -12,7 +13,7 @@ export function init(fwd: Fwd) {
   }
 
   function loop() {
-    const fq = fwd.controls.getSlider('base').value + fwd.random(220, 880);
+    const fq = fwd.controls.getSlider('base').value + fwd.random(220);
     const itv = fwd.random(0.1, 0.5);
 
     beep(fq);

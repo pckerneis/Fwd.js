@@ -7,7 +7,7 @@ import {
 } from '.';
 
 import { FwdAudio } from '../audio/Audio';
-import { FwdControls } from '../control/FwdControl';
+import { FwdControls, FwdHTMLControls } from '../control/FwdControl';
 
 let NOW: Time = 0;
 
@@ -120,7 +120,7 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     audio,
     wait,
     random,
-    controls: new FwdControls()
+    controls: new FwdHTMLControls()
   };
   
   audio.initializeModule(fwd);

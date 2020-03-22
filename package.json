@@ -8,7 +8,6 @@
     "dev": "webpack-dev-server --open --hot"
   },
   "devDependencies": {
-    "@types/codeflask": "^1.4.0",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
     "eslint": "^6.8.0",

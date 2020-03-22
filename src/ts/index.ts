@@ -9,12 +9,14 @@ const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
 
 document.addEventListener('DOMContentLoaded', () => {
-  let fwd: Fwd = null;
-
   loadScriptContent();
   prepareLayout();
   initializeHighlightJS();
+  initializeMainControls();
+});
 
+function initializeMainControls() {
+  let fwd: Fwd = null;
   const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
   const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
   const stopButton = document.getElementById(stopButtonId) as HTMLButtonElement;
@@ -44,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fwd.audio.master.nativeNode.gain.linearRampToValueAtTime(v, 0);
     }    
   }
-});
+}
 
 function initializeHighlightJS() {
   document.querySelectorAll('pre code').forEach((block) => {
