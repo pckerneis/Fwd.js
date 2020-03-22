@@ -3,7 +3,14 @@ import {fwd} from './fwd';
 fwd.controls.addSlider('base', {
   defaultValue: 500,
   min: 0,
-  max: 1000,
+  max: 5000,
+  step: 1
+});
+
+fwd.controls.addSlider('range', {
+  defaultValue: 0,
+  min: 0,
+  max: 200,
   step: 1
 });
 
@@ -14,7 +21,9 @@ export function init() {
 }
 
 function loop() {
-  const fq = fwd.controls.getSlider('base').value + fwd.random(220);
+  const range = fwd.controls.getSlider('range').value;
+  const base = fwd.controls.getSlider('base').value;
+  const fq = base + fwd.random(range);
   const itv = fwd.random(0.1, 0.5);
 
   beep(fq);

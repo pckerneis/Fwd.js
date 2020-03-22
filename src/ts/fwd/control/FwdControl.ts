@@ -36,6 +36,55 @@ export interface FwdControls {
 
 //=============================================================
 
+class SliderController {
+  public readonly htmlElement: HTMLElement;
+
+  private _input: HTMLInputElement;
+
+  private _textInput: HTMLInputElement;
+
+  public get value(): number {
+    return this._input.value === '' ? 0 : Number.parseFloat(this._input.value);
+  }
+
+  constructor(options: SliderOptions) {
+    this._input = this.prepareInput(options, true);
+    this._textInput = this.prepareInput(options, false);
+    
+    this._input.oninput = () => {
+      this._textInput.value = this._input.value;
+    }
+
+    this._textInput.onchange = () => {
+      this._input.value = this._textInput.value;
+    }
+
+    const div = document.createElement('div');
+    div.classList.add('slider-control');
+    div.append(this._input);
+    div.append(this._textInput);
+    this.htmlElement = div;
+  }
+
+  private prepareInput(options: SliderOptions, range: boolean): HTMLInputElement {
+    const input = document.createElement('input');
+    input.min = options.min.toString();
+    input.max = options.max.toString();
+    input.step = options.step.toString();
+    input.defaultValue = options.defaultValue.toString();
+
+    if (range) {
+      input.type = 'range';
+      input.classList.add('slider');
+    } else {
+      input.type = 'number';
+      input.classList.add('slider-textbox');
+    }
+
+    return input;
+  }
+}
+
 export class FwdHTMLControls {
 
   private _elementContainer: HTMLDivElement;
@@ -57,21 +106,14 @@ export class FwdHTMLControls {
     const label = document.createElement('label');
     label.innerText = name;
 
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = options.min.toString();
-    input.max = options.max.toString();
-    input.step = options.step.toString();
-    input.classList.add('slider');
-    input.defaultValue = options.defaultValue.toString();
-
+    const sliderController = new SliderController(options);
     row.append(label);
-    row.append(input);
+    row.append(sliderController.htmlElement);
     this._elementContainer.append(row);
 
     const valueSource: ValueSource<number> = {
       get(): number {
-        return input.value === '' ? 0 : Number.parseFloat(input.value);
+        return sliderController.value;
       }
     }
 
