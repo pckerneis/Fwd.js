@@ -34,12 +34,10 @@ export interface FwdInitOptions {
 }
 
 export function putFwd(fwdInstance: Fwd) {
-  fwd = fwdInstance;
-  console.log(fwdInstance);
-  console.info("-- fwd put");
+  fwd = new Proxy(fwdInstance, proxyHandler) as Fwd;
 }
 
-export const fwdInstance = {
+export const fwdDefaultInstance = {
   log(...messages: any[]) { console.log(...messages); },
   err(...messages: any[]) { console.error(...messages); }
 };
@@ -55,4 +53,4 @@ const proxyHandler = {
   }
 }
 
-export let fwd: Fwd = new Proxy(fwdInstance, proxyHandler) as Fwd;
+export let fwd: Fwd = new Proxy(fwdDefaultInstance, proxyHandler) as Fwd;

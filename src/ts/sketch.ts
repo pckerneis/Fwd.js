@@ -9,7 +9,7 @@ fwd.controls.addSlider('base', {
 
 export function init() {
   for (let i = 0; i < 5; ++i) {
-    fwd.schedule(i * 5, loop, true);
+    fwd.schedule(i * 5, loop);
   }
 }
 

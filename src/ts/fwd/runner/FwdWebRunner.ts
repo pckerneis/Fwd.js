@@ -19,11 +19,10 @@ export default class FwdWebRunner implements FwdRunner {
   private _logger: FwdLogger;
   private _audio: FwdAudio;
   private _controls: FwdControls;
-
-  get fwdInstance(): Fwd { return this._fwd; }
-  get fwdLogger(): FwdLogger { return this._logger; }
+  
   get audio(): FwdAudio { return this._audio; }
   get controls(): FwdControls { return this._controls; }
+  get logger(): FwdLogger { return this._logger; }
 
   entryPoint: Function;
 
@@ -201,7 +200,7 @@ class FwdWebImpl implements Fwd {
   }
 
   public get logger(): FwdLogger {
-    return this._runner.fwdLogger;
+    return this._runner.logger;
   }
 
   public get audio(): FwdAudio {
