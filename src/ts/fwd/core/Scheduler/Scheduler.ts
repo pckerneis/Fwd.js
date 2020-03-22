@@ -6,6 +6,8 @@ export abstract class Scheduler<EventType extends Event> {
     abstract running: boolean;
     abstract interval: number;
     abstract lookAhead: number;
+
+    abstract now(): Time;
     
     protected abstract run(): void;
 
@@ -14,4 +16,6 @@ export abstract class Scheduler<EventType extends Event> {
 
     abstract schedule(time: Time, event: EventType): EventRef;
     abstract cancel(eventRef: EventRef): void;
+
+    onEnded: Function;
 }

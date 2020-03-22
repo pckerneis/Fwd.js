@@ -12,6 +12,7 @@ const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
 const consoleId = 'console';
+const timeCodeId = 'time-code';
 
 export default class FwdWebRunner implements FwdRunner {
   private _fwd: Fwd;
@@ -35,10 +36,16 @@ export default class FwdWebRunner implements FwdRunner {
     this._audio.initializeModule(this._fwd);
     putFwd(this._fwd);
 
+    this._fwd.scheduler.onEnded = () => {
+      (document.getElementById(startButtonId) as HTMLButtonElement).disabled = false;
+      (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = true;
+    };
+
     this.prepareLayout();
     this.loadScriptContent();
     this.initializeHighlightJS();
     this.initializeMainControls();
+    this.initializeTimeCode();
   }
 
   //==================================================================
@@ -91,11 +98,14 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private start() {
+    (document.getElementById(startButtonId) as HTMLButtonElement).disabled = true;
+    (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = false;
     this._fwd.scheduler.clearEvents();
     this.entryPoint();
     this._audio.start();
     this._fwd.start();
     this.applyMasterValue();
+    this.initializeTimeCode();
   }
 
   private stop() {
@@ -165,6 +175,21 @@ export default class FwdWebRunner implements FwdRunner {
       seconds.toString().padStart(2, '0'),
       ms.toString().padStart(3, '0').substr(0, 3)
     ].join(':');
+  }
+
+  private initializeTimeCode() {
+    const timeCodeElem = document.getElementById(timeCodeId);
+
+    const update = () => {
+      const t = this._fwd.scheduler.rtNow();
+      timeCodeElem.innerText = this.formatTime(t);
+
+      if (this._fwd.scheduler.state !== 'stopped') {
+        requestAnimationFrame(update);
+      }
+    };
+
+    requestAnimationFrame(update);
   }
 }
 

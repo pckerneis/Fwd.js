@@ -20,7 +20,7 @@ button {
   border-radius: 4px;
 }
 
-button:hover {
+button:hover:not([disabled]) {
   border: 1px solid rgba(0, 0, 0, 0.9);
 }
 
@@ -113,6 +113,21 @@ button:hover {
 
 .slider-row label {
   margin: 4px 10px;
+}
+
+.time-code-container {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: column;
+  margin-left: 3px;
+  padding: 0 12px;
+  font-family: monospace;
+  font-size: large;
+  background-color: #00000008;
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 5px 0px #00000026;
+  color: rgb(43, 43, 43);
 }
 
 /* highlight.js */

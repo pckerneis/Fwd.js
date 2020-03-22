@@ -20,6 +20,8 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
   private _startTime = 0;
 
+  public onEnded: Function;
+
   get running(): boolean {
     return this._running;
   }
@@ -56,6 +58,10 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     // Using default time provider if none is specified
     this._timeProvider = _timeProvider || systemNow;
+  }
+
+  now(): Time {
+    return this._now;
   }
 
   start(position: Time): void {
@@ -96,8 +102,8 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     if (this._eventQueue.events.length > 0) {
       this._timeout = setTimeout(() => this.run(), this.interval);
-    } else {
-      console.log('__ OVER')
+    } else if (this.onEnded != null) {
+      this.onEnded();
     }
   }
 
