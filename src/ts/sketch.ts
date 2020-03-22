@@ -17,6 +17,15 @@ fwd.controls.addSlider('range', {
 export function init() {
   for (let i = 0; i < 5; ++i) {
     fwd.schedule(i * 5, loop);
+
+    fwd.schedule(i * 5, () => {
+      fwd.controls.addSlider('a'+i, {
+        defaultValue: 0,
+        min: 0,
+        max: 200,
+        step: 1
+      });
+    });
   }
 }
 

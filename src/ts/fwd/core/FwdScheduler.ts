@@ -52,7 +52,7 @@ export class FwdScheduler {
   }
 
   rtNow() {
-    return this._scheduler.now();
+    return this._scheduler.now() / 1000;
   }
 
   schedule(time: Time, action: Function, preventCancel?: boolean): EventRef {

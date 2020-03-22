@@ -73,7 +73,11 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     const internalLog = (timeStr: string, ...messages: any[]) => {
-      consoleCode.innerHTML += [timeStr, ...messages].join(' ');
+      if (timeStr != null) {
+        messages = [timeStr, ...messages];
+      }
+
+      consoleCode.innerHTML += messages.join(' ');
       consoleCode.innerHTML += '\n';
 
       if (autoScroll) {
@@ -83,28 +87,44 @@ export default class FwdWebRunner implements FwdRunner {
 
     return {
       log: (time: Time, ...messages: any[]) => {
-        const timeStr = this.formatTime(time * 1000);
+        const timeStr = this.formatTime(time);
         internalLog(timeStr, ...messages);
-        console.log(timeStr, ...messages);
+        
+        if (timeStr === null) {
+          console.log(...messages);
+        } else {
+          console.log(timeStr, ...messages);
+        }
       },
       
       err: (time: Time, ...messages: any[]) => {
-        const timeStr = this.formatTime(time * 1000);
+        const timeStr = this.formatTime(time);
         internalLog(timeStr, ...messages);
-        console.error(timeStr, ...messages);
+        
+        if (timeStr === null) {
+          console.error(...messages);
+        } else {
+          console.error(timeStr, ...messages);
+        }
       }
     };
   }
 
-  private start() {
+   private start() {
     (document.getElementById(startButtonId) as HTMLButtonElement).disabled = true;
     (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = false;
+
     this._fwd.scheduler.clearEvents();
+    this._controls.reset();
+
     this.entryPoint();
+
     this._audio.start();
     this._fwd.start();
+
     this.applyMasterValue();
     this.initializeTimeCode();
+
   }
 
   private stop() {
@@ -165,6 +185,12 @@ export default class FwdWebRunner implements FwdRunner {
   }
   
   private formatTime(t: Time) {
+    if (t === null) {
+      return null;
+    }
+
+    t *= 1000;
+
     const seconds = Math.floor((t / 1000) % 60);
     const minutes = Math.floor((t / 1000 / 60));
     const ms = Math.floor(t % 1000);

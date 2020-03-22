@@ -1,3 +1,5 @@
+import { fwd } from '../core/fwd';
+
 interface ValueSource<T> {
   get(): T;
 }
@@ -30,6 +32,7 @@ export class FwdSlider {
 type FwdControl = FwdSlider; 
 
 export interface FwdControls {
+  reset(): void;
   addSlider(name: string, options: SliderOptions): any;
   getSlider(name: string): FwdSlider;
 }
@@ -86,7 +89,6 @@ class SliderController {
 }
 
 export class FwdHTMLControls {
-
   private _elementContainer: HTMLDivElement;
 
   private _controls = new Map<string, FwdControl>();
@@ -96,8 +98,16 @@ export class FwdHTMLControls {
     this._elementContainer.innerHTML = '';
   }
 
+  reset() {
+    this._elementContainer.innerHTML = '';
+    this._controls = new Map<string, FwdControl>();
+  }
+
   addSlider(name: string, options: SliderOptions) {
-    this.assertNameIsNotUsed(name);
+    if (this.nameIsAlreadyUsed(name)) {
+      fwd.err(`There's already a controller with the name ${name}.`)
+      return;
+    }
 
     // Create HTML controls
     const row = document.createElement('div');
@@ -126,9 +136,7 @@ export class FwdHTMLControls {
     return control as FwdSlider;
   }
 
-  assertNameIsNotUsed(name: string) {
-    if (this._controls.get(name) != null) {
-      throw new Error(`There's already a control with the name ${name}.`)
-    }
+  nameIsAlreadyUsed(name: string): boolean {
+    return this._controls.get(name) != null;
   }
 }
