@@ -3,7 +3,7 @@ import hljs from 'highlightjs';
 import { Fwd, putFwd } from '../core/fwd';
 import { Time, EventRef } from '../core';
 import FwdRunner from './FwdRunner';
-import { SliderOptions, FwdHTMLControls, FwdControls } from '../control/FwdControl';
+import { FwdHTMLControls, FwdControls } from '../control/FwdControl';
 import { FwdScheduler } from '../core/FwdScheduler';
 import { FwdAudio } from '../audio/Audio';
 import { FwdLogger } from '../core/FwdLogger';
@@ -45,20 +45,6 @@ export default class FwdWebRunner implements FwdRunner {
     this.initializeHighlightJS();
     this.initializeMainControls();
     this.initializeTimeCode();
-  }
-
-  //==================================================================
-
-  onSessionStart(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  onSessionStop(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  sliderAdded(name: string, options: SliderOptions): void {
-    throw new Error('Method not implemented.');
   }
 
   //==================================================================
@@ -189,11 +175,9 @@ export default class FwdWebRunner implements FwdRunner {
       return null;
     }
 
-    t *= 1000;
-
-    const seconds = Math.floor((t / 1000) % 60);
-    const minutes = Math.floor((t / 1000 / 60));
-    const ms = Math.floor(t % 1000);
+    const minutes = Math.floor(t / 60);
+    const seconds = Math.floor(t % 60);
+    const ms = Math.floor((t * 1000) % 1000);
   
     return [
       minutes.toString().padStart(2, '0'),
@@ -256,7 +240,6 @@ class FwdWebImpl implements Fwd {
 
   start(): void {
     this._scheduler.start();
-    // this.audio.start();
   }
 
   stop(): void {
