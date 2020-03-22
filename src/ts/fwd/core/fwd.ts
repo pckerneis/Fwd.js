@@ -44,7 +44,10 @@ export interface Fwd {
   scheduler: Scheduler<FwdEvent>;
   start: () => void;
   stop: () => void;
+
   log: (...messages: any[]) => void;
+  err: (...messages: any[]) => void;
+
   wait: (t: Time) => void;
 
   audio: FwdAudio;
@@ -55,6 +58,7 @@ export interface Fwd {
 
 export interface FwdLogger {
   log: (time: Time, ...messages: any[]) => void;
+  err: (time: Time, ...messages: any[]) => void;
 }
 
 export interface FwdInitOptions {
@@ -66,8 +70,27 @@ export interface FwdInitOptions {
 const defaultOptions: FwdInitOptions = {
   interval: 5,
   lookAhead: 100,
-  fwdLogger: { log: console.log }
+  fwdLogger: {
+    log(...messages: any[]) { console.log(...messages); },
+    err(...messages: any[]) { console.error(...messages); }
+  }
 }
+
+const proxyHandler = {
+  get: function(obj: any, prop: string) {
+    if (prop in obj) {
+      return obj[prop];
+    }
+
+    fwd.err(`You're trying to use the undefined property '${prop}' of fwd. Make sure fwd was properly initialized with all needed modules.`)
+    return undefined;
+  }
+}
+
+export let fwd: Fwd = new Proxy({
+  log: defaultOptions.fwdLogger.log,
+  err: defaultOptions.fwdLogger.err,
+}, proxyHandler) as Fwd;
 
 export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
   options = { ...defaultOptions, ...options };
@@ -86,6 +109,12 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
   const log = (...messages: any[]) => {
     if (options.fwdLogger != null) {
       options.fwdLogger.log(NOW, messages);
+    }
+  }
+
+  const err = (...messages: any[]) => {
+    if (options.fwdLogger != null) {
+      options.fwdLogger.err(NOW, messages);
     }
   }
 
@@ -109,7 +138,7 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     scheduler.start(0);
   }
 
-  const fwd = {
+  Object.assign(fwd, {
     now: () => NOW / 1000,
     scheduler,
     schedule,
@@ -117,11 +146,12 @@ export function fwdInit(options: Partial<FwdInitOptions> = {}): Fwd {
     start,
     stop,
     log,
-    audio,
+    err,
     wait,
     random,
+    audio,
     controls: new FwdHTMLControls()
-  };
+  });
   
   audio.initializeModule(fwd);
 

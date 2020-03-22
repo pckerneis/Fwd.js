@@ -28,7 +28,7 @@ function initializeMainControls() {
 
     fwd = fwdInit({ fwdLogger: prepareLogger() });
     applyMasterValue();
-    initSketch(fwd);
+    initSketch();
     fwd.start();
   };
 
@@ -82,21 +82,29 @@ function prepareLogger(): FwdLogger {
   const autoScroll = true;
 
   if (!consoleCode || !consoleDiv) {
-    return { log: console.log };
+    return { log: console.log, err: console.error };
   }
 
-  return { 
+  const internalLog = (timeStr: string, ...messages: any[]) => {
+    consoleCode.innerHTML += [timeStr, ...messages].join(' ');
+    consoleCode.innerHTML += '\n';
+
+    if (autoScroll) {
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }    
+  }
+
+  return {
     log(time, messages) {
       const timeStr = formatTime(time);
-
+      internalLog(timeStr, ...messages);
       console.log(timeStr, ...messages);
-
-      consoleCode.innerHTML += [timeStr, ...messages].join(' ');
-      consoleCode.innerHTML += '\n';
-
-      if (autoScroll) {
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
-      }
+    },
+    
+    err(time, messages) {
+      const timeStr = formatTime(time);
+      internalLog(timeStr, ...messages);
+      console.error(timeStr, ...messages);
     }
   };
 }
