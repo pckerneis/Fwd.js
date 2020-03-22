@@ -1,1 +1,1 @@
-export { fwdInit, Fwd, fwd, FwdLogger } from './core/fwd'
+export { Fwd, fwd } from './core/fwd'

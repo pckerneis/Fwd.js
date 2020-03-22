@@ -59,19 +59,20 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
   }
 
   start(position: Time): void {
-    if (! this._running) {
-      this._running = true;
-      this._startTime = this._timeProvider();
+    if (this._running) {
+      this.stop();
     }
 
+    this._running = true;
+    this._startTime = this._timeProvider();
     this._now = position;
     this.run();
   }
 
   stop(): void {
     if (this._running) {
-      this._running = false;
       clearTimeout(this._timeout);
+      this._running = false;
     }
   }
 
@@ -93,7 +94,11 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       next = this._eventQueue.next(this._now);
     }
 
-    this._timeout = setTimeout(() => this.run(), this.interval);
+    if (this._eventQueue.events.length > 0) {
+      this._timeout = setTimeout(() => this.run(), this.interval);
+    } else {
+      console.log('__ OVER')
+    }
   }
 
   schedule(time: Time, event: EventType): ScheduledEvent<EventType> {

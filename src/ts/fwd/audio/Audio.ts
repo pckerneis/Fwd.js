@@ -4,7 +4,7 @@ import { Time } from '../core';
 export class FwdAudio {
   private _fwd: Fwd;
 
-  private _ctx: AudioContext = new AudioContext();
+  private _ctx: AudioContext;;
 
   private _masterGain: FwdGainNode;
 
@@ -17,8 +17,7 @@ export class FwdAudio {
   }
 
   constructor() {
-    this._masterGain = new FwdGainNode(this, 0.5);
-    this._masterGain.nativeNode.connect(this._ctx.destination);
+    this.resetAudioContext();
   }
 
   initializeModule(fwd: Fwd) {
@@ -26,12 +25,21 @@ export class FwdAudio {
   }
 
   start() {
+    this.resetAudioContext();
     this._startOffset = this._ctx.currentTime;
   }
 
   now(): Time {
-    return this._fwd.now() - this._startOffset;
+    return this._fwd.now() + this._startOffset;
   }
+
+  private resetAudioContext() {
+    this._ctx = new AudioContext();
+    this._masterGain = new FwdGainNode(this, 0.5);
+    this._masterGain.nativeNode.connect(this._ctx.destination);
+  }
+
+  //===============================================================================
 
   gain(value: number = 0) {
     this.assertInit();

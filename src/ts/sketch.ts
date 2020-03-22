@@ -1,19 +1,16 @@
 import {fwd} from './fwd';
 
-(fwd as any).lol;
+fwd.controls.addSlider('base', {
+  defaultValue: 500,
+  min: 0,
+  max: 1000,
+  step: 1
+});
 
 export function init() {
-  fwd.controls.addSlider('base', {
-    defaultValue: 500,
-    min: 0,
-    max: 1000,
-    step: 1
-  });
-
   for (let i = 0; i < 5; ++i) {
     fwd.schedule(i * 5, loop);
   }
-  (fwd as any).lol;
 }
 
 function loop() {

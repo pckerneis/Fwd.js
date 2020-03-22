@@ -1,6 +1,8 @@
-import { Time, Event, EventRef } from '../EventQueue/EventQueue';
+import { Time, Event, EventRef, EventQueue } from '../EventQueue/EventQueue';
 
 export abstract class Scheduler<EventType extends Event> {
+    readonly eventQueue: EventQueue<EventType>;
+
     abstract running: boolean;
     abstract interval: number;
     abstract lookAhead: number;
