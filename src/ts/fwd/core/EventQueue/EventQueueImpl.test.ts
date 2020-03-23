@@ -1,9 +1,9 @@
+import { Event, Time } from './EventQueue';
 import { EventQueueImpl } from './EventQueueImpl';
-import { Time, Event } from './EventQueue';
 
-export function testEventQueueSort() {
+export function testEventQueueSort(): void {
   class DummyEvent extends Event {
-    trigger(t: Time) {
+    public trigger(t: Time): void {
       console.log(t);
     }
   }

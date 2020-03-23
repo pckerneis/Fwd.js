@@ -1,23 +1,23 @@
-import { Time, Event, EventRef, EventQueue } from '../EventQueue/EventQueue';
+import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 
 export abstract class Scheduler<EventType extends Event> {
 
-    onEnded: Function;
-    keepAlive: boolean;
-    
-    readonly eventQueue: EventQueue<EventType>;
+    public onEnded: Function;
+    public  keepAlive: boolean;
 
-    abstract running: boolean;
-    abstract interval: number;
-    abstract lookAhead: number;
+    public readonly eventQueue: EventQueue<EventType>;
 
-    abstract now(): Time;
-    
+    public abstract running: boolean;
+    public abstract interval: number;
+    public abstract lookAhead: number;
+
+    public abstract now(): Time;
+
+    public abstract start(position: Time): void;
+    public abstract stop(): void;
+
+    public abstract schedule(time: Time, event: EventType): EventRef;
+    public abstract cancel(eventRef: EventRef): void;
+
     protected abstract run(): void;
-
-    abstract start(position: Time): void;
-    abstract stop(): void;
-
-    abstract schedule(time: Time, event: EventType): EventRef;
-    abstract cancel(eventRef: EventRef): void;
 }

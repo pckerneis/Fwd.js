@@ -1,12 +1,12 @@
 import {
   EventRef,
-  Time
+  Time,
 } from '.';
 
 import { FwdAudio } from '../audio/Audio';
 import { FwdControls } from '../control/FwdControl';
-import { FwdScheduler } from './FwdScheduler';
 import { FwdLogger } from './FwdLogger';
+import { FwdScheduler } from './FwdScheduler';
 
 export interface Fwd {
   now: () => Time;
@@ -33,24 +33,29 @@ export interface FwdInitOptions {
   lookAhead: number
 }
 
-export function putFwd(fwdInstance: Fwd) {
+export function putFwd(fwdInstance: Fwd): void {
   fwd = new Proxy(fwdInstance, proxyHandler) as Fwd;
 }
 
 export const fwdDefaultInstance = {
-  log(...messages: any[]) { console.log(...messages); },
-  err(...messages: any[]) { console.error(...messages); }
+  log(...messages: any[]): void {
+    console.log(...messages);
+  },
+  err(...messages: any[]): void {
+    console.error(...messages);
+  },
 };
 
 const proxyHandler = {
-  get: function(obj: any, prop: string) {
+  get: function (obj: any, prop: string): any {
     if (prop in obj) {
       return obj[prop];
     }
 
-    fwd.err(`You're trying to use the undefined property '${prop}' of fwd. Make sure fwd was properly initialized with all needed modules.`)
+    fwd.err(`You're trying to use the undefined property '${prop}' of fwd. `
+      + `Make sure fwd was properly initialized with all needed modules.`);
     return undefined;
-  }
-}
+  },
+};
 
 export let fwd: Fwd = new Proxy(fwdDefaultInstance, proxyHandler) as Fwd;

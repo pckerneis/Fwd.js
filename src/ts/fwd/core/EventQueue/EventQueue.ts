@@ -1,7 +1,7 @@
 export type Time = number;
 
 export abstract class Event {
-    abstract trigger(t: Time): void;
+    public abstract trigger(t: Time): void;
 }
 
 export type EventRef = any;
@@ -13,11 +13,11 @@ export interface ScheduledEvent<EventType extends Event> {
 }
 
 export abstract class EventQueue<EventType extends Event> {
-    abstract next(now: Time): ScheduledEvent<EventType> | null;
-    
-    abstract add(time: Time, event: EventType): EventRef;
-    abstract remove(eventRef: EventRef): void;
-    abstract clear(): void;
 
     public readonly events: ScheduledEvent<EventType>[];
+    public abstract next(now: Time): ScheduledEvent<EventType> | null;
+    
+    public abstract add(time: Time, event: EventType): EventRef;
+    public abstract remove(eventRef: EventRef): void;
+    public abstract clear(): void;
 }

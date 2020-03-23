@@ -1,11 +1,11 @@
-import { Event, Time, EventRef } from './EventQueue/EventQueue';
-import { SchedulerImpl } from './Scheduler/SchedulerImpl';
+import { Event, EventRef, Time } from './EventQueue/EventQueue';
 import { Scheduler } from './Scheduler/Scheduler';
+import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
 let NOW: Time = 0;
 
 class FwdEvent extends Event {
-  private _stopped = false;
+  private _stopped: boolean = false;
 
   constructor(
     public readonly time: Time,
@@ -15,7 +15,7 @@ class FwdEvent extends Event {
     super();
   }
 
-  trigger(now: Time) {
+  public trigger(now: Time): void {
     if (! this._stopped) {
       const previous = NOW;
       NOW = now;
@@ -28,13 +28,11 @@ class FwdEvent extends Event {
 type State = 'stopping' | 'stopped' | 'running' | 'ready';
 
 export class FwdScheduler {
+  public onEnded: Function;
+
   private _scheduler: Scheduler<FwdEvent>;
 
   private _state: State = 'ready';
-
-  onEnded: Function;
-
-  get state(): State { return this._state; }
 
   constructor(interval: number = 5, lookAhead: number = 50) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
@@ -47,15 +45,17 @@ export class FwdScheduler {
     }
   }
 
-  now() {
+  public get state(): State { return this._state; }
+
+  public now(): Time {
     return NOW / 1000;
   }
 
-  rtNow() {
+  public rtNow(): Time {
     return this._scheduler.now() / 1000;
   }
 
-  schedule(time: Time, action: Function, preventCancel?: boolean): EventRef {
+  public schedule(time: Time, action: Function, preventCancel?: boolean): EventRef {
     if (this._state === 'stopped' || this._state === 'stopping') {
       return null;
     }
@@ -64,15 +64,15 @@ export class FwdScheduler {
     return this._scheduler.schedule(nextTime, new FwdEvent(nextTime, action, ! preventCancel));
   }
 
-  cancel(ref: EventRef) {
+  public cancel(ref: EventRef): void {
     this._scheduler.cancel(ref);
   }
 
-  wait(time: Time) {
+  public wait(time: Time): void {
     NOW += time * 1000;
   }
 
-  clearEvents() {
+  public clearEvents(): void {
     if (this._state === 'running') {
       throw new Error('You should call stop before calling clearEvents.');
     }
@@ -85,7 +85,7 @@ export class FwdScheduler {
     this._state = 'ready';
   }
 
-  start() {
+  public start(): void {
     if (this._state !== 'ready') {
       throw new Error('start should be called after initialization or after clearEvents.');
     }
@@ -96,7 +96,7 @@ export class FwdScheduler {
     this._state = 'running';
   }
 
-  stop() {
+  public stop(): void {
     if (this._state !== 'running') {
       throw new Error('stop should be called after start.');
     }

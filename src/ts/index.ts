@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             runner.logger.err(null, `It seems like your sketch doesn't export a 'init' function.`);
         }
-    }
+    };
 
     const m = require('./sketch');
     runner.sketchModule = require('./sketch');

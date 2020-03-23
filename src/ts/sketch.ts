@@ -4,24 +4,24 @@ fwd.controls.addSlider('base', {
   defaultValue: 500,
   min: 0,
   max: 5000,
-  step: 1
+  step: 1,
 });
 
 fwd.controls.addSlider('range', {
   defaultValue: 0,
   min: 0,
   max: 200,
-  step: 1
+  step: 1,
 });
 
-export function init() {
+export function init(): void {
   for (let i = 0; i < 5; ++i) {
-    // fwd.schedule(i * 50, loop);
+    fwd.schedule(i * 50, loop);
   }
 }
 
 export
-function loop() {
+function loop(): void {
   const range = fwd.controls.getSlider('range').value;
   const base = fwd.controls.getSlider('base').value;
   const fq = base + fwd.random(range);
@@ -32,7 +32,7 @@ function loop() {
 }
 
 export
-function beep(fq: number) {
+function beep(fq: number): void {
   fwd.log('beep');
 
   const lfo = fwd.audio.lfo(100);

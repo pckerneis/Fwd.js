@@ -12,7 +12,6 @@ export interface SliderOptions {
 }
 
 export class FwdSlider {
-  public get value(): number { return this._valueSource.get(); }
 
   public readonly min: number;
 
@@ -25,6 +24,8 @@ export class FwdSlider {
     this.max = options.max;
     this.step = options.step;
   }
+
+  public get value(): number { return this._valueSource.get(); }
 }
 
 //=============================================================
@@ -42,25 +43,21 @@ export interface FwdControls {
 class SliderController {
   public readonly htmlElement: HTMLElement;
 
-  private _input: HTMLInputElement;
+  private readonly _input: HTMLInputElement;
 
-  private _textInput: HTMLInputElement;
-
-  public get value(): number {
-    return this._input.value === '' ? 0 : Number.parseFloat(this._input.value);
-  }
+  private readonly _textInput: HTMLInputElement;
 
   constructor(options: SliderOptions) {
-    this._input = this.prepareInput(options, true);
-    this._textInput = this.prepareInput(options, false);
+    this._input = SliderController.prepareInput(options, true);
+    this._textInput = SliderController.prepareInput(options, false);
     
     this._input.oninput = () => {
       this._textInput.value = this._input.value;
-    }
+    };
 
     this._textInput.onchange = () => {
       this._input.value = this._textInput.value;
-    }
+    };
 
     const div = document.createElement('div');
     div.classList.add('slider-control');
@@ -69,7 +66,7 @@ class SliderController {
     this.htmlElement = div;
   }
 
-  private prepareInput(options: SliderOptions, range: boolean): HTMLInputElement {
+  private static prepareInput(options: SliderOptions, range: boolean): HTMLInputElement {
     const input = document.createElement('input');
     input.min = options.min.toString();
     input.max = options.max.toString();
@@ -86,32 +83,36 @@ class SliderController {
 
     return input;
   }
+
+  public get value(): number {
+    return this._input.value === '' ? 0 : Number.parseFloat(this._input.value);
+  }
 }
 
 export class FwdHTMLControls {
   private _elementContainer: HTMLDivElement;
 
-  private _controls = new Map<string, FwdControl>();
+  private _controls: Map<string, FwdControl> = new Map<string, FwdControl>();
 
   constructor() {
     this._elementContainer = document.getElementById('controls') as HTMLDivElement;
     this._elementContainer.innerHTML = '';
   }
 
-  reset() {
+  public reset(): void {
     this._elementContainer.innerHTML = '';
     this._controls = new Map<string, FwdControl>();
   }
 
-  addSlider(name: string, options: SliderOptions) {
+  public addSlider(name: string, options: SliderOptions): void {
     if (this.nameIsAlreadyUsed(name)) {
-      fwd.err(`There's already a controller with the name ${name}.`)
+      fwd.err(`There's already a controller with the name ${name}.`);
       return;
     }
 
     // Create HTML controls
     const row = document.createElement('div');
-    row.classList.add('slider-row')
+    row.classList.add('slider-row');
 
     const label = document.createElement('label');
     label.innerText = name;
@@ -124,19 +125,19 @@ export class FwdHTMLControls {
     const valueSource: ValueSource<number> = {
       get(): number {
         return sliderController.value;
-      }
-    }
+      },
+    };
 
     // Add to internal array
     this._controls.set(name, new FwdSlider(valueSource, options));
   }
 
-  getSlider(name: string): FwdSlider {
+  public getSlider(name: string): FwdSlider {
     const control = this._controls.get(name);
     return control as FwdSlider;
   }
 
-  nameIsAlreadyUsed(name: string): boolean {
+  public nameIsAlreadyUsed(name: string): boolean {
     return this._controls.get(name) != null;
   }
 }

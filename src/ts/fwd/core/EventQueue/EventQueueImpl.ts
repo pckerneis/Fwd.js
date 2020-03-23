@@ -1,15 +1,15 @@
-import { Time, Event, EventRef, EventQueue, ScheduledEvent } from './EventQueue';
+import { Event, EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
 
 export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
-    private latestRefIdx = 0;
+    private latestRefIdx: number = 0;
 
     private _events: ScheduledEvent<EventType>[] = [];
 
-    get events() {
+    public get events(): ScheduledEvent<EventType>[] {
       return this._events;
     }
 
-    next(now: Time): ScheduledEvent<EventType> | null {
+    public next(now: Time): ScheduledEvent<EventType> | null {
       if (this._events.length === 0) {
         return null;
       }
@@ -21,7 +21,7 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       return null;
     }
 
-    add(time: Time, event: EventType): EventRef {
+    public add(time: Time, event: EventType): EventRef {
       const idx = this.insertIndex(time, 0, this._events.length);
       const scheduledEvent: ScheduledEvent<EventType> = {
         event,
@@ -34,11 +34,11 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       return scheduledEvent.ref;
     }
 
-    remove(eventRef: EventRef): void {
+    public remove(eventRef: EventRef): void {
       this._events = this.events.filter((e) => e.ref !== eventRef);
     }
 
-    clear(): void {
+    public clear(): void {
       this._events = [];
     }
 
