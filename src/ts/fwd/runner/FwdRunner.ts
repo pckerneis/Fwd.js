@@ -1,4 +1,4 @@
-import { FwdLogger } from '../core';
+import { FwdLogger } from '../core/FwdLogger';
 
 export default interface FwdRunner {
   entryPoint: Function;

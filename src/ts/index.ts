@@ -17,8 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const m = require('./sketch');
     runner.sketchModule = require('./sketch');
+
+    Object.keys(m).forEach((e) => console.log(m[e], m[e].length))
+
     runner.actions = Object.keys(m)
-        .filter((e) => typeof m[e] === 'function');
+        .filter((e) => typeof m[e] === 'function' 
+                    && e !== 'init' 
+                    && m[e].length === 0);
 });
 
 function hardLoadModule(): any {

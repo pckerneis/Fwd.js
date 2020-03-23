@@ -1,12 +1,8 @@
-import {
-  EventRef,
-  Time,
-} from '.';
-
 import { FwdAudio } from '../audio/Audio';
 import { FwdControls } from '../control/FwdControl';
 import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';
+import { Time, EventRef } from './EventQueue/EventQueue';
 
 export interface Fwd {
   now: () => Time;

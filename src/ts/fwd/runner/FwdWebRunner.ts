@@ -1,8 +1,8 @@
 import hljs from 'highlightjs';
 import Split from 'split.js'
-import { FwdAudio } from '../audio/Audio';
+import { FwdAudio } from "../audio/Audio";
 import { FwdControls, FwdHTMLControls } from '../control/FwdControl';
-import { EventRef, Time } from '../core';
+import { EventRef, Time } from "../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../core/fwd';
 import { FwdLogger } from '../core/FwdLogger';
 import { FwdScheduler } from '../core/FwdScheduler';

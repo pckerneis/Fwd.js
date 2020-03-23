@@ -1,5 +1,5 @@
-import { Time } from '../core';
 import { Fwd, fwd } from '../core/fwd';
+import { Time } from '../core/EventQueue/EventQueue';
 
 export class FwdAudio {
   private _fwd: Fwd;
