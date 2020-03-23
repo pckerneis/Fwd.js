@@ -1,4 +1,4 @@
-import { Fwd } from '../core/fwd';
+import { Fwd, fwd } from '../core/fwd';
 import { Time } from '../core';
 
 export class FwdAudio {
@@ -46,9 +46,14 @@ export class FwdAudio {
     return new FwdGainNode(this, value);
   }
 
-  osc(frequency: number = 440, type: OscillatorType = 'sine', start = true) {
+  osc(frequency: number = 440, type: OscillatorType = 'sine') {
     this.assertInit();
-    return new FwdOscillatorNode(this, frequency, type, start);
+    return new FwdOscillatorNode(this, frequency, type);
+  }
+
+  lfo(frequency: number = 1, type: OscillatorType = 'sine') {
+    this.assertInit();
+    return new LFONode(this, frequency, type);
   }
 
   private assertInit() {
@@ -60,7 +65,39 @@ export class FwdAudio {
 
 //=========================================================================
 
-abstract class FwdAudioNodeWrapper<T extends AudioNode> {
+abstract class FwdAudioNode {
+  readonly inputNode: AudioNode | AudioParam;
+  readonly outputNode: AudioNode;
+
+  connect(destination: FwdAudioNode, output?: number, input?: number): FwdAudioNode {
+    if (this.outputNode == null || destination.inputNode == null) {
+      throw new Error('Error while trying to connect the audio node');
+    }
+    
+    if (destination.inputNode instanceof AudioNode) {
+      this.outputNode.connect(destination.inputNode, output, input);
+    } else {
+      this.outputNode.connect(destination.inputNode, output);
+    }
+
+    return destination;
+  }
+}
+
+//=========================================================================
+
+class FwdAudioParamWrapper extends FwdAudioNode {
+  constructor(readonly inputNode: AudioParam) {
+    super();
+  }
+}
+
+//=========================================================================
+
+abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
+  get inputNode() { return this.nativeNode; }
+
+  get outputNode() { return this.nativeNode; }
 
   get nativeNode() { return this._nativeNode; }
 
@@ -69,19 +106,7 @@ abstract class FwdAudioNodeWrapper<T extends AudioNode> {
   private tearedDownCalled = false;
 
   protected constructor(private _fwdAudio: FwdAudio, private _nativeNode: T) {
-  }
-
-  connect(destination: FwdAudioNodeWrapper<any>, output?: number, input?: number): FwdAudioNodeWrapper<any> {
-    if (this._nativeNode == null) {
-      throw new Error('Error while trying to connect the audio node');
-    }
-    
-    this._nativeNode.connect(
-      destination._nativeNode, 
-      output, 
-      input);
-
-    return destination;
+    super();
   }
 
   tearDown() {
@@ -132,12 +157,21 @@ class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
 //=========================================================================
 
 class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
-  set oscillatorType(type: OscillatorType) {
-    this.nativeNode.type = type;
+  setType(type: OscillatorType) {
+    fwd.schedule(fwd.now(), () => {
+      if (this.nativeNode !== null) {
+        this.nativeNode.type = type;
+      }
+    });
   }
 
-  set frequency(fq: number) {
-    this.nativeNode.frequency.setValueAtTime(fq, 0);
+  setFrequency(fq: number) {
+    const audioNow = this.fwdAudio.now();
+    this.nativeNode.frequency.setValueAtTime(fq, audioNow);
+  }
+
+  get frequency(): FwdAudioParamWrapper {
+    return new FwdAudioParamWrapper(this.nativeNode.frequency);
   }
 
   rampTo(value: number, time: number) {
@@ -146,24 +180,61 @@ class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
     this.nativeNode.frequency.linearRampToValueAtTime(value, audioNow + time);
   }
   
-  constructor(
-    fwdAudio: FwdAudio,
-    freq: number = 440,
-    type: OscillatorType = 'sine',
-    start = true
-  ) {
+  constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
     super(fwdAudio, fwdAudio.context.createOscillator());
 
-    this.frequency = freq;
-    this.oscillatorType = type;
-    
-    if (start) {
-      this.nativeNode.start();
-    }
+    this.nativeNode.frequency.value = freq;
+    this.nativeNode.type = type;
+    this.nativeNode.start();
   }
 
   stop() {
     const audioNow = this.fwdAudio.now(); 
     this.nativeNode.stop(audioNow);
+  }
+}
+
+//===============================================================
+
+class LFONode extends FwdAudioNode {
+  private _output: GainNode;
+  private _osc: OscillatorNode;
+
+  get inputNode(): AudioNode { return null; }
+  get outputNode(): AudioNode { return this._output; }
+
+  get oscillator(): OscillatorNode { return this._osc; }
+
+  set frequency(frequency: number) {
+    const audioNow = this.fwdAudio.now();
+    this._osc.frequency.setValueAtTime(frequency, audioNow);
+  }
+
+  set type(type: OscillatorType) {
+    fwd.schedule(fwd.now(), () => {
+      this._osc.type = type;
+    });
+  }
+
+  constructor(public fwdAudio: FwdAudio, frequency: number, type: OscillatorType) {
+    super();
+
+    this._output = fwdAudio.context.createGain();
+    this._output.gain.value = 1;
+
+    // Setup DC offset
+    const constantSource = fwdAudio.context.createConstantSource();
+    const hiddenGain = fwdAudio.context.createGain();
+    hiddenGain.gain.value = 0.5;
+    constantSource.connect(hiddenGain).connect(this._output);
+
+    // Setup osc
+    this._osc = fwdAudio.context.createOscillator();
+    this._osc.frequency.value = frequency;
+    this._osc.type = type;
+    this._osc.connect(hiddenGain);
+
+    this._osc.start();
+    constantSource.start();
   }
 }

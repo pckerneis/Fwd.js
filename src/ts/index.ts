@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof module['init'] === 'function') {
       module.init();
     } else {
-      runner.logger.err(null, `It seems that your sketch doesn't have a exported init function.`);
+      runner.logger.err(null, `It seems like your sketch doesn't export a 'init' function.`);
     }
   }
 });

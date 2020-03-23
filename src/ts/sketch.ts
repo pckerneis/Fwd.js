@@ -17,15 +17,6 @@ fwd.controls.addSlider('range', {
 export function init() {
   for (let i = 0; i < 5; ++i) {
     fwd.schedule(i * 5, loop);
-
-    fwd.schedule(i * 5, () => {
-      fwd.controls.addSlider('a'+i, {
-        defaultValue: 0,
-        min: 0,
-        max: 200,
-        step: 1
-      });
-    });
   }
 }
 
@@ -42,8 +33,11 @@ function loop() {
 function beep(fq: number) {
   fwd.log('beep');
 
-  let osc = fwd.audio.osc(fq);
-  let gain = fwd.audio.gain();
+  const lfo = fwd.audio.lfo(100);
+  const osc = fwd.audio.osc(fq);
+  const gain = fwd.audio.gain();
+
+  lfo.connect(fwd.audio.gain(50)).connect(osc.frequency);
   osc.connect(gain).connect(fwd.audio.master);
 
   gain.rampTo(0.15, 0.008);
