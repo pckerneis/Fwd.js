@@ -1,6 +1,10 @@
 import { Time, Event, EventRef, EventQueue } from '../EventQueue/EventQueue';
 
 export abstract class Scheduler<EventType extends Event> {
+
+    onEnded: Function;
+    keepAlive: boolean;
+    
     readonly eventQueue: EventQueue<EventType>;
 
     abstract running: boolean;
@@ -16,6 +20,4 @@ export abstract class Scheduler<EventType extends Event> {
 
     abstract schedule(time: Time, event: EventType): EventRef;
     abstract cancel(eventRef: EventRef): void;
-
-    onEnded: Function;
 }

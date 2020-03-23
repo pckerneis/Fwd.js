@@ -4,7 +4,7 @@ import { Time } from '../core';
 export class FwdAudio {
   private _fwd: Fwd;
 
-  private _ctx: AudioContext;;
+  private _ctx: AudioContext;
 
   private _masterGain: FwdGainNode;
 
@@ -87,8 +87,18 @@ abstract class FwdAudioNode {
 //=========================================================================
 
 class FwdAudioParamWrapper extends FwdAudioNode {
-  constructor(readonly inputNode: AudioParam) {
+  get inputNode(): AudioParam {
+    return this._param;
+  }
+
+  constructor(readonly fwdAudio: FwdAudio, private _param: AudioParam) {
     super();
+  }
+
+  rampTo(value: number, time: number) {
+    const audioNow = this.fwdAudio.now();
+    this._param.cancelAndHoldAtTime(audioNow);
+    this._param.linearRampToValueAtTime(value, audioNow + time);
   }
 }
 
@@ -142,15 +152,15 @@ abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
 //=========================================================================
 
 class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
+  get gain() { return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.gain); }
+
   constructor(fwdAudio: FwdAudio, defaultValue: number = 0) {
     super(fwdAudio, fwdAudio.context.createGain());
     this.nativeNode.gain.setValueAtTime(defaultValue, 0);
   }
 
   rampTo(value: number, time: number) {
-    const audioNow = this.fwdAudio.now();
-    this.nativeNode.gain.cancelAndHoldAtTime(audioNow);
-    this.nativeNode.gain.linearRampToValueAtTime(value, audioNow + time);
+    this.gain.rampTo(value, time);
   }
 }
 
@@ -165,19 +175,8 @@ class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
     });
   }
 
-  setFrequency(fq: number) {
-    const audioNow = this.fwdAudio.now();
-    this.nativeNode.frequency.setValueAtTime(fq, audioNow);
-  }
-
   get frequency(): FwdAudioParamWrapper {
-    return new FwdAudioParamWrapper(this.nativeNode.frequency);
-  }
-
-  rampTo(value: number, time: number) {
-    const audioNow = this.fwdAudio.now();
-    this.nativeNode.frequency.cancelAndHoldAtTime(audioNow);
-    this.nativeNode.frequency.linearRampToValueAtTime(value, audioNow + time);
+    return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.frequency);
   }
   
   constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
@@ -186,6 +185,11 @@ class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
     this.nativeNode.frequency.value = freq;
     this.nativeNode.type = type;
     this.nativeNode.start();
+  }
+
+  setFrequency(fq: number) {
+    const audioNow = this.fwdAudio.now();
+    this.nativeNode.frequency.setValueAtTime(fq, audioNow);
   }
 
   stop() {

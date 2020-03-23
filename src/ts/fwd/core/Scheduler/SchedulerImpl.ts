@@ -22,6 +22,8 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
   public onEnded: Function;
 
+  public keepAlive: boolean;
+
   get running(): boolean {
     return this._running;
   }
@@ -100,7 +102,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       next = this._eventQueue.next(this._now);
     }
 
-    if (this._eventQueue.events.length > 0) {
+    if (this._eventQueue.events.length > 0 || this.keepAlive) {
       this._timeout = setTimeout(() => this.run(), this.interval);
     } else if (this.onEnded != null) {
       this.onEnded();

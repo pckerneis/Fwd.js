@@ -17,11 +17,13 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "@microsoft/tsdoc": "^0.12.18",
     "@types/highlightjs": "^9.12.0",
     "@types/split.js": "^1.4.0",
     "highlightjs": "^9.16.2",
     "highlightjs-line-numbers.js": "^2.7.0",
     "split.js": "^1.5.11",
+    "tslint": "^6.1.0",
     "webpack-dev-server": "^3.10.3"
   }
 }

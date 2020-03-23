@@ -16,10 +16,11 @@ fwd.controls.addSlider('range', {
 
 export function init() {
   for (let i = 0; i < 5; ++i) {
-    fwd.schedule(i * 5, loop);
+    // fwd.schedule(i * 50, loop);
   }
 }
 
+export
 function loop() {
   const range = fwd.controls.getSlider('range').value;
   const base = fwd.controls.getSlider('base').value;
@@ -30,6 +31,7 @@ function loop() {
   fwd.schedule(itv, loop);
 }
 
+export
 function beep(fq: number) {
   fwd.log('beep');
 

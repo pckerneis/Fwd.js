@@ -13,18 +13,25 @@ const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
 const consoleId = 'console';
 const timeCodeId = 'time-code';
+const actionContainerId = 'actions';
 
 export default class FwdWebRunner implements FwdRunner {
   private _fwd: Fwd;
   private _logger: FwdLogger;
   private _audio: FwdAudio;
   private _controls: FwdControls;
+  private _actionButtons: HTMLButtonElement[];
   
   get audio(): FwdAudio { return this._audio; }
   get controls(): FwdControls { return this._controls; }
   get logger(): FwdLogger { return this._logger; }
 
+  sketchModule: any;
   entryPoint: Function;
+  
+  set actions(actions: string[]) {
+    this.resetActionButtons(actions);
+  }
 
   constructor() {
     this._logger = this.prepareLogger();
@@ -38,6 +45,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.scheduler.onEnded = () => {
       (document.getElementById(startButtonId) as HTMLButtonElement).disabled = false;
       (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = true;
+      this._actionButtons.forEach(button => button.disabled = true);
     };
 
     this.prepareLayout();
@@ -110,6 +118,8 @@ export default class FwdWebRunner implements FwdRunner {
 
     this.applyMasterValue();
     this.initializeTimeCode();
+
+    this._actionButtons.forEach(button => button.disabled = false);
 
   }
 
@@ -199,6 +209,26 @@ export default class FwdWebRunner implements FwdRunner {
     };
 
     requestAnimationFrame(update);
+  }
+
+  private resetActionButtons(actions: string[]) {
+    const container = document.getElementById(actionContainerId);
+    container.innerHTML = '';
+
+    this._actionButtons = [];
+    
+    actions.forEach((action) => {
+      const button = document.createElement('button');
+      button.innerText = action;
+      button.disabled = true;
+      button.onclick = () => {
+        const when = (this._fwd.scheduler.now() + 50) / 1000;
+        this._fwd.schedule(when, this.sketchModule[action]);
+      }
+
+      container.append(button);
+      this._actionButtons.push(button);
+    });
   }
 }
 

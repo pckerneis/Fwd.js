@@ -91,6 +91,7 @@ export class FwdScheduler {
     }
 
     NOW = 0;
+    this._scheduler.keepAlive = true;
     this._scheduler.start(0);
     this._state = 'running';
   }
@@ -105,7 +106,8 @@ export class FwdScheduler {
         this._scheduler.cancel(scheduledEvent.ref);
       }
     });
-    
+
     this._state = 'stopping';
+    this._scheduler.keepAlive = false;
   }
 }
