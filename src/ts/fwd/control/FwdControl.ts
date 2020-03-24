@@ -1,4 +1,5 @@
 import { fwd } from '../core/fwd';
+import audit from '../utils/audit';
 
 interface ValueSource<T> {
   get(): T;
@@ -51,9 +52,9 @@ class SliderController {
     this._input = SliderController.prepareInput(options, true);
     this._textInput = SliderController.prepareInput(options, false);
     
-    this._input.oninput = () => {
+    this._input.oninput = audit(() => {
       this._textInput.value = this._input.value;
-    };
+    });
 
     this._textInput.onchange = () => {
       this._input.value = this._textInput.value;

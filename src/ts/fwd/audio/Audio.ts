@@ -50,6 +50,8 @@ export class FwdAudio {
     return new LFONode(this, frequency, type);
   }
 
+  //=========================================================================
+
   private resetAudioContext(): void {
     this._ctx = new AudioContext();
     this._masterGain = new FwdGainNode(this, 0.5);

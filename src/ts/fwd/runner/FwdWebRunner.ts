@@ -7,6 +7,7 @@ import { Fwd, putFwd } from '../core/fwd';
 import { FwdLogger } from '../core/FwdLogger';
 import { FwdScheduler } from '../core/FwdScheduler';
 import FwdRunner from './FwdRunner';
+import audit from '../utils/audit';
 
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
@@ -181,14 +182,16 @@ export default class FwdWebRunner implements FwdRunner {
     startButton.onclick = () => this.start();
     stopButton.onclick = () => this.stop();
 
-    masterSlider.oninput = () => this.applyMasterValue();
+    masterSlider.oninput = audit(() => this.applyMasterValue());
   }
 
   private applyMasterValue(): void {
     const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
-
+    const masterGain = this._audio.master.nativeNode.gain;
+    const now = this._audio.context.currentTime;
     const v = FwdWebRunner.parseNumber(masterSlider.value) / 100;
-    this._audio.master.nativeNode.gain.linearRampToValueAtTime(v, 0);
+    masterGain.cancelAndHoldAtTime(now);
+    masterGain.linearRampToValueAtTime(v, now + 0.01);
   }
   
   private initializeHighlightJS(): void {
