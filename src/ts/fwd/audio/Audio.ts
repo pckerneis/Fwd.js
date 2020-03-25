@@ -1,5 +1,6 @@
 import { Fwd, fwd } from '../core/fwd';
 import { Time } from '../core/EventQueue/EventQueue';
+import path from 'path';
 
 export class FwdAudio {
   private _fwd: Fwd;
@@ -45,9 +46,14 @@ export class FwdAudio {
     return new FwdOscillatorNode(this, frequency, type);
   }
 
-  public lfo(frequency: number = 1, type: OscillatorType = 'sine'): LFONode {
+  public lfo(frequency: number = 1, type: OscillatorType = 'sine'): FwdLFONode {
     this.assertInit();
-    return new LFONode(this, frequency, type);
+    return new FwdLFONode(this, frequency, type);
+  }
+
+  public sampler(pathToFile: string) {
+    this.assertInit();
+    return new FwdSamplerNode(this, pathToFile);
   }
 
   //=========================================================================
@@ -67,9 +73,10 @@ export class FwdAudio {
 
 //=========================================================================
 
-abstract class FwdAudioNode {
-  public inputNode: AudioNode | AudioParam;
-  public outputNode: AudioNode;
+export abstract class FwdAudioNode {
+  public abstract inputNode: AudioNode | AudioParam;
+  public abstract outputNode: AudioNode;
+  public abstract readonly fwdAudio: FwdAudio;
 
   public connect(destination: FwdAudioNode, output?: number, input?: number): FwdAudioNode {
     if (this.outputNode == null || destination.inputNode == null) {
@@ -84,11 +91,21 @@ abstract class FwdAudioNode {
 
     return destination;
   }
+
+  public connectToMaster(): this {
+    if (this.outputNode == null) {
+      throw new Error('Error while trying to connect the audio node');
+    }
+
+    this.connect(this.fwdAudio.master);
+    return this;
+  }
 }
 
 //=========================================================================
 
 class FwdAudioParamWrapper extends FwdAudioNode {
+  public outputNode: AudioNode = null;
 
   constructor(readonly fwdAudio: FwdAudio, private _param: AudioParam) {
     super();
@@ -202,7 +219,7 @@ class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
 
 //===============================================================
 
-class LFONode extends FwdAudioNode {
+class FwdLFONode extends FwdAudioNode {
   private readonly _output: GainNode;
   private readonly _osc: OscillatorNode;
 
@@ -242,5 +259,43 @@ class LFONode extends FwdAudioNode {
     fwd.schedule(fwd.now(), () => {
       this._osc.type = type;
     });
+  }
+}
+
+//===============================================================
+
+export class FwdSamplerNode extends FwdAudioNode {
+  private readonly _output: GainNode;
+  private _buffer: AudioBuffer;
+
+  constructor(public fwdAudio: FwdAudio, public readonly pathToFile: string) {
+    super();
+
+    this._output = fwdAudio.context.createGain();
+    this._output.gain.value = 1;
+
+    this.load();
+  }
+
+  public get inputNode(): AudioNode { return null; }
+  public get outputNode(): AudioNode { return this._output; }
+  
+  public play() {
+    fwd.schedule(0, () => {
+      const source = this._output.context.createBufferSource();
+      source.buffer = this._buffer;
+      source.connect(this._output);
+      source.start(this.fwdAudio.now());
+      fwd.log('Play')
+    });
+  }
+
+  private load() {
+    const url = path.resolve('../../data', this.pathToFile);
+
+    fetch(url)
+      .then(response => response.arrayBuffer())
+      .then(arrayBuffer => this.fwdAudio.context.decodeAudioData(arrayBuffer))
+      .then(audioBuffer => this._buffer = audioBuffer);
   }
 }

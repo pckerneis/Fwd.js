@@ -1,5 +1,8 @@
 import {fwd} from './fwd';
 
+const sample = fwd.audio.sampler('Brushed_bell.wav').connectToMaster();
+export function playSample(): void { sample.play(); }
+
 fwd.controls.addSlider('base', {
   defaultValue: 500,
   min: 0,
@@ -20,8 +23,7 @@ export function init(): void {
   }
 }
 
-export
-function loop(): void {
+export function loop(): void {
   const range = fwd.controls.getSlider('range').value;
   const base = fwd.controls.getSlider('base').value;
   const fq = base + fwd.random(range);
@@ -31,8 +33,7 @@ function loop(): void {
   fwd.schedule(itv, loop);
 }
 
-export
-function beep(fq: number): void {
+export function beep(fq: number): void {
   fwd.log('beep');
 
   const lfo = fwd.audio.lfo(100);

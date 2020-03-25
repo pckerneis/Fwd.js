@@ -1,5 +1,5 @@
 import FwdRunner from './fwd/runner/FwdRunner';
-import FwdWebRunner from './fwd/runner/FwdWebRunner';
+import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
 
 document.addEventListener('DOMContentLoaded', () => {
     const runner: FwdRunner = new FwdWebRunner();
@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const m = require('./sketch');
     runner.sketchModule = require('./sketch');
-
-    Object.keys(m).forEach((e) => console.log(m[e], m[e].length))
 
     runner.actions = Object.keys(m)
         .filter((e) => typeof m[e] === 'function' 
