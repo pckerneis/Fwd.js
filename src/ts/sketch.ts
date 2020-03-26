@@ -1,52 +1,32 @@
 import {fwd} from './fwd';
 
 const sample = fwd.audio.sampler('Brushed_bell.wav').connectToMaster();
-export function playSample(): void { sample.play(); }
 
-fwd.controls.addSlider('base', {
-  defaultValue: 500,
-  min: 0,
-  max: 5000,
-  step: 1,
-});
-
-fwd.controls.addSlider('range', {
-  defaultValue: 0,
-  min: 0,
-  max: 200,
-  step: 1,
-});
+export function playSample() {
+  sample.play();
+}
 
 export function init(): void {
-  for (let i = 0; i < 5; ++i) {
-    fwd.schedule(i * 50, loop);
-  }
+  fwd.log('ready');
 }
 
-export function loop(): void {
-  const range = fwd.controls.getSlider('range').value;
-  const base = fwd.controls.getSlider('base').value;
-  const fq = base + fwd.random(range);
-  const itv = fwd.random(0.1, 0.5);
+export function kick(): void {
+  fwd.log('kick');
 
-  beep(fq);
-  fwd.schedule(itv, loop);
-}
-
-export function beep(fq: number): void {
-  fwd.log('beep');
-
-  const lfo = fwd.audio.lfo(100);
-  const osc = fwd.audio.osc(fq);
+  const osc = fwd.audio.osc(300);
   const gain = fwd.audio.gain();
 
-  lfo.connect(fwd.audio.gain(50)).connect(osc.frequency);
-  osc.connect(gain).connect(fwd.audio.master);
+  osc.connect(gain).connectToMaster();
 
-  gain.rampTo(0.15, 0.008);
+  gain.rampTo(1, 0.008);
+  osc.frequency.rampTo(42, 0.03);
+
   fwd.wait(0.1);
-  gain.rampTo(0, 0.2);
-  fwd.wait(0.2);
-  osc.tearDown();
+  gain.rampTo(0, 0.3);
+
+  fwd.wait(1);
   gain.tearDown();
+  osc.tearDown();
+
+  fwd.schedule(0, kick);
 }

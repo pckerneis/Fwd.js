@@ -1,4 +1,4 @@
-import { Event, EventQueue, ScheduledEvent, Time } from '../EventQueue/EventQueue';
+import { Event, EventQueue, EventRef, ScheduledEvent, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
 import { Scheduler } from './Scheduler';
 
@@ -13,8 +13,10 @@ export class BasicEvent {
 
 export class SchedulerImpl<EventType extends Event = BasicEvent> extends Scheduler<EventType> {
 
+  /** @inheritdoc */
   public onEnded: Function;
 
+  /** @inheritdoc */
   public keepAlive: boolean;
 
   private _now: Time = 0;
@@ -41,34 +43,42 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this._timeProvider = _timeProvider || systemNow;
   }
 
+  /** @inheritdoc */
   public get running(): boolean {
     return this._running;
   }
 
+  /** @inheritdoc */
   public get interval(): number {
     return this._interval;
   }
 
+  /** @inheritdoc */
   public set interval(v: number) {
     this._interval = Math.max(0, v);
   }
 
+  /** @inheritdoc */
   public get lookAhead(): number {
     return this._lookAhead;
   }
 
+  /** @inheritdoc */
   public set lookAhead(v: number) {
     this._lookAhead = Math.max(0, v);
   }
 
+  /** @inheritdoc */
   public get eventQueue(): EventQueue<EventType> {
     return this._eventQueue;
   }
 
+  /** @inheritdoc */
   public now(): Time {
     return this._now;
   }
 
+  /** @inheritdoc */
   public start(position: Time): void {
     if (this._running) {
       this.stop();
@@ -80,6 +90,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this.run();
   }
 
+  /** @inheritdoc */
   public stop(): void {
     if (this._running) {
       clearTimeout(this._timeout);
@@ -87,22 +98,22 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     }
   }
 
+  /** @inheritdoc */
   public clearQueue(): void {
     this._eventQueue.clear();
   }
 
-  public schedule(time: Time, event: EventType): ScheduledEvent<EventType> {
-    return {
-      ref: this._eventQueue.add(time, event),
-      event, 
-      time,
-    };
+  /** @inheritdoc */
+  public schedule(time: Time, event: EventType): EventRef {
+    this._eventQueue.add(time, event);
   }
 
-  public cancel(eventRef: any): void {
+  /** @inheritDoc */
+  public cancel(eventRef: EventRef): void {
     this._eventQueue.remove(eventRef);
   }
 
+  /** @inheritDoc */
   protected run(): void {
     if (! this._running) {
       return;

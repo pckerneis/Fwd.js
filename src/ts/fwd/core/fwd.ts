@@ -5,7 +5,7 @@ import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';
 
 /**
- * The Fwd runtime main entry point. It exposes the scheduler as well as core modules such as `audio` or `controls`
+ * The Fwd runtime main interface. It exposes the scheduler as well as core modules such as `audio` or `controls`
  * and utility methods such as `log`. Its main purpose is to offer a nice way to manipulate data over time in a
  * creative context.
  *
@@ -29,7 +29,7 @@ export interface Fwd {
   wait: (time: Time) => void;
 
   /**
-   * Schedules an action. The time passed in is relative to the current time position of the scheduler.
+   * Schedule an action. The time passed in is relative to the current time position of the scheduler.
    *
    * @param time The delay before the action gets executed.
    * @param action A function to be called at the specified time.

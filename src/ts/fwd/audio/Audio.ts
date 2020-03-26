@@ -286,7 +286,6 @@ export class FwdSamplerNode extends FwdAudioNode {
       source.buffer = this._buffer;
       source.connect(this._output);
       source.start(this.fwdAudio.now());
-      fwd.log('Play')
     });
   }
 

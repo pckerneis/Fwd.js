@@ -1,15 +1,17 @@
 import { Event, EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
 
 export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
-    private latestRefIdx: number = 0;
+  private latestRefIdx: number = 0;
 
-    private _events: ScheduledEvent<EventType>[] = [];
+  private _events: ScheduledEvent<EventType>[] = [];
 
-    public get events(): ScheduledEvent<EventType>[] {
+  /** @inheritdoc */
+  public get events(): ScheduledEvent<EventType>[] {
       return this._events;
     }
 
-    public next(now: Time): ScheduledEvent<EventType> | null {
+  /** @inheritdoc */
+  public next(now: Time): ScheduledEvent<EventType> | null {
       if (this._events.length === 0) {
         return null;
       }
@@ -21,7 +23,8 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       return null;
     }
 
-    public add(time: Time, event: EventType): EventRef {
+  /** @inheritdoc */
+  public add(time: Time, event: EventType): EventRef {
       const idx = this.insertIndex(time, 0, this._events.length);
       const scheduledEvent: ScheduledEvent<EventType> = {
         event,
@@ -34,51 +37,53 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       return scheduledEvent.ref;
     }
 
-    public remove(eventRef: EventRef): void {
+  /** @inheritdoc */
+  public remove(eventRef: EventRef): void {
       this._events = this.events.filter((e) => e.ref !== eventRef);
     }
 
-    public clear(): void {
+  /** @inheritdoc */
+  public clear(): void {
       this._events = [];
     }
 
-    // Recursive divide and conquer to find insert index in already sorted array
-    private insertIndex(time: Time, min: number, max: number): number {
-      const range = max - min;
+  // Recursive divide and conquer to find insert index in already sorted array
+  private insertIndex(time: Time, min: number, max: number): number {
+    const range = max - min;
 
-      if (isNaN(range) || max < min) {
-        return undefined;
+    if (isNaN(range) || max < min) {
+      return undefined;
+    }
+
+    if (range === 0) {
+      return min;
+    }
+
+    let pivot = (Math.random() * range + min) | 0;
+    let timeAtPivot = this._events[pivot].time;
+
+    while (timeAtPivot === time) {
+      pivot++;
+
+      if (pivot >= this._events.length) {
+        return pivot;
       }
 
-      if (range === 0) {
-        return min;
-      }
-
-      let pivot = (Math.random() * range + min) | 0;
-      let timeAtPivot = this._events[pivot].time;
-
-      while (timeAtPivot === time) {
-        pivot++;
-
-        if (pivot >= this._events.length) {
-          return pivot;
-        }
-
-        timeAtPivot = this._events[pivot].time;
-
-        if (timeAtPivot > time) {
-          return pivot;
-        }
-      }
+      timeAtPivot = this._events[pivot].time;
 
       if (timeAtPivot > time) {
-        return this.insertIndex(time, min, pivot);
-      } else {
-        return this.insertIndex(time, pivot + 1, max);
+        return pivot;
       }
     }
 
-    private newRef(): EventRef {
+    if (timeAtPivot > time) {
+      return this.insertIndex(time, min, pivot);
+    } else {
+      return this.insertIndex(time, pivot + 1, max);
+    }
+  }
+
+  private newRef(): EventRef {
       return '' + this.latestRefIdx++;
     }
 }

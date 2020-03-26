@@ -226,7 +226,7 @@ export default class FwdWebRunner implements FwdRunner {
       button.innerText = action;
       button.disabled = true;
       button.onclick = () => {
-        const when = (this._fwd.scheduler.now() + 50) / 1000;
+        const when = this._fwd.scheduler.rtNow();
         this._fwd.schedule(when, this.sketchModule[action]);
       };
 
