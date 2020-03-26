@@ -1,4 +1,4 @@
-export default function audit(action: Function, waitTime: number = 20) {
+export default function audit(action: Function, waitTime: number = 20): any {
   let timeout: any;
 
 	return () => {

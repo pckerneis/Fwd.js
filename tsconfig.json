@@ -11,6 +11,16 @@
       "suppressImplicitAnyIndexErrors": true,
       "esModuleInterop": true
     },
+    "typedocOptions": {
+      "inputFiles": ["./src/ts/fwd"],
+      "mode": "module",
+      "out": "doc",
+      "name": "Fwd API documentation",
+      "includeVersion": false,
+      "excludePrivate": true,
+      "excludeNotExported": true,
+      "exclude": "**/*+(index|.spec|.e2e|.test).ts"
+    },
     "include": [
         "src/ts/**/*"
     ],

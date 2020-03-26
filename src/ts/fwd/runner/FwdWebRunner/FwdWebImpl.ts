@@ -1,10 +1,10 @@
-import { Time, EventRef } from '../../core/EventQueue/EventQueue';
-import { FwdScheduler } from '../../core/FwdScheduler';
-import { Fwd } from '../../core/fwd';
-import FwdWebRunner from './FwdWebRunner';
-import { FwdLogger } from '../../core/FwdLogger';
-import { FwdControls } from '../../control/FwdControl';
 import { FwdAudio } from '../../audio/Audio';
+import { FwdControls } from '../../control/FwdControl';
+import { EventRef, Time } from '../../core/EventQueue/EventQueue';
+import { Fwd } from '../../core/Fwd';
+import { FwdLogger } from '../../core/FwdLogger';
+import { FwdScheduler } from '../../core/FwdScheduler';
+import FwdWebRunner from './FwdWebRunner';
 
 export default class FwdWebImpl implements Fwd {
 

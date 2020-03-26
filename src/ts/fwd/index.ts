@@ -1,1 +1,1 @@
-export { Fwd, fwd } from './core/fwd'
+export { Fwd, fwd } from './core/Fwd'

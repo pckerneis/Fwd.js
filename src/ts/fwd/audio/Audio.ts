@@ -1,6 +1,6 @@
-import { Fwd, fwd } from '../core/fwd';
-import { Time } from '../core/EventQueue/EventQueue';
 import path from 'path';
+import { Time } from '../core/EventQueue/EventQueue';
+import { Fwd, fwd } from '../core/Fwd';
 
 export class FwdAudio {
   private _fwd: Fwd;
@@ -51,7 +51,7 @@ export class FwdAudio {
     return new FwdLFONode(this, frequency, type);
   }
 
-  public sampler(pathToFile: string) {
+  public sampler(pathToFile: string): FwdSamplerNode {
     this.assertInit();
     return new FwdSamplerNode(this, pathToFile);
   }
@@ -104,7 +104,7 @@ export abstract class FwdAudioNode {
 
 //=========================================================================
 
-class FwdAudioParamWrapper extends FwdAudioNode {
+export class FwdAudioParamWrapper extends FwdAudioNode {
   public outputNode: AudioNode = null;
 
   constructor(readonly fwdAudio: FwdAudio, private _param: AudioParam) {
@@ -123,7 +123,7 @@ class FwdAudioParamWrapper extends FwdAudioNode {
 
 //=========================================================================
 
-abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
+export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
 
   private tearedDownCalled: boolean = false;
 
@@ -163,14 +163,14 @@ abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
 
   protected assertIsReady(context: string): void {
     if (this._nativeNode == null) {
-      throw new Error(context + ': this audio node was teared down or unproperly initialized.');
+      throw new Error(context + ': this audio node was teared down or not initialized.');
     }
   }
 }
 
 //=========================================================================
 
-class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
+export class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
   constructor(fwdAudio: FwdAudio, defaultValue: number = 0) {
     super(fwdAudio, fwdAudio.context.createGain());
     this.nativeNode.gain.setValueAtTime(defaultValue, 0);
@@ -185,7 +185,7 @@ class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
 
 //=========================================================================
 
-class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
+export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   
   constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
     super(fwdAudio, fwdAudio.context.createOscillator());
@@ -219,7 +219,7 @@ class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
 
 //===============================================================
 
-class FwdLFONode extends FwdAudioNode {
+export class FwdLFONode extends FwdAudioNode {
   private readonly _output: GainNode;
   private readonly _osc: OscillatorNode;
 
@@ -280,7 +280,7 @@ export class FwdSamplerNode extends FwdAudioNode {
   public get inputNode(): AudioNode { return null; }
   public get outputNode(): AudioNode { return this._output; }
   
-  public play() {
+  public play(): void {
     fwd.schedule(0, () => {
       const source = this._output.context.createBufferSource();
       source.buffer = this._buffer;
@@ -290,7 +290,7 @@ export class FwdSamplerNode extends FwdAudioNode {
     });
   }
 
-  private load() {
+  private load(): void {
     const url = path.resolve('../../data', this.pathToFile);
 
     fetch(url)

@@ -1,13 +1,13 @@
 import hljs from 'highlightjs';
 import Split from 'split.js'
 import { FwdAudio } from "../../audio/Audio";
-import FwdWebImpl from "./FwdWebImpl";
 import { FwdControls, FwdHTMLControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
-import { Fwd, putFwd } from '../../core/fwd';
+import { Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
-import FwdRunner from '../FwdRunner';
 import audit from '../../utils/audit';
+import FwdRunner from '../FwdRunner';
+import FwdWebImpl from "./FwdWebImpl";
 
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';

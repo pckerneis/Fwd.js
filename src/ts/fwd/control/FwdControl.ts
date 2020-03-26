@@ -1,4 +1,4 @@
-import { fwd } from '../core/fwd';
+import { fwd } from '../core/Fwd';
 import audit from '../utils/audit';
 
 interface ValueSource<T> {
