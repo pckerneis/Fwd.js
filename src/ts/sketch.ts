@@ -1,6 +1,6 @@
 import {fwd} from './fwd';
 
-const sample = fwd.audio.sampler('Brushed_bell.wav').connectToMaster();
+let sample: any;
 
 export function playSample() {
   sample.play();
@@ -8,17 +8,18 @@ export function playSample() {
 
 export function init(): void {
   fwd.log('ready');
+  sample = fwd.audio.sampler('Brushed_bell.wav').connectToMaster();
 }
 
 export function kick(): void {
-  fwd.log('kick');
+  fwd.log('kick!');
 
   const osc = fwd.audio.osc(300);
   const gain = fwd.audio.gain();
 
   osc.connect(gain).connectToMaster();
 
-  gain.rampTo(1, 0.008);
+  gain.rampTo(1, 0.01);
   osc.frequency.rampTo(42, 0.03);
 
   fwd.wait(0.1);

@@ -1,6 +1,6 @@
 import hljs from 'highlightjs';
 import Split from 'split.js'
-import { FwdAudio } from "../../audio/Audio";
+import { FwdAudio, FwdAudioListener } from "../../audio/Audio";
 import { FwdControls, FwdHTMLControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../../core/Fwd';
@@ -8,7 +8,9 @@ import { FwdLogger } from '../../core/FwdLogger';
 import audit from '../../utils/audit';
 import FwdRunner from '../FwdRunner';
 import FwdWebImpl from "./FwdWebImpl";
+import { AudioMeter } from './components/AudioMeter';
 
+const containerId = 'container';
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
@@ -25,6 +27,7 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _logger: FwdLogger;
   private readonly _audio: FwdAudio;
   private readonly _controls: FwdControls;
+  private _masterMeter: AudioMeter;
   private _actionButtons: HTMLButtonElement[];
 
   constructor() {
@@ -43,10 +46,11 @@ export default class FwdWebRunner implements FwdRunner {
     };
 
     FwdWebRunner.prepareLayout();
-    FwdWebRunner.loadScriptContent();
-    this.initializeHighlightJS();
+    // FwdWebRunner.loadScriptContent();
+    // this.initializeHighlightJS();
     this.initializeMainControls();
     this.initializeTimeCode();
+    this.prepareMasterMeter();
   }
 
   private static parseNumber(str: string): number {
@@ -82,14 +86,21 @@ export default class FwdWebRunner implements FwdRunner {
   }
   
   private static prepareLayout(): void {
-    Split(['#editor', '#console'], {
-        sizes: [70, 30],
-        minSize: [0, 0],
-        direction: 'vertical',
-        gutterSize: 6,
-        snapOffset: 80,
-      },
-    );
+    Split(['#console'], {
+      sizes: [100],
+      minSize: [0],
+      direction: 'vertical',
+      gutterSize: 6,
+      snapOffset: 80,
+    });
+
+    // Split(['#editor', '#console'], {
+    //   sizes: [70, 30],
+    //   minSize: [0, 0],
+    //   direction: 'vertical',
+    //   gutterSize: 6,
+    //   snapOffset: 80,
+    // });
   }
   
   public get audio(): FwdAudio { return this._audio; }
@@ -156,9 +167,9 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.scheduler.clearEvents();
     this._controls.reset();
 
-    this.entryPoint();
-
     this._audio.start();
+
+    this.entryPoint();
     this._fwd.start();
 
     this.applyMasterValue();
@@ -172,6 +183,19 @@ export default class FwdWebRunner implements FwdRunner {
     if (this._fwd != null) {
       this._fwd.stop();
     }
+  }
+
+  private prepareMasterMeter(): void {
+    this._masterMeter = new AudioMeter();
+
+    this._audio.listeners.push({
+      audioContextStarted: (ctx: AudioContext) => {
+        const container = document.querySelector('#master-meter');
+        container.innerHTML = '';
+        this._masterMeter.audioSource = this._audio.master.nativeNode;
+        container.append(this._masterMeter.htmlElement);
+      }
+    });
   }
 
   private initializeMainControls(): void {

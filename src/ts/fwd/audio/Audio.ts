@@ -2,6 +2,10 @@ import path from 'path';
 import { Time } from '../core/EventQueue/EventQueue';
 import { Fwd, fwd } from '../core/Fwd';
 
+export interface FwdAudioListener {
+  audioContextStarted(context: AudioContext): void;
+}
+
 export class FwdAudio {
   private _fwd: Fwd;
 
@@ -10,6 +14,8 @@ export class FwdAudio {
   private _masterGain: FwdGainNode;
 
   private _startOffset: Time = 0;
+
+  public readonly listeners: FwdAudioListener[] = [];
 
   constructor() {
     this.resetAudioContext();
@@ -62,6 +68,10 @@ export class FwdAudio {
     this._ctx = new AudioContext();
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
+
+    for (const listener of this.listeners) {
+      listener.audioContextStarted(this._ctx);
+    }
   }
 
   private assertInit(): void {
