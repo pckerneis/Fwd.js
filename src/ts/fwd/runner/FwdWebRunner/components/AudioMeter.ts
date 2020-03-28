@@ -1,3 +1,5 @@
+import { gainToDecibels } from '../../../core/utils/decibels';
+
 export class AudioMeter {
   public readonly htmlElement: HTMLElement;
 
@@ -55,6 +57,6 @@ export class AudioMeter {
   }
 
   private static dB(value: number) {
-    return 10 * Math.log10(value);
+    return gainToDecibels(value);
   }
 }

@@ -75,16 +75,6 @@ export default class FwdWebRunner implements FwdRunner {
     ].join(':');
   }
   
-  private static loadScriptContent(): void {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'src/ts/sketch.ts', false);
-    xhr.send();
-  
-    if (xhr.status == 200) {
-      document.getElementById('sketch-code').innerText = xhr.responseText;
-    }
-  }
-  
   private static prepareLayout(): void {
     Split(['#console'], {
       sizes: [100],
@@ -93,14 +83,6 @@ export default class FwdWebRunner implements FwdRunner {
       gutterSize: 6,
       snapOffset: 80,
     });
-
-    // Split(['#editor', '#console'], {
-    //   sizes: [70, 30],
-    //   minSize: [0, 0],
-    //   direction: 'vertical',
-    //   gutterSize: 6,
-    //   snapOffset: 80,
-    // });
   }
   
   public get audio(): FwdAudio { return this._audio; }
@@ -176,7 +158,6 @@ export default class FwdWebRunner implements FwdRunner {
     this.initializeTimeCode();
 
     this._actionButtons.forEach(button => button.disabled = false);
-
   }
 
   private stop(): void {
@@ -213,15 +194,9 @@ export default class FwdWebRunner implements FwdRunner {
     const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
     const masterGain = this._audio.master.nativeNode.gain;
     const now = this._audio.context.currentTime;
-    const v = FwdWebRunner.parseNumber(masterSlider.value) / 100;
+    const value = FwdWebRunner.parseNumber(masterSlider.value) / 100;
     masterGain.cancelAndHoldAtTime(now);
-    masterGain.linearRampToValueAtTime(v, now + 0.01);
-  }
-  
-  private initializeHighlightJS(): void {
-    document.querySelectorAll('pre code').forEach((block) => {
-      hljs.highlightBlock(block);
-    });
+    masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
 
   private initializeTimeCode(): void {
