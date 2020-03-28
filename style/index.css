@@ -217,10 +217,7 @@ button:hover:not([disabled]) {
 meter {
   display: block;
   margin: auto;
-  height: 15px;
-  background: none;
-  background: rgba(0, 0, 0, 0.096);
-  box-shadow: none;
+  height: 13px;
 }
 
 meter::-webkit-meter-bar {
@@ -231,14 +228,12 @@ meter::-webkit-meter-bar {
 
 meter::-webkit-meter-optimum-value {
   box-shadow: 0 5px 5px -5px #999 inset;
-  background-image: linear-gradient( 90deg, #69b2cf 0%, #f28f68 100%);
+  background-image: linear-gradient(90deg, #69b2cf 0%, #f28f68 100%);
   background-size: 100% 100%;
 }
 
-meter::-moz-meter-bar {
-  box-shadow: 0 5px 5px -5px #999 inset;
-  background-image: linear-gradient( 90deg, #69b2cf 0%, #f28f68 100%);
-  background-size: 100% 100%;
+.clipping meter::-webkit-meter-optimum-value {
+  background-image: linear-gradient(90deg, #dd4620 0%, #dd1515 100%);
 }
 
 /*====================================*/

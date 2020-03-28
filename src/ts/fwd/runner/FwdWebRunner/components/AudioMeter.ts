@@ -1,9 +1,12 @@
 import { gainToDecibels } from '../../../core/utils/decibels';
+import debounce from '../../../utils/debounce';
 
 export class AudioMeter {
   public readonly htmlElement: HTMLElement;
 
   private _averageMeter: HTMLMeterElement;
+
+  private _releaseClipDebounced: any;
 
   public set audioSource(source: GainNode) {
     if (this._analyser != null) {
@@ -43,20 +46,38 @@ export class AudioMeter {
     const sampleBuffer = new Float32Array(this._analyser.fftSize);
     this._analyser.getFloatTimeDomainData(sampleBuffer);
 
+    let clipping = false;
+
     // Compute average
     let sumOfSquares = 0;
-    
+        
     for (let i = 0; i < sampleBuffer.length; i++) {
       sumOfSquares += sampleBuffer[i] ** 2;
+      clipping = clipping || sampleBuffer[i] > 1;
     }
 
-    const average = AudioMeter.dB(sumOfSquares / sampleBuffer.length);
+    const average = gainToDecibels(sumOfSquares / sampleBuffer.length);
     this._averageMeter.value = isFinite(average) ? average : this._averageMeter.min;
+
+    if (clipping) {
+      this.clip();
+    }
 
     requestAnimationFrame(() => this.update());
   }
 
-  private static dB(value: number) {
-    return gainToDecibels(value);
+  private clip() {
+    const releaseTime = 300;
+    const cssClass = 'clipping';
+
+    this.htmlElement.classList.add(cssClass);
+
+    if (this._releaseClipDebounced == null) {
+      this._releaseClipDebounced = debounce(() => {
+        this.htmlElement.classList.remove(cssClass);
+      }, releaseTime);
+    }
+
+    this._releaseClipDebounced();
   }
 }

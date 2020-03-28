@@ -168,13 +168,12 @@ export default class FwdWebRunner implements FwdRunner {
 
   private prepareMasterMeter(): void {
     this._masterMeter = new AudioMeter();
-
+    const container = document.querySelector('#master-meter');
+    container.append(this._masterMeter.htmlElement);
+    
     this._audio.listeners.push({
       audioContextStarted: (ctx: AudioContext) => {
-        const container = document.querySelector('#master-meter');
-        container.innerHTML = '';
         this._masterMeter.audioSource = this._audio.master.nativeNode;
-        container.append(this._masterMeter.htmlElement);
       }
     });
   }

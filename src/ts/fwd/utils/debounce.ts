@@ -1,4 +1,4 @@
-export default function debounce(action: Function, waitTime: number = 20): any {
+export default function debounce(action: Function, ms: number = 20): any {
   let timeout: any;
 
 	return () => {
@@ -11,6 +11,6 @@ export default function debounce(action: Function, waitTime: number = 20): any {
     };
     
 		clearTimeout(timeout);
-		timeout = setTimeout(doIt, waitTime);
+		timeout = setTimeout(doIt, ms);
 	};
 }
