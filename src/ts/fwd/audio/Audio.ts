@@ -62,6 +62,11 @@ export class FwdAudio {
     return new FwdSamplerNode(this, pathToFile);
   }
 
+  public noise(): FwdNoiseNode {
+    this.assertInit();
+    return new FwdNoiseNode(this);
+  }
+
   //=========================================================================
 
   private resetAudioContext(): void {
@@ -306,5 +311,35 @@ export class FwdSamplerNode extends FwdAudioNode {
       .then(response => response.arrayBuffer())
       .then(arrayBuffer => this.fwdAudio.context.decodeAudioData(arrayBuffer))
       .then(audioBuffer => this._buffer = audioBuffer);
+  }
+}
+
+//===============================================================
+
+export class FwdNoiseNode extends FwdAudioNode {
+  private readonly _output: AudioBufferSourceNode;
+
+  constructor(public readonly fwdAudio: FwdAudio) {
+    super();
+
+    this._output = fwdAudio.context.createBufferSource();
+    this._output.loop = true;
+    this._output.buffer = this.generateWhiteNoise();
+    this._output.start(0);
+  }
+
+  public get inputNode(): AudioNode { return null; }
+  public get outputNode(): AudioNode { return this._output; }
+
+  private generateWhiteNoise() {
+    const sampleRate = this.fwdAudio.context.sampleRate;
+    const buffer = this.fwdAudio.context.createBuffer(1, 2 * sampleRate, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < 2 * sampleRate; ++i) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    
+    return buffer;
   }
 }
