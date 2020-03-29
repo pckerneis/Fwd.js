@@ -12,16 +12,27 @@ export class ConfigurationPanel {
     title.innerText = 'Settings';
     this.htmlElement.append(title);
 
-    // Audio
+    this.buildAudioSection();
+    this.buildMIDISection();
+  }
+
+  private buildAudioSection() {
     const audioTitle = document.createElement('h3');
     audioTitle.innerText = 'Audio';
     this.htmlElement.append(audioTitle);
 
     const testSoundButton = document.createElement('button');
-    testSoundButton.innerText = 'Test';
+    testSoundButton.innerText = 'Test audio';
     this.htmlElement.append(testSoundButton);
 
-    // MIDI
+    testSoundButton.onclick = () => {
+      testSoundButton.disabled = true;
+      this.testBeep();
+      setTimeout(() => testSoundButton.disabled = false, 1500);
+    };
+  }
+
+  private buildMIDISection() {
     const midiTitle = document.createElement('h3');
     midiTitle.innerText = 'MIDI';
     this.htmlElement.append(midiTitle);
@@ -32,11 +43,22 @@ export class ConfigurationPanel {
 
         const buildRow = (type: string, name: string) => {
           const row = document.createElement('div');
+
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.checked = true;
+
           const text = `${type}: ${name}`;
-          const span = document.createElement('div');
-          span.innerText = text;
+          const label = document.createElement('label');
+          label.innerText = text;
+          label.prepend(input);
+
           row.classList.add('device-row');
-          row.append(span);
+
+          const aliasInput = document.createElement('input');
+          aliasInput.classList.add('alias-input');
+
+          row.append(label, aliasInput);
           this.htmlElement.append(row);
         };
 
@@ -50,18 +72,62 @@ export class ConfigurationPanel {
       },
     );
   }
+
+  private testBeep() {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain).connect(ctx.destination);
+
+    const now = ctx.currentTime;
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.5, now + 0.5);
+    gain.gain.linearRampToValueAtTime(0, now + 1);
+
+    setTimeout(() => {
+      osc.stop();
+      osc.disconnect();
+      gain.disconnect();
+    }, 2000);
+
+    osc.start(now);
+  }
 }
 
 injectStyle('ConfigurationPanel', `
 .configuration-panel {
   min-width: 300px;
   min-height: 300px;
+  max-height: 90%;
   padding: 2px 22px;
   display: flex;
   flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .device-row {
-  padding: 3px;
+  margin: 1px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: no-wrap;
+}
+
+.device-row label {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  background: none;
+  user-select: none;
+}
+
+.alias-input {
+  width: 100px;
+  margin-left: 12px;
+  background: none;
+  border: 1px solid #80808070;
+  box-shadow: 2px 2px 4px 0 #0000000f inset;
+  padding: 2px;
+  font-family: monospace;
 }
 `);
