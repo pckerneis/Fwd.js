@@ -3,7 +3,9 @@ import debounce from '../../../utils/debounce';
 import { Popover } from './Popover';
 
 export interface BindableControl {
+  // bindableControlId: number;
   controlElement: HTMLElement;
+  active: boolean;
 
   triggerKeyAction(sourceBinding: KeyBinding): void;
   setKeyBindingMode(bindingMode: boolean): void;
@@ -43,11 +45,11 @@ export class ControlBindingManager {
       this._popover.sourceElement = control.controlElement;
       this._popover.setInnerHTML(this.getKeyBindingsAsString(keyBindingsForControl));
       this._popover.show();
+      
       this._popover.onclose = () => {
         control.setKeyBindingMode(false);
+        this._controlBeingEdited = null;
       }
-    } else {
-      this._popover.hide();
     }
   }
 
@@ -96,7 +98,9 @@ export class ControlBindingManager {
   private dispatchKeyEvent(code: string): void {
     const bindings = this._keyBindings.filter((binding) => binding.code === code);
     bindings.forEach((binding) => {
-      binding.control.triggerKeyAction(binding);
+      if (binding.control.active) {
+        binding.control.triggerKeyAction(binding);
+      }
     });
   }
 }
