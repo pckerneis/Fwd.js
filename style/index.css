@@ -96,7 +96,7 @@ button:hover:not([disabled]) {
 /*             Console
 /*====================================*/
 
-#console {
+.web-console {
   color: rgb(0, 0, 0);
   background: rgba(0, 0, 0, 0.02);
   position: relative;
@@ -108,21 +108,26 @@ button:hover:not([disabled]) {
   box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
 }
 
-#console pre {
+.web-console pre {
   flex-grow: 1;
   overflow: auto;
   margin: 0;
 }
 
-#console code {
+.web-console code {
   flex-grow: 1;
   display: flex;
   padding: 3px 10px;
 }
 
-#console .menubar {
+.web-console .menubar {
   background: rgba(0, 0, 0, 0.02);
   border-top: #00000010 1px solid;
+}
+
+.web-console .menubar button {
+  padding: 2px 4px;
+  margin: 4px 8px;
 }
 
 /*====================================*/

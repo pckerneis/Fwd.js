@@ -7,17 +7,14 @@ import audit from '../../utils/audit';
 import FwdRunner from '../FwdRunner';
 import FwdWebImpl from "./FwdWebImpl";
 import { AudioMeter } from './components/AudioMeter';
+import { formatTime } from '../../core/utils/time';
+import { parseNumber } from '../../core/utils/numbers';
+import { FwdWebConsole } from './components/Console';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
-
-const consoleViewportId = 'console-viewport';
-const consoleCodeId = 'console-code';
-const clearConsoleId = 'clear-console';
-const autoScrollConsoleId = 'auto-scroll-console';
-
 const timeCodeId = 'time-code';
 const actionContainerId = 'actions';
 
@@ -52,28 +49,6 @@ export default class FwdWebRunner implements FwdRunner {
     this.initializeTimeCode();
     this.prepareMasterMeter();
   }
-
-  private static parseNumber(str: string): number {
-    return str == null ? 0 :
-      (typeof str === 'number' ? str :
-        (typeof str === 'string' ? Number.parseFloat(str) : 0));
-  }
-  
-  private static formatTime(t: Time): string {
-    if (t === null) {
-      return null;
-    }
-
-    const minutes = Math.floor(t / 60);
-    const seconds = Math.floor(t % 60);
-    const ms = Math.floor((t * 1000) % 1000);
-  
-    return [
-      minutes.toString().padStart(2, '0'),
-      seconds.toString().padStart(2, '0'),
-      ms.toString().padStart(3, '0').substr(0, 3),
-    ].join(':');
-  }
   
   public get audio(): FwdAudio { return this._audio; }
   public get controls(): FwdControls { return this._controls; }
@@ -86,63 +61,35 @@ export default class FwdWebRunner implements FwdRunner {
   //==================================================================
   
   private prepareLogger(): FwdLogger {
-    const consoleViewport = document.getElementById(consoleViewportId);
-    const consoleCode = document.getElementById(consoleCodeId);
-    const autoScrollInput = document.getElementById(autoScrollConsoleId) as HTMLInputElement;
-
-
-
-    if (!consoleCode || !consoleViewport) {
-      return { log: console.log, err: console.error };
-    }
-
-    const internalLog = (timeStr: string, ...messages: any[]) => {
-      if (timeStr != null) {
-        messages = [timeStr, ...messages];
-      }
-
-      consoleCode.innerHTML += messages.join(' ');
-      consoleCode.innerHTML += '\n';
-      
-      const autoScroll = autoScrollInput.checked;
-
-      if (autoScroll) {
-        consoleViewport.scrollTop = consoleViewport.scrollHeight;
-      }    
-    };
-
-    
-    const clearButton = document.getElementById(clearConsoleId);
-    clearButton.onclick = () => {
-      consoleCode.innerHTML = '';
-    };
+    const webConsole: FwdWebConsole = new FwdWebConsole();
+    document.getElementById(containerId).append(webConsole.htmlElement);
 
     return {
       log: (time: Time, ...messages: any[]) => {
-        const timeStr = FwdWebRunner.formatTime(time);
-        internalLog(timeStr, ...messages);
+        webConsole.print(time, messages);
         
-        if (timeStr === null) {
+        if (time === null) {
           console.log(...messages);
         } else {
+          const timeStr = formatTime(time);
           console.log(timeStr, ...messages);
         }
       },
       
       err: (time: Time, ...messages: any[]) => {
-        const timeStr = FwdWebRunner.formatTime(time);
-        internalLog(timeStr, ...messages);
+        webConsole.print(time, messages);
         
-        if (timeStr === null) {
+        if (time === null) {
           console.error(...messages);
         } else {
+          const timeStr = formatTime(time);
           console.error(timeStr, ...messages);
         }
       },
     };
   }
 
-   private start(): void {
+  private start(): void {
     (document.getElementById(startButtonId) as HTMLButtonElement).disabled = true;
     (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = false;
 
@@ -193,7 +140,7 @@ export default class FwdWebRunner implements FwdRunner {
     const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
     const masterGain = this._audio.master.nativeNode.gain;
     const now = this._audio.context.currentTime;
-    const value = FwdWebRunner.parseNumber(masterSlider.value) / 100;
+    const value = parseNumber(masterSlider.value) / 100;
     masterGain.cancelAndHoldAtTime(now);
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
@@ -203,7 +150,7 @@ export default class FwdWebRunner implements FwdRunner {
 
     const update = () => {
       const t = this._fwd.scheduler.rtNow();
-      timeCodeElem.innerText = FwdWebRunner.formatTime(t);
+      timeCodeElem.innerText = formatTime(t);
 
       if (this._fwd.scheduler.state !== 'stopped') {
         requestAnimationFrame(update);
