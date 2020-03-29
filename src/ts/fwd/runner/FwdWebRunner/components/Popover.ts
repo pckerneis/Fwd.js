@@ -12,6 +12,9 @@ function isInViewport(element: HTMLElement) {
 type PopoverPosition = 'top' | 'left' | 'right' | 'bottom';
 
 export class Popover {
+
+  public onclose: Function;
+
   private readonly popover: HTMLDivElement;
 
   private readonly className = 'popover';
@@ -42,6 +45,7 @@ export class Popover {
       return;
     }
 
+    this.popover.addEventListener('click', this.handleDocumentEvent);
     document.addEventListener('click', this.handleDocumentEvent);
     window.addEventListener('scroll', this.handleWindowEvent);
     window.addEventListener('resize', this.handleWindowEvent);
@@ -97,9 +101,14 @@ export class Popover {
   hide() {
     this.popover.remove();
 
+    this.popover.removeEventListener('click', this.handleDocumentEvent);
     document.removeEventListener('click', this.handleDocumentEvent);
     window.removeEventListener('scroll', this.handleWindowEvent);
     window.removeEventListener('resize', this.handleWindowEvent);
+
+    if (this.onclose != null) {
+      this.onclose();
+    }
   }
 
   toggle() {
@@ -118,15 +127,20 @@ export class Popover {
     }
   }
 
-  private handleWindowEvent() {
+  private handleWindowEvent = (evt: MouseEvent) => {
     if (this.isVisible) {
       this.show();
     }
   };
 
-  private handleDocumentEvent(evt: MouseEvent) {
+  private handleDocumentEvent = (evt: MouseEvent) => {
     if (this.isVisible && evt.target !== this.sourceElement && evt.target !== this.popover) {
       this.hide();
+    }
+
+    if (evt.target === this.popover) {
+      evt.preventDefault();
+      evt.stopPropagation();
     }
   }
 }

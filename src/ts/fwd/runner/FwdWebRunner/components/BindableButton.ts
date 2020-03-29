@@ -43,6 +43,9 @@ export class ControlBindingManager {
       this._popover.sourceElement = control.controlElement;
       this._popover.setInnerHTML(this.getKeyBindingsAsString(keyBindingsForControl));
       this._popover.show();
+      this._popover.onclose = () => {
+        control.setKeyBindingMode(false);
+      }
     } else {
       this._popover.hide();
     }
@@ -133,10 +136,6 @@ export class BindableButton implements BindableControl {
 
     this._button.oncontextmenu = (evt: MouseEvent) => {
       controlBindingManager.setControlBeingEdited(this);
-    }
-
-    this._button.onblur = (evt: MouseEvent) => {
-      controlBindingManager.setControlBeingEdited(null);
     }
 
     this._indicator = document.createElement('span');
