@@ -93,6 +93,7 @@ button:hover:not([disabled]) {
 #settings-button {
   padding: 10px;
   opacity: 0.5;
+  margin-right: 8px;
 }
 
 #settings-button:hover {

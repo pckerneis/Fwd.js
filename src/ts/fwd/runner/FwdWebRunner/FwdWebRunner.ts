@@ -12,6 +12,8 @@ import { formatTime } from '../../core/utils/time';
 import { parseNumber } from '../../core/utils/numbers';
 import { FwdWebConsole } from './components/Console';
 import { BindableButton } from './components/BindableButton';
+import { Overlay } from './components/Overlay';
+import { ConfigurationPanel } from './components/ConfigurationPanel';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -19,6 +21,7 @@ const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
 const timeCodeId = 'time-code';
 const actionContainerId = 'actions';
+const settingsButtonId = 'settings-button';
 
 export default class FwdWebRunner implements FwdRunner {
 
@@ -31,13 +34,16 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _controls: FwdControls;
   private _masterMeter: AudioMeter;
   private _actionButtons: BindableButton[];
+  private _settingsOverlay: Overlay;
+  private _configurationPanel: ConfigurationPanel;
 
   constructor() {
     this._controls = new FwdHTMLControls();
     document.getElementById(containerId).append(this._controls.htmlElement);
-    this._logger = this.prepareLogger();
-    this._audio = new FwdAudio();
 
+    this._logger = this.prepareLogger();
+
+    this._audio = new FwdAudio();
     this._fwd = new FwdWebImpl(this);
     this._audio.initializeModule(this._fwd);
     putFwd(this._fwd);
@@ -51,6 +57,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.initializeMainControls();
     this.initializeTimeCode();
     this.prepareMasterMeter();
+    this.prepareSettingsMenu();
   }
   
   public get audio(): FwdAudio { return this._audio; }
@@ -179,6 +186,16 @@ export default class FwdWebRunner implements FwdRunner {
 
       container.append(button.htmlElement);
       this._actionButtons.push(button);
+    });
+  }
+
+  private prepareSettingsMenu(): void {
+    this._settingsOverlay = new Overlay();
+    this._configurationPanel = new ConfigurationPanel();
+    this._settingsOverlay.container.append(this._configurationPanel.htmlElement);
+
+    document.getElementById(settingsButtonId).addEventListener('click', () => {
+      this._settingsOverlay.show();
     });
   }
 }
