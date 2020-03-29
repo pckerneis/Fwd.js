@@ -29,19 +29,29 @@ button:hover:not([disabled]) {
   flex-wrap: nowrap;
 }
 
-/*====================================*/
-/*              Layout
-/*====================================*/
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
 
-#container {
+.full-page {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
+}
+
+/*====================================*/
+/*              Layout
+/*====================================*/
+
+#container {
   padding: 0 20px 5px 20px;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 }
 
 /* top */
@@ -59,22 +69,10 @@ button:hover:not([disabled]) {
   font-size: 16px;
 }
 
-#master-slider {
-  width: 100px;
-}
-
 .buttons {
   display: flex;
   justify-content: center;
   padding: 8px 0;
-}
-
-.top-row img {
-  padding: 7px 8px;
-  opacity: 0.4;
-  width: auto;
-  height: 15px;
-  max-height: 18px;
 }
 
 .time-code-container {
@@ -92,6 +90,20 @@ button:hover:not([disabled]) {
   color: rgb(43, 43, 43);
 }
 
+#settings-button {
+  padding: 10px;
+  opacity: 0.5;
+}
+
+#settings-button:hover {
+  padding: 10px;
+  opacity: 0.77;
+}
+
+#settings-button img {
+  width: 30px;
+}
+
 /*====================================*/
 /*             Actions
 /*====================================*/
@@ -102,12 +114,32 @@ button:hover:not([disabled]) {
 }
 
 /*====================================*/
-/*          Master meter
+/*          Master section
 /*====================================*/
+
+.master-section {
+  margin-left: auto;
+  margin-right: 20px;
+  margin-bottom: 6px;
+  padding: 4px 0;
+}
+
+#master-slider {
+  width: 100px;
+  margin: 0 12px;
+}
 
 #master-meter {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+}
+
+#master-meter meter {
+  width: 50px;
+}
+
+.master-label {
   justify-content: center;
 }
 
