@@ -45,7 +45,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.scheduler.onEnded = () => {
       (document.getElementById(startButtonId) as HTMLButtonElement).disabled = false;
       (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = true;
-      this._actionButtons.forEach(button => button.disabled = true);
+      this._actionButtons.forEach(button => button.active = false);
     };
 
     this.initializeMainControls();
@@ -107,7 +107,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.applyMasterValue();
     this.initializeTimeCode();
 
-    this._actionButtons.forEach(button => button.disabled = false);
+    this._actionButtons.forEach(button => button.active = true);
   }
 
   private stop(): void {
@@ -171,7 +171,7 @@ export default class FwdWebRunner implements FwdRunner {
     
     actions.forEach((action) => {
       const button = new BindableButton(action);
-      button.disabled = true;
+      button.active = false;
       button.action = () => {
         const when = this._fwd.scheduler.rtNow();
         this._fwd.schedule(when, this.sketchModule[action]);

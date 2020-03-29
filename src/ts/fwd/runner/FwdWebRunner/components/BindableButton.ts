@@ -111,13 +111,15 @@ export class BindableButton implements BindableControl {
 
   private _releaseBlinkDebounced: Function;
 
+  private _active = true;
+
   constructor(label: string) {
     this.htmlElement = this._button = document.createElement('button');
     this._button.classList.add('bindable-button');
     this.text = label;
 
     this._button.onclick = () => {
-      if (this.action != null) {
+      if (this._active && this.action != null) {
         this.action();
       }
     }
@@ -142,6 +144,20 @@ export class BindableButton implements BindableControl {
     this._button.append(this._indicator);
   }
 
+  set active(active: boolean) {
+    if (active) {
+      this._button.classList.add('active');
+    } else {
+      this._button.classList.remove('active');
+    }
+
+    this._active = active;
+  }
+
+  get active(): boolean {
+    return this._active;
+  }
+
   public get controlElement(): HTMLElement { return this.htmlElement; }
 
   public get text(): string { return this._button.innerText; }
@@ -151,8 +167,10 @@ export class BindableButton implements BindableControl {
   public set disabled(disabled: boolean) { this._button.disabled = disabled; }
   
   public triggerKeyAction(sourceBinding: KeyBinding) {
-    this.blink();
-    this.action();
+    if (this._active) {
+      this.blink();
+      this.action();
+    }
   }
 
   setKeyBindings(bindings: KeyBinding[]) {
@@ -205,16 +223,30 @@ injectStyle(BindableButton.name, `
   .indicator.bound {
     background: #69b2cfa1;
   }
+  
+  button.bindable-button:not(.active):focus {
+    outline: none;
+  }
 
-  .bindable-button {
+  button.bindable-button,
+  button.bindable-button:hover {
     display: flex;
     padding-right: 7px;
-    margin: 1px 3px;
+
+    color: grey;
+    border-color: #00000030;
+  }
+
+  button.bindable-button.active {
+    border-color: #00000050;
+    color: black;
+  }
+
+  button.bindable-button.active:hover {
+    border-color: #00000088;
   }
 
   .bindable-button.binding {
-    border: 2px solid #69b2cf;
     background: #69b2cf61;
-    margin: 0 2px;
   }
 `);
