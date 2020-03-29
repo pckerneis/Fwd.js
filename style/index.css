@@ -242,3 +242,43 @@ input[type=range]:focus::-ms-fill-lower {
 input[type=range]:focus::-ms-fill-upper {
   background: rgba(13, 13, 13, 0.07);
 }
+
+/* scrollbar */
+/* http://webkit-scroll-gen.sourceforge.net/ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-button {
+  width: 0px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00000018;
+  border: none;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0000002d;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #00000042;
+}
+
+::-webkit-scrollbar-track {
+  background: #00000000;
+  border: none;
+}
+
+::-webkit-scrollbar-track:hover {
+  background: #0000000c;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
