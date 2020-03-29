@@ -7,7 +7,7 @@ export class BindableButton {
 
   private _button: HTMLButtonElement;
 
-  private _indicator: HTMLDivElement;
+  private _indicator: HTMLSpanElement;
 
   constructor(label: string) {
     this.htmlElement = this._button = document.createElement('button');
@@ -20,9 +20,9 @@ export class BindableButton {
       }
     }
 
-    this._indicator = document.createElement('div');
+    this._indicator = document.createElement('span');
     this._indicator.classList.add('indicator');
-    this._indicator.textContent = 'H';
+    // this._indicator.textContent = 'H';
     this._button.append(this._indicator);
   }
 
@@ -35,12 +35,15 @@ export class BindableButton {
 
 injectStyle(BindableButton.name, `
   .indicator {
-    color: blue;
-    background: red;
-    width: 5px;
+    background: rgba(0, 0, 0, 0.3);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin: auto 0 auto 7px;
   }
 
   .bindable-button {
     display: flex;
+    padding-right: 7px;
   }
 `);

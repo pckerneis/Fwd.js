@@ -1,5 +1,6 @@
 import { gainToDecibels } from '../../../core/utils/decibels';
 import debounce from '../../../utils/debounce';
+import { injectStyle } from '../StyleInjector';
 
 export class AudioMeter {
   public readonly htmlElement: HTMLElement;
@@ -81,3 +82,27 @@ export class AudioMeter {
     this._releaseClipDebounced();
   }
 }
+
+injectStyle('AudioMeter', `
+meter {
+  display: block;
+  margin: auto;
+  height: 13px;
+}
+
+meter::-webkit-meter-bar {
+  background: none; /* Important to get rid of default background. */
+  background-color: whiteSmoke;
+  box-shadow: 0 5px 5px -5px #333 inset;
+}
+
+meter::-webkit-meter-optimum-value {
+  box-shadow: 0 5px 5px -5px #999 inset;
+  background-image: linear-gradient(90deg, #69b2cf 0%, #f28f68 100%);
+  background-size: 100% 100%;
+}
+
+.clipping meter::-webkit-meter-optimum-value {
+  background-image: linear-gradient(90deg, #dd4620 0%, #dd1515 100%);
+}
+`);

@@ -1,5 +1,6 @@
 import { Time } from '../../../core/EventQueue/EventQueue';
 import { formatTime } from '../../../core/utils/time';
+import { injectStyle } from '../StyleInjector';
 
 export class FwdWebConsole {
   public readonly htmlElement: HTMLDivElement;
@@ -74,3 +75,39 @@ export class FwdWebConsole {
     return div;
   }
 }
+
+injectStyle('WebConsole', `
+.web-console {
+  color: rgb(0, 0, 0);
+  background: rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin: 0;
+  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
+}
+
+.web-console pre {
+  flex-grow: 1;
+  overflow: auto;
+  margin: 0;
+}
+
+.web-console code {
+  flex-grow: 1;
+  display: flex;
+  padding: 3px 10px;
+}
+
+.web-console .menubar {
+  background: rgba(0, 0, 0, 0.02);
+  border-top: #00000010 1px solid;
+}
+
+.web-console .menubar button {
+  padding: 2px 4px;
+  margin: 4px 8px;
+}
+`);

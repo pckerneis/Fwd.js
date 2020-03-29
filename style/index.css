@@ -93,109 +93,12 @@ button:hover:not([disabled]) {
 }
 
 /*====================================*/
-/*             Console
-/*====================================*/
-
-.web-console {
-  color: rgb(0, 0, 0);
-  background: rgba(0, 0, 0, 0.02);
-  position: relative;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  margin: 0;
-  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
-}
-
-.web-console pre {
-  flex-grow: 1;
-  overflow: auto;
-  margin: 0;
-}
-
-.web-console code {
-  flex-grow: 1;
-  display: flex;
-  padding: 3px 10px;
-}
-
-.web-console .menubar {
-  background: rgba(0, 0, 0, 0.02);
-  border-top: #00000010 1px solid;
-}
-
-.web-console .menubar button {
-  padding: 2px 4px;
-  margin: 4px 8px;
-}
-
-/*====================================*/
 /*             Actions
 /*====================================*/
 
 #actions {
   display: flex;
   justify-content: center;
-}
-
-
-/*====================================*/
-/*             Controls
-/*====================================*/
-
-#controls {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  padding: 5px 8px;
-  margin-bottom: 6px;
-  margin: auto;
-  width: 80%;
-  min-width: 120px;
-  max-width: 500px;
-}
-
-#controls > * {
-  padding: 2px 5px;
-}
-
-#controls .slider {
-  max-width: 300px;
-}
-
-.slider-row {
-  display: flex;
-  grid-template-columns: 1fr 2fr;
-  flex-wrap: wrap;
-}
-
-.slider-row label {
-  margin: 4px 10px;
-  width: 30%;
-  min-width: 80px;
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.slider-row .slider {
-  flex-grow: 1;
-}
-
-.slider-control {
-  flex-grow: 1;
-  display: flex;
-}
-
-.slider-textbox {
-  width: 65px;
-  padding: 4px 5px;
-  margin-left: 12px;
-  background: #00000005;
-  box-shadow: 1px 1px 4px #0000002c inset;
-  border: none;
-  border-radius: 3px;
 }
 
 /*====================================*/
@@ -208,37 +111,13 @@ button:hover:not([disabled]) {
   justify-content: center;
 }
 
-meter {
-  display: block;
-  margin: auto;
-  height: 13px;
-}
-
-meter::-webkit-meter-bar {
-  background: none; /* Important to get rid of default background. */
-  background-color: whiteSmoke;
-  box-shadow: 0 5px 5px -5px #333 inset;
-}
-
-meter::-webkit-meter-optimum-value {
-  box-shadow: 0 5px 5px -5px #999 inset;
-  background-image: linear-gradient(90deg, #69b2cf 0%, #f28f68 100%);
-  background-size: 100% 100%;
-}
-
-.clipping meter::-webkit-meter-optimum-value {
-  background-image: linear-gradient(90deg, #dd4620 0%, #dd1515 100%);
-}
-
 /*====================================*/
 /*              Other
 /*====================================*/
 
-/* highlight.js */
-.hljs{display:block;overflow-x:auto;padding:.5em;background:#F0F0F0}.hljs,.hljs-subst{color:#444}.hljs-comment{color:#888888}.hljs-keyword,.hljs-attribute,.hljs-selector-tag,.hljs-meta-keyword,.hljs-doctag,.hljs-name{font-weight:bold}.hljs-type,.hljs-string,.hljs-number,.hljs-selector-id,.hljs-selector-class,.hljs-quote,.hljs-template-tag,.hljs-deletion{color:#880000}.hljs-title,.hljs-section{color:#880000;font-weight:bold}.hljs-regexp,.hljs-symbol,.hljs-variable,.hljs-template-variable,.hljs-link,.hljs-selector-attr,.hljs-selector-pseudo{color:#BC6060}.hljs-literal{color:#78A960}.hljs-built_in,.hljs-bullet,.hljs-code,.hljs-addition{color:#397300}.hljs-meta{color:#1f7199}.hljs-meta-string{color:#4d99bf}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
-
 /* sliders */
 /* http://danielstern.ca/range.css/#/ */
+
 input[type=range] {
   -webkit-appearance: none;
   margin: 4.6px 0;

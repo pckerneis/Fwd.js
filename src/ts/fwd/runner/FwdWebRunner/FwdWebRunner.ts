@@ -1,5 +1,6 @@
 import { FwdAudio } from "../../audio/Audio";
-import { FwdControls, FwdHTMLControls } from '../../control/FwdControl';
+import { FwdControls } from '../../control/FwdControl';
+import { FwdHTMLControls } from '../../control/FwdHtmlControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
@@ -32,8 +33,9 @@ export default class FwdWebRunner implements FwdRunner {
   private _actionButtons: BindableButton[];
 
   constructor() {
-    this._logger = this.prepareLogger();
     this._controls = new FwdHTMLControls();
+    document.getElementById(containerId).append(this._controls.htmlElement);
+    this._logger = this.prepareLogger();
     this._audio = new FwdAudio();
 
     this._fwd = new FwdWebImpl(this);

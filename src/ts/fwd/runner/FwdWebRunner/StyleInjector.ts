@@ -1,34 +1,34 @@
 
-const injectedStyles: { [key: string]: string } =  {};
+type StyleMap = { [key: string]: string };
 
-const preloadStyle: string[] = [];
+const injectedStyles: StyleMap =  {};
+const preloadStyle: StyleMap = {};
 
 let dynamicStyleContainer: HTMLStyleElement;
-
 let documentLoaded = false;
 
 export function injectStyle(id: string, css: string) {
   if (injectedStyles[id] == null) {
     if(documentLoaded) {
-      doInject(css);
+      doInject(id, css);
     } else {
-      preloadStyle.push(css);
+      preloadStyle[id] = css;
     }
+
     injectedStyles[id] = css;
   }
 }
 
-function doInject(css: string) {
+function doInject(id: string, css: string) {
   if (dynamicStyleContainer == null) {
     dynamicStyleContainer = document.createElement('style');
     document.body.append(dynamicStyleContainer);
   }
 
+  dynamicStyleContainer.innerHTML += (`/* ${id} */\n`);
   dynamicStyleContainer.innerHTML += css;
-
-  console.log('did inject')
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  preloadStyle.forEach(doInject);
+  Object.keys(preloadStyle).forEach((key) => doInject(key, preloadStyle[key]));
 });
