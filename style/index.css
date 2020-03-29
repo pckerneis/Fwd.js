@@ -43,6 +43,8 @@ button:hover:not([disabled]) {
   left: 0;
   right: 0;
   display: flex;
+  min-width: 400px;
+  min-height: 300px;
 }
 
 /*====================================*/
@@ -54,7 +56,8 @@ button:hover:not([disabled]) {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  height: 30px; /* container must be given a size otherwise it will grow with its content */
+  /* container must be given a size otherwise it will grow with its content */
+  min-height: 300px;
 }
 
 /* top */
@@ -114,36 +117,6 @@ button:hover:not([disabled]) {
 
 #actions {
   display: flex;
-  justify-content: center;
-}
-
-/*====================================*/
-/*          Master section
-/*====================================*/
-
-.master-section {
-  margin-left: auto;
-  margin-right: 20px;
-  margin-bottom: 6px;
-  padding: 4px 0;
-}
-
-#master-slider {
-  width: 100px;
-  margin: 0 12px;
-}
-
-#master-meter {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#master-meter meter {
-  width: 50px;
-}
-
-.master-label {
   justify-content: center;
 }
 

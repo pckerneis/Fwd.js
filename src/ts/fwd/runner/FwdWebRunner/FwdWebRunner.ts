@@ -14,6 +14,7 @@ import { FwdWebConsole } from './components/Console';
 import { BindableButton } from './components/BindableButton';
 import { Overlay } from './components/Overlay';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
+import { MasterSlider } from './components/MasterSlider';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -56,8 +57,8 @@ export default class FwdWebRunner implements FwdRunner {
 
     this.initializeMainControls();
     this.initializeTimeCode();
-    this.prepareMasterMeter();
     this.prepareSettingsMenu();
+    this.prepareMasterSlider();
   }
   
   public get audio(): FwdAudio { return this._audio; }
@@ -123,27 +124,24 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  private prepareMasterMeter(): void {
-    this._masterMeter = new AudioMeter();
-    const container = document.querySelector('#master-meter');
-    container.append(this._masterMeter.htmlElement);
-    
+  private prepareMasterSlider(): void {
+    const masterSlider = new MasterSlider();
+    masterSlider.slider.oninput = audit(() => this.applyMasterValue());
+    document.getElementById(containerId).append(masterSlider.htmlElement);
+
     this._audio.listeners.push({
       audioContextStarted: (ctx: AudioContext) => {
-        this._masterMeter.audioSource = this._audio.master.nativeNode;
+        masterSlider.meter.audioSource = this._audio.master.nativeNode;
       }
     });
   }
 
   private initializeMainControls(): void {
-    const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
     const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
     const stopButton = document.getElementById(stopButtonId) as HTMLButtonElement;
   
     startButton.onclick = () => this.start();
     stopButton.onclick = () => this.stop();
-
-    masterSlider.oninput = audit(() => this.applyMasterValue());
   }
 
   private applyMasterValue(): void {

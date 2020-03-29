@@ -58,13 +58,19 @@ export class FwdHTMLControls implements FwdControls {
 
   private _controls: Map<string, FwdController> = new Map<string, FwdController>();
 
+  private _controlsElement: HTMLDivElement;
+
   constructor() {
     this.htmlElement = document.createElement('div');
-    this.htmlElement.classList.add('controls-container');
+    this.htmlElement.classList.add('controls-row');
+
+    this._controlsElement = document.createElement('div');
+    this._controlsElement.classList.add('controls-container');
+    this.htmlElement.append(this._controlsElement);
   }
 
   public reset(): void {
-    this.htmlElement.innerHTML = '';
+    this._controlsElement.innerHTML = '';
     this._controls = new Map<string, FwdController>();
   }
 
@@ -84,7 +90,7 @@ export class FwdHTMLControls implements FwdControls {
     const sliderController = new SliderController(options);
     row.append(label);
     row.append(sliderController.htmlElement);
-    this.htmlElement.append(row);
+    this._controlsElement.append(row);
 
     const valueSource: ValueSource<number> = {
       get(): number {
@@ -107,15 +113,23 @@ export class FwdHTMLControls implements FwdControls {
 }
 
 injectStyle('FwdWebControls', `
+.controls-row {
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+  min-width: 120px;
+  min-height: 100px;
+  flex-shrink: 0;
+}
+
 .controls-container {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: monospace;
   padding: 5px 8px;
   margin-bottom: 6px;
-  margin: auto;
-  width: 80%;
-  min-width: 120px;
   max-width: 500px;
 }
 

@@ -9,7 +9,7 @@
 <script src="dist/bundle.js"></script>
 <body>
   <div class="full-page">
-    <div class="flex-column">
+    <div id="container" class="flex-column">
       <div class="top-row">
         <div id="project-name">
           <span class="project-name">Project name</span>
@@ -25,14 +25,7 @@
           <span id="time-code"></span>
         </div>
       </div>
-      <div id="container">
-        <div id="actions"></div>
-      </div>
-      <div class="flex-row master-section">
-        <label class="flex-column master-label" for="master-slider" class="flex-row">Master</label>
-        <input type="range" min="0" max="100" value="77" id="master-slider" class="slider" />
-        <div class="flex-row" id="master-meter"></div>
-      </div>
+      <div id="actions"></div>
     </div>
   </div>
 </body>

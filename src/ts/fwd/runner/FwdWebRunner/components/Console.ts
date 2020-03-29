@@ -85,6 +85,7 @@ injectStyle('WebConsole', `
   overflow: auto;
   display: flex;
   flex-direction: column;
+  min-height: 70px;
 }
 
 .web-console pre {
