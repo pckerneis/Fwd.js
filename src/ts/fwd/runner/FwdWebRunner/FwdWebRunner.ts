@@ -1,6 +1,4 @@
-import hljs from 'highlightjs';
-import Split from 'split.js'
-import { FwdAudio, FwdAudioListener } from "../../audio/Audio";
+import { FwdAudio } from "../../audio/Audio";
 import { FwdControls, FwdHTMLControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../../core/Fwd';
@@ -14,7 +12,12 @@ const containerId = 'container';
 const startButtonId = 'start-button';
 const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
-const consoleId = 'console';
+
+const consoleViewportId = 'console-viewport';
+const consoleCodeId = 'console-code';
+const clearConsoleId = 'clear-console';
+const autoScrollConsoleId = 'auto-scroll-console';
+
 const timeCodeId = 'time-code';
 const actionContainerId = 'actions';
 
@@ -45,9 +48,6 @@ export default class FwdWebRunner implements FwdRunner {
       this._actionButtons.forEach(button => button.disabled = true);
     };
 
-    FwdWebRunner.prepareLayout();
-    // FwdWebRunner.loadScriptContent();
-    // this.initializeHighlightJS();
     this.initializeMainControls();
     this.initializeTimeCode();
     this.prepareMasterMeter();
@@ -75,16 +75,6 @@ export default class FwdWebRunner implements FwdRunner {
     ].join(':');
   }
   
-  private static prepareLayout(): void {
-    Split(['#console'], {
-      sizes: [100],
-      minSize: [0],
-      direction: 'vertical',
-      gutterSize: 6,
-      snapOffset: 80,
-    });
-  }
-  
   public get audio(): FwdAudio { return this._audio; }
   public get controls(): FwdControls { return this._controls; }
   public get logger(): FwdLogger { return this._logger; }
@@ -96,11 +86,13 @@ export default class FwdWebRunner implements FwdRunner {
   //==================================================================
   
   private prepareLogger(): FwdLogger {
-    const consoleDiv = document.getElementById(consoleId);
-    const consoleCode = consoleDiv.children[0];
-    const autoScroll = true;
+    const consoleViewport = document.getElementById(consoleViewportId);
+    const consoleCode = document.getElementById(consoleCodeId);
+    const autoScrollInput = document.getElementById(autoScrollConsoleId) as HTMLInputElement;
 
-    if (!consoleCode || !consoleDiv) {
+
+
+    if (!consoleCode || !consoleViewport) {
       return { log: console.log, err: console.error };
     }
 
@@ -111,10 +103,18 @@ export default class FwdWebRunner implements FwdRunner {
 
       consoleCode.innerHTML += messages.join(' ');
       consoleCode.innerHTML += '\n';
+      
+      const autoScroll = autoScrollInput.checked;
 
       if (autoScroll) {
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        consoleViewport.scrollTop = consoleViewport.scrollHeight;
       }    
+    };
+
+    
+    const clearButton = document.getElementById(clearConsoleId);
+    clearButton.onclick = () => {
+      consoleCode.innerHTML = '';
     };
 
     return {

@@ -18,7 +18,7 @@ export class FwdAudio {
   public readonly listeners: FwdAudioListener[] = [];
 
   constructor() {
-    this.resetAudioContext();
+    // this.resetAudioContext();
   }
 
   public get context(): AudioContext { return this._ctx; }

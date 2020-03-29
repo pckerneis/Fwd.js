@@ -19,6 +19,7 @@ export function init(): void {
 }
 
 export function kick(): void {
+  fwd.log('kick');
   const baseFreq = fwd.controls.getSlider('kickTune').value;
 
   const osc = fwd.audio.osc(baseFreq * 5);

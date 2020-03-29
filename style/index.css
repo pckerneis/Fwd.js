@@ -8,6 +8,7 @@ body {
   background: rgb(229, 230, 231);
   font-family: 'Roboto';
   box-sizing: border-box;
+  font-size: 13px;
 }
 
 button {
@@ -43,22 +44,6 @@ button:hover:not([disabled]) {
   flex-direction: column;
 }
 
-#container pre {
-  flex-grow: 1;
-  position: relative;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: stretch;
-  margin: 0;
-}
-
-#container pre code {
-  position: absolute;
-  flex-grow: 1;
-  padding: 8px;
-}
-
 /* top */
 
 .top-row {
@@ -71,6 +56,7 @@ button:hover:not([disabled]) {
   margin: 12px 20px;
   flex-grow: 1;
   white-space: nowrap;
+  font-size: 16px;
 }
 
 #master-slider {
@@ -87,7 +73,7 @@ button:hover:not([disabled]) {
   padding: 7px 8px;
   opacity: 0.4;
   width: auto;
-  height: auto;
+  height: 15px;
   max-height: 18px;
 }
 
@@ -106,34 +92,37 @@ button:hover:not([disabled]) {
   color: rgb(43, 43, 43);
 }
 
-/* splits */
-
-.splits {
-  flex-grow: 1;
-}
-
-.split-panel,
-.gutter {
-    float: top;
-}
-
-.gutter {
-    cursor: ns-resize;
-    background: rgba(128, 128, 128, 0.144);
-}
-
-.gutter:hover {
-    cursor: ns-resize;
-    background: rgba(128, 128, 128, 0.507);
-}
+/*====================================*/
+/*             Console
+/*====================================*/
 
 #console {
-  color: white;
-  background: black;
+  color: rgb(0, 0, 0);
+  background: rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin: 0;
+  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
 }
 
-#editor {
-  background: #F0F0F0;
+#console pre {
+  flex-grow: 1;
+  overflow: auto;
+  margin: 0;
+}
+
+#console code {
+  flex-grow: 1;
+  display: flex;
+  padding: 3px 10px;
+}
+
+#console .menubar {
+  background: rgba(0, 0, 0, 0.02);
+  border-top: #00000010 1px solid;
 }
 
 /*====================================*/

@@ -34,11 +34,13 @@
 
     <div id="actions"></div>
     <div id="controls"></div>
-
-    <div class="splits">
-      <pre id="console" class="split-panel">
-        <code class="nohighlight"></code>
-      </pre>
+    
+    <div id="console" class="split-panel">
+      <pre id="console-viewport"><code id="console-code" class="nohighlight"></code></pre>
+      <div class="menubar">
+        <button id="clear-console">clear</button>
+        <label><input id="auto-scroll-console" type="checkbox" checked="true"/>Auto-scroll</label>
+      </div>
     </div>
   </div>
 </body>
