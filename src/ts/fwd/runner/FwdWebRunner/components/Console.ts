@@ -78,15 +78,13 @@ export class FwdWebConsole {
 
 injectStyle('WebConsole', `
 .web-console {
+  flex-grow: 1;
   color: rgb(0, 0, 0);
   background: rgba(0, 0, 0, 0.02);
-  position: relative;
+  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
   overflow: auto;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  margin: 0;
-  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
 }
 
 .web-console pre {
