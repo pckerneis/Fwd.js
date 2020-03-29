@@ -10,6 +10,7 @@ import { AudioMeter } from './components/AudioMeter';
 import { formatTime } from '../../core/utils/time';
 import { parseNumber } from '../../core/utils/numbers';
 import { FwdWebConsole } from './components/Console';
+import { BindableButton } from './components/BindableButton';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -28,7 +29,7 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _audio: FwdAudio;
   private readonly _controls: FwdControls;
   private _masterMeter: AudioMeter;
-  private _actionButtons: HTMLButtonElement[];
+  private _actionButtons: BindableButton[];
 
   constructor() {
     this._logger = this.prepareLogger();
@@ -167,15 +168,14 @@ export default class FwdWebRunner implements FwdRunner {
     this._actionButtons = [];
     
     actions.forEach((action) => {
-      const button = document.createElement('button');
-      button.innerText = action;
+      const button = new BindableButton(action);
       button.disabled = true;
-      button.onclick = () => {
+      button.action = () => {
         const when = this._fwd.scheduler.rtNow();
         this._fwd.schedule(when, this.sketchModule[action]);
       };
 
-      container.append(button);
+      container.append(button.htmlElement);
       this._actionButtons.push(button);
     });
   }
