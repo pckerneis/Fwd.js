@@ -88,6 +88,13 @@ export class BindableButton implements BindableControl {
       this._button.classList.remove('binding');
     }
   }
+  
+  handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
+    if (this.active) {
+      this.blink();
+      this.action();
+    }
+  }
 
   private blink() {
     const releaseTime = 300;

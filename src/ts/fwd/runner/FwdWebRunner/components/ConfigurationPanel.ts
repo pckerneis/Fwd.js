@@ -1,5 +1,5 @@
 import { injectStyle } from '../StyleInjector';
-import { requestMIDIAccess, MIDIAccess, MIDIInput, MIDIOutput } from '../../../midi/FwdMidi';
+import { requestMIDIAccess, MIDIAccess, MIDIInput, MIDIOutput } from '../../../midi/helpers';
 
 export class ConfigurationPanel {
   public readonly htmlElement: HTMLDivElement;

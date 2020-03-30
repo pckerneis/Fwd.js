@@ -11,8 +11,8 @@
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",
-    "tslint": "^6.1.0",
     "ts-loader": "^6.2.1",
+    "tslint": "^6.1.0",
     "typedoc": "^0.17.3",
     "typescript": "^3.8.3",
     "webpack": "^4.42.0",
@@ -24,6 +24,7 @@
     "@types/split.js": "^1.4.0",
     "highlightjs": "^9.16.2",
     "highlightjs-line-numbers.js": "^2.7.0",
-    "split.js": "^1.5.11"
+    "split.js": "^1.5.11",
+    "webmidi": "^2.5.1"
   }
 }
