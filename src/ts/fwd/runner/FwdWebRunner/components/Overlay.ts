@@ -4,6 +4,8 @@ export class Overlay {
   public readonly container: HTMLElement;
 
   private _backdrop: HTMLDivElement;
+
+  public onclose: Function;
   
   constructor() {
     this.container = document.createElement('div');
@@ -29,6 +31,9 @@ export class Overlay {
 
   public hide() {
     this._backdrop.remove();
+    
+    if (this.onclose !== null)
+      this.onclose();
   }
 }
 

@@ -1,6 +1,6 @@
 import { injectStyle } from '../StyleInjector';
 import debounce from '../../../utils/debounce';
-import { BindableControl, ControlBindingManager, KeyBinding } from './BindableControl';
+import { BindableControl, ControlBindingManager, KeyBinding, ControlBinding } from './BindableControl';
 
 export class BindableButton implements BindableControl {
   public readonly htmlElement: HTMLElement;
@@ -15,10 +15,10 @@ export class BindableButton implements BindableControl {
 
   private _active = true;
 
-  constructor(label: string) {
+  constructor(public readonly controllerName: string) {
     this.htmlElement = this._button = document.createElement('button');
     this._button.classList.add('bindable-button');
-    this.text = label;
+    this.text = controllerName;
 
     this._button.onclick = () => {
       if (this._active && this.action != null) {
@@ -71,14 +71,13 @@ export class BindableButton implements BindableControl {
     }
   }
 
-  setKeyBindings(bindings: KeyBinding[]) {
+  setBindings(bindings: ControlBinding[]) {
     if (bindings === null || bindings.length === 0) {
       this._indicator.classList.remove('bound');
       return;
     }
 
     this._indicator.classList.add('bound');
-
   }
 
   setKeyBindingMode(bindingMode: boolean) {
@@ -153,5 +152,7 @@ injectStyle(BindableButton.name, `
 
   .bindable-button.binding {
     background: #69b2cf61;
+    position: relative;
+    box-shadow: 0 0 0 999px #0000003c;
   }
 `);
