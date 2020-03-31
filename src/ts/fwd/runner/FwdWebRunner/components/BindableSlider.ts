@@ -8,6 +8,10 @@ import debounce from '../../../utils/debounce';
 export class BindableSlider implements BindableControl {
   public readonly htmlElement: HTMLElement;
 
+  public controllerId: number;
+
+  public readonly controllerKind = 'slider';
+
   private readonly _input: HTMLInputElement;
 
   private readonly _textInput: HTMLInputElement;
@@ -109,6 +113,7 @@ export class BindableSlider implements BindableControl {
   handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
     const mappedValue = map(value, 0, 127, Number(this._input.min), Number(this._input.max));
     this._input.value = mappedValue.toString();
+    this._textInput.value = mappedValue.toFixed(1);
     this.blink();
   }
 

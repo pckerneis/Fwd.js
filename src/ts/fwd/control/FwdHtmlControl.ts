@@ -1,6 +1,7 @@
 import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
 import { ValueSource, FwdController, SliderOptions, FwdControls, FwdSlider } from './FwdControl';
 import { BindableSlider } from '../runner/FwdWebRunner/components/BindableSlider';
+import { ControlBindingManager } from '../runner/FwdWebRunner/components/BindableControl';
 
 export class FwdHTMLControls implements FwdControls {
   public readonly htmlElement: HTMLDivElement;
@@ -49,6 +50,8 @@ export class FwdHTMLControls implements FwdControls {
 
     // Add to internal array
     this._controls.set(name, new FwdSlider(valueSource, options));
+
+    ControlBindingManager.getInstance().registerController(sliderController);
   }
 
   public getSlider(name: string): FwdSlider {

@@ -7,6 +7,10 @@ export class BindableButton implements BindableControl {
 
   public action: Function;
 
+  public readonly controllerKind = 'button';
+
+  public controllerId: number;
+
   private _button: HTMLButtonElement;
 
   private _indicator: HTMLSpanElement;

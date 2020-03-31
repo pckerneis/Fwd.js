@@ -15,6 +15,7 @@ import { BindableButton } from './components/BindableButton';
 import { Overlay } from './components/Overlay';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { MasterSlider } from './components/MasterSlider';
+import { ControlBindingManager } from './components/BindableControl';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -33,7 +34,6 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _logger: FwdLogger;
   private readonly _audio: FwdAudio;
   private readonly _controls: FwdControls;
-  private _masterMeter: AudioMeter;
   private _actionButtons: BindableButton[];
   private _settingsOverlay: Overlay;
   private _configurationPanel: ConfigurationPanel;
@@ -67,7 +67,10 @@ export default class FwdWebRunner implements FwdRunner {
 
   public set actions(actions: string[]) {
     this.resetActionButtons(actions);
+    this._actions = actions;
   }
+
+  private _actions: string[];
 
   //==================================================================
   
@@ -106,6 +109,9 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._fwd.scheduler.clearEvents();
     this._controls.reset();
+
+    ControlBindingManager.getInstance().clearCurrentControllers();
+    this.resetActionButtons(this._actions);
 
     this._audio.start();
 
@@ -184,6 +190,8 @@ export default class FwdWebRunner implements FwdRunner {
 
       container.append(button.htmlElement);
       this._actionButtons.push(button);
+
+      ControlBindingManager.getInstance().registerController(button);
     });
   }
 
