@@ -37,17 +37,7 @@ export class FwdSlider {
 
 //=============================================================
 
-export type FwdController = FwdSlider; 
-
-export interface ControlKeyBinding {
-  keyCode: string,
-
-}
-
-export type BindableControl = FwdController & {
-  keyBindings: ControlKeyBinding[];
-  // midiBindings: ControlMidiBinding[];
-};
+export type FwdController = FwdSlider;
 
 export interface FwdControls {
   readonly htmlElement: HTMLElement;

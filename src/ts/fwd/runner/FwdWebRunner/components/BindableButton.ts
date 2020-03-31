@@ -25,16 +25,13 @@ export class BindableButton implements BindableControl {
         this.action();
       }
     }
-
-    this._button.addEventListener('contextmenu', (evt: MouseEvent) => {
+    
+    this._button.oncontextmenu = (evt: MouseEvent) => {
+      ControlBindingManager.getInstance().setControlBeingEdited(this);
       evt.preventDefault();
       evt.stopPropagation();
       evt.cancelBubble = true;
       return false;
-    });
-
-    this._button.oncontextmenu = (evt: MouseEvent) => {
-      ControlBindingManager.getInstance().setControlBeingEdited(this);
     }
 
     this._indicator = document.createElement('span');
@@ -64,6 +61,12 @@ export class BindableButton implements BindableControl {
   public get disabled(): boolean { return this._button.disabled; }
   public set disabled(disabled: boolean) { this._button.disabled = disabled; }
   
+  // ====================================================================
+
+  acceptsBinding(binding: ControlBinding): boolean {
+    return binding.kind === 'NoteOn' || binding.kind === 'KeyPress';
+  }
+
   public triggerKeyAction(sourceBinding: KeyBinding) {
     if (this._active) {
       this.blink();
@@ -80,7 +83,7 @@ export class BindableButton implements BindableControl {
     this._indicator.classList.add('bound');
   }
 
-  setKeyBindingMode(bindingMode: boolean) {
+  setBindingMode(bindingMode: boolean) {
     if (bindingMode) {
       this._button.classList.add('binding');
     } else {
@@ -94,7 +97,13 @@ export class BindableButton implements BindableControl {
       this.action();
     }
   }
+  
+  handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
+    throw new Error('Method not implemented.');
+  }
 
+  // ====================================================================
+  
   private blink() {
     const releaseTime = 300;
     const cssClass = 'blinking';

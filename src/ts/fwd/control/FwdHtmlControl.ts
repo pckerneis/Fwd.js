@@ -1,57 +1,6 @@
 import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
 import { ValueSource, FwdController, SliderOptions, FwdControls, FwdSlider } from './FwdControl';
-import audit from '../utils/audit';
-
-class SliderController {
-  public readonly htmlElement: HTMLElement;
-
-  private readonly _input: HTMLInputElement;
-
-  private readonly _textInput: HTMLInputElement;
-
-  constructor(options: SliderOptions) {
-    this._input = SliderController.prepareInput(options, true);
-    this._textInput = SliderController.prepareInput(options, false);
-    
-    this._input.oninput = audit(() => {
-      this._textInput.value = this._input.value;
-    });
-
-    this._textInput.onchange = () => {
-      this._input.value = this._textInput.value;
-    };
-
-    const div = document.createElement('div');
-    div.classList.add('slider-control');
-    div.append(this._input);
-    div.append(this._textInput);
-    this.htmlElement = div;
-  }
-
-  private static prepareInput(options: SliderOptions, range: boolean): HTMLInputElement {
-    const input = document.createElement('input');
-    input.min = options.min.toString();
-    input.max = options.max.toString();
-    input.step = options.step.toString();
-    input.defaultValue = options.defaultValue.toString();
-
-    if (range) {
-      input.type = 'range';
-      input.classList.add('slider');
-    } else {
-      input.type = 'number';
-      input.classList.add('slider-textbox');
-    }
-
-    return input;
-  }
-
-  public get value(): number {
-    return this._input.value === '' ? 0 : Number.parseFloat(this._input.value);
-  }
-}
-
-//=============================================================
+import { BindableSlider } from '../runner/FwdWebRunner/components/BindableSlider';
 
 export class FwdHTMLControls implements FwdControls {
   public readonly htmlElement: HTMLDivElement;
@@ -87,7 +36,7 @@ export class FwdHTMLControls implements FwdControls {
     const label = document.createElement('label');
     label.innerText = name;
 
-    const sliderController = new SliderController(options);
+    const sliderController = new BindableSlider(name, options);
     row.append(label);
     row.append(sliderController.htmlElement);
     this._controlsElement.append(row);
@@ -158,20 +107,5 @@ injectStyle('FwdWebControls', `
 
 .slider-row .slider {
   flex-grow: 1;
-}
-
-.slider-control {
-  flex-grow: 1;
-  display: flex;
-}
-
-.slider-textbox {
-  width: 65px;
-  padding: 4px 5px;
-  margin-left: 12px;
-  background: #00000005;
-  box-shadow: 1px 1px 4px #0000002c inset;
-  border: none;
-  border-radius: 3px;
 }
 `);

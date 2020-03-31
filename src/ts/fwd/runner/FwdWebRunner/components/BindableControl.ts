@@ -7,17 +7,19 @@ export interface BindableControl {
   controlElement: HTMLElement;
   active: boolean;
 
-  triggerKeyAction(sourceBinding: KeyBinding): void;
-  setKeyBindingMode(bindingMode: boolean): void;
+  acceptsBinding(binding: ControlBinding): boolean;
 
+  setBindingMode(bindingMode: boolean): void;
   setBindings(bindings: ControlBinding[]): void;
 
+  triggerKeyAction(sourceBinding: KeyBinding): void;
   handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void;
   // handleControlChange(binding: MIDIBinding, event: InputEventControlchange): void;
+  handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void;
 }
 
 export interface KeyBinding {
-  kind: 'Keyboard',
+  kind: 'KeyPress',
   code: string,
   control: BindableControl;
 }
@@ -70,7 +72,7 @@ export class ControlBindingManager {
 
   setControlBeingEdited(control: BindableControl) {
     if (this._controlBeingEdited !== null) {
-      this._controlBeingEdited.setKeyBindingMode(false);
+      this._controlBeingEdited.setBindingMode(false);
     }
 
     this._controlBeingEdited = control;
@@ -89,14 +91,14 @@ export class ControlBindingManager {
   private showMappingsOverlay() {
     if (this._controlBeingEdited !== null) {
       const control = this._controlBeingEdited;
-      control.setKeyBindingMode(true);
+      control.setBindingMode(true);
 
       this.buildMappingsOverlay();
 
       this._overlay.show();
 
       this._overlay.onclose = () => {
-        control.setKeyBindingMode(false);
+        control.setBindingMode(false);
         this._controlBeingEdited = null;
       }
     }
@@ -105,7 +107,7 @@ export class ControlBindingManager {
   private handleKeyDown(code: string) {
     if (this._controlBeingEdited !== null) {
       if (code === 'Escape') {
-        this._controlBeingEdited.setKeyBindingMode(false);
+        this._controlBeingEdited.setBindingMode(false);
         this._controlBeingEdited = null;
         return;
       }
@@ -117,10 +119,16 @@ export class ControlBindingManager {
   }
 
   private addKeyBinding(control: BindableControl, code: string) {
+    const newBinding = { control, code, kind: 'KeyPress' } as KeyBinding;
+    
+    if (! control.acceptsBinding(newBinding)) {
+      return;
+    }
+
     const existingBinding = this.getKeyBinding(control, code);
 
     if (existingBinding === null) {
-      this._keyBindings.push({ control, code, kind: 'Keyboard' });
+      this._keyBindings.push(newBinding);
 
       this.notifyEditedControl();
       this.showMappingsOverlay();
@@ -165,15 +173,21 @@ export class ControlBindingManager {
       const existingBinding = this.getNoteOnBinding(this._controlBeingEdited, deviceId, noteNumber, channel);
    
       if (existingBinding == null) {
-        this._midiBindings.push({
+        const newBinding = {
           deviceId,
           kind: 'NoteOn',
           midiChanel: channel,
           noteNumber,
           control: this._controlBeingEdited,
           displayName: `${noteOn.note.number} (${noteOn.note.name})`
-        });
-        
+        } as MIDIBinding;
+
+        if (! this._controlBeingEdited.acceptsBinding(newBinding)) {
+          return;
+        }
+
+        this._midiBindings.push(newBinding);
+
         this.notifyEditedControl();
         this.showMappingsOverlay();
       }
@@ -214,14 +228,23 @@ export class ControlBindingManager {
       const existingBinding = this.getControlChangeBinding(this._controlBeingEdited, deviceId, ccNumber, channel);
    
       if (existingBinding == null) {
-        this._midiBindings.push({
+        const newBinding = {
           deviceId,
           kind: 'ControlChange',
           midiChanel: channel,
           ccNumber,
           control: this._controlBeingEdited,
           displayName: `${controlChange.controller.number} (${controlChange.controller.name})`
-        });
+        } as MIDIBinding;
+
+        if (! this._controlBeingEdited.acceptsBinding(newBinding)) {
+          return;
+        }
+
+        this._midiBindings.push(newBinding);
+
+        this.notifyEditedControl();
+        this.showMappingsOverlay();
       }
     } else {
       this.dispatchControlChange(controlChange);
@@ -247,7 +270,7 @@ export class ControlBindingManager {
                         && binding.midiChanel === event.channel
                         && binding.ccNumber === event.controller.number)
       .forEach((binding) => {
-        // binding.control.handleControlChange(binding, event);
+        binding.control.handleControlChange(event.value, event.controller.number, event.channel, event.target.id);
       });
   }
   
@@ -330,7 +353,7 @@ export class ControlBindingManager {
 
   private removeBinding(binding: ControlBinding): any {
     switch(binding.kind) {
-      case 'Keyboard':
+      case 'KeyPress':
         this._keyBindings = this._keyBindings.filter(b => b !== binding);
         break;
       case 'ControlChange':
@@ -394,5 +417,21 @@ injectStyle('BindableControl', `
 
 .control-binding-none {
   text-align: center;
+}
+
+.indicator {
+  background: rgba(0, 0, 0, 0.3);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin: auto 0 auto 7px;
+}
+
+.indicator.bound.blinking {
+  background: #00b7ff;
+}
+
+.indicator.bound {
+  background: #69b2cfa1;
 }
 `);
