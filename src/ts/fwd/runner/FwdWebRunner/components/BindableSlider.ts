@@ -86,11 +86,6 @@ export class BindableSlider implements BindableControl {
   }
 
   setBindingMode(bindingMode: boolean): void {
-    if (bindingMode) {
-      this.htmlElement.classList.add('binding');
-    } else {
-      this.htmlElement.classList.remove('binding');
-    }
   }
 
   setBindings(bindings: ControlBinding[]): void {
@@ -165,10 +160,6 @@ injectStyle('BindableSlider', `
 
 .slider-binding-indicator.bound {
   background: #69b2cfa1;
-}
-
-.slider-control.binding input[type=range]::-webkit-slider-thumb {
-  background: #69b2cf61;  
 }
 
 input[type=range]::-webkit-slider-thumb {

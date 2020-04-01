@@ -39,8 +39,6 @@ export class ConfigurationPanel {
 
     requestMIDIAccess().then(
       (access: MIDIAccess) => {
-        console.log('success', access);
-
         const buildRow = (type: string, name: string) => {
           const row = document.createElement('div');
 

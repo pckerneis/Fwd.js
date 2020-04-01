@@ -132,6 +132,13 @@ export class ControlBindingManager {
       });
   }
 
+  private removeRegisteredBinding(binding: ControlBinding) {
+    this._knownControllers.forEach((known: KnownController) => {
+      known.midiBindings = known.midiBindings.filter(b => binding != b);
+      known.keyBindings = known.keyBindings.filter(b => binding != b);
+    });
+  }
+
   clearCurrentControllers() {
     this._currentControllers = [];
     this._keyBindings = [];
@@ -224,14 +231,12 @@ export class ControlBindingManager {
       webmidi.inputs.forEach((input) => {
         input.addListener('noteon', 'all', (event) => this.handleNoteOn(event));
         input.addListener('controlchange', 'all', (event) => this.handleControlChange(event));
-        console.log('listener added for', input);
       });
     });
   }
 
   private handleNoteOn(noteOn: InputEventNoteon) {
     if (this._controlBeingEdited !== null) {
-      console.log('note on, being edited')
       const deviceId = noteOn.target.id;
       const noteNumber = noteOn.note.number;
       const channel = noteOn.channel;
@@ -286,7 +291,6 @@ export class ControlBindingManager {
   }
 
   private handleControlChange(controlChange: InputEventControlchange) {
-    console.log(controlChange);
     if (this._controlBeingEdited !== null) {
       const deviceId = controlChange.target.id;
       const ccNumber = controlChange.controller.number;
@@ -348,6 +352,18 @@ export class ControlBindingManager {
   
   buildMappingsOverlay() {
     const control = this._controlBeingEdited;
+    const controlTop = control.controlElement.getBoundingClientRect().top;
+    const controlIsInUpperHalf = controlTop < window.innerHeight / 2;
+
+    if (controlIsInUpperHalf) {
+      this._overlay.container.classList.add('bottom');
+      this._overlay.container.classList.remove('top');
+    } else {
+      this._overlay.container.classList.add('top');
+      this._overlay.container.classList.remove('bottom');
+    }
+
+    this._overlay.focusOnElement(control.controlElement);
 
     this._overlay.container.innerHTML = '';
 
@@ -437,9 +453,7 @@ export class ControlBindingManager {
 
     this.notifyControl(this.findController(binding.controlId));
     this.showMappingsOverlay();
-
-    // TODO: remove from known bindings
-    // this.removeRegisteredBinding()
+    this.removeRegisteredBinding(binding);
   }
 }
 
@@ -508,5 +522,13 @@ injectStyle('BindableControl', `
 
 .indicator.bound {
   background: #69b2cfa1;
+}
+
+.overlay-container.top {
+  transform: translate(0, -60%);
+}
+
+.overlay-container.bottom {
+  transform: translate(0, 50%);
 }
 `);

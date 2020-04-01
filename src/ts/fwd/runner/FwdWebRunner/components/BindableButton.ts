@@ -88,11 +88,6 @@ export class BindableButton implements BindableControl {
   }
 
   setBindingMode(bindingMode: boolean) {
-    if (bindingMode) {
-      this._button.classList.add('binding');
-    } else {
-      this._button.classList.remove('binding');
-    }
   }
   
   handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
@@ -161,11 +156,5 @@ injectStyle(BindableButton.name, `
 
   button.bindable-button.active:hover {
     border-color: #00000088;
-  }
-
-  .bindable-button.binding {
-    background: #69b2cf61;
-    position: relative;
-    box-shadow: 0 0 0 999px #0000003c;
   }
 `);

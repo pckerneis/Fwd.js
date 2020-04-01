@@ -2,19 +2,25 @@ import { injectStyle } from '../StyleInjector';
 
 export class Overlay {
   public readonly container: HTMLElement;
+  
+  public get backdrop(): HTMLDivElement { return this._backdrop; }
 
   private _backdrop: HTMLDivElement;
+
+  private _shadowElement: HTMLDivElement;
 
   public onclose: Function;
   
   constructor() {
+    this._shadowElement = document.createElement('div');
+    this._shadowElement.classList.add('overlay-shadow-element', 'hidden');
+
     this.container = document.createElement('div');
     this.container.classList.add('overlay-container');
 
     this._backdrop = document.createElement('div');
     this._backdrop.classList.add('overlay-backdrop');
-
-    this._backdrop.append(this.container);
+    this._backdrop.append(this._shadowElement, this.container);
 
     this._backdrop.addEventListener('click', () => {
       this.hide();
@@ -35,6 +41,21 @@ export class Overlay {
     if (this.onclose !== null)
       this.onclose();
   }
+
+  public focusOnElement(element: HTMLElement) {
+    if (element == null) {
+      this._backdrop.classList.remove('hidden');
+      this._shadowElement.classList.add('hidden');
+    } else {
+      this.backdrop.classList.add('hidden');
+      this._shadowElement.classList.remove('hidden');
+      const bounds = element.getBoundingClientRect();
+      this._shadowElement.style.top = bounds.top + 'px';
+      this._shadowElement.style.left = bounds.left + 'px';
+      this._shadowElement.style.width = (bounds.right - bounds.left) + 'px';
+      this._shadowElement.style.height = (bounds.bottom - bounds.top) + 'px';
+    }
+  }
 }
 
 injectStyle('Overlay', `
@@ -49,6 +70,12 @@ injectStyle('Overlay', `
   justify-content: center;
   background: #00000088;
   box-shadow: 0 0 11px 0 #00000036;
+  overflow: hidden;
+}
+
+
+.overlay-backdrop.hidden {
+  background: none;
 }
 
 .overlay-container {
@@ -58,5 +85,14 @@ injectStyle('Overlay', `
   position: relative;
   margin: auto;
   border-radius: 2px;
+}
+
+.overlay-shadow-element {
+  position: absolute;
+  box-shadow: 0 0 0 9999px #00000050;
+}
+
+.overlay-shadow-element.hidden {
+  opacity: 0;
 }
 `);
