@@ -7,6 +7,9 @@ export interface FwdAudioListener {
 }
 
 export class FwdAudio {
+
+  public readonly listeners: FwdAudioListener[] = [];
+
   private _fwd: Fwd;
 
   private _ctx: AudioContext;
@@ -14,8 +17,6 @@ export class FwdAudio {
   private _masterGain: FwdGainNode;
 
   private _startOffset: Time = 0;
-
-  public readonly listeners: FwdAudioListener[] = [];
 
   constructor() {
     // this.resetAudioContext();
@@ -336,7 +337,7 @@ export class FwdNoiseNode extends FwdAudioNode {
   public get inputNode(): AudioNode { return null; }
   public get outputNode(): AudioNode { return this._output; }
 
-  private generateWhiteNoise() {
+  private generateWhiteNoise(): AudioBuffer {
     const sampleRate = this.fwdAudio.context.sampleRate;
     const buffer = this.fwdAudio.context.createBuffer(1, 2 * sampleRate, sampleRate);
     const data = buffer.getChannelData(0);

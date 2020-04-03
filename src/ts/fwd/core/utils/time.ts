@@ -1,13 +1,17 @@
 import { Time } from '../EventQueue/EventQueue';
 
-export function formatTime(t: Time): string {
-  if (t === null) {
+/**
+ * Format a time value in milleseconds as `hh:mm:ss:mls`
+ * @param time the milliseconds value to format
+ */
+export function formatTime(time: Time): string {
+  if (time === null) {
     return null;
   }
 
-  const minutes = Math.floor(t / 60);
-  const seconds = Math.floor(t % 60);
-  const ms = Math.floor((t * 1000) % 1000);
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  const ms = Math.floor((time * 1000) % 1000);
 
   return [
     minutes.toString().padStart(2, '0'),

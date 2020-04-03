@@ -9,10 +9,6 @@ export class FwdWebConsole {
   private _viewport: HTMLElement;
   private _autoScrollCheckbox: HTMLInputElement;
 
-  public get autoScroll(): boolean {
-    return this._autoScrollCheckbox.checked;
-  }
-
   constructor() {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('web-console');
@@ -23,11 +19,15 @@ export class FwdWebConsole {
     );
   }
 
-  public clear() {
+  public get autoScroll(): boolean {
+    return this._autoScrollCheckbox.checked;
+  }
+
+  public clear(): void {
     this._code.innerHTML = '';
   }
 
-  public print(time: Time, ...messages: any[]) {
+  public print(time: Time, ...messages: any[]): void {
     if (time != null) {
       messages = [formatTime(time), ...messages];
     }
@@ -60,7 +60,7 @@ export class FwdWebConsole {
     const clearButton = document.createElement('button');
     clearButton.id = 'clear-console'; // TODO: find better way to style
     clearButton.innerText = 'Clear';
-    clearButton.onclick = () => { this.clear(); }
+    clearButton.onclick = () => { this.clear(); };
 
     const autoScrollLabel = document.createElement('label');
     autoScrollLabel.innerText = 'Auto-scroll';

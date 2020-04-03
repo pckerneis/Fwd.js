@@ -1,5 +1,5 @@
+import { MIDIAccess, MIDIInput, MIDIOutput, requestMIDIAccess } from '../../../midi/helpers';
 import { injectStyle } from '../StyleInjector';
-import { requestMIDIAccess, MIDIAccess, MIDIInput, MIDIOutput } from '../../../midi/helpers';
 
 export class ConfigurationPanel {
   public readonly htmlElement: HTMLDivElement;
@@ -16,7 +16,7 @@ export class ConfigurationPanel {
     this.buildMIDISection();
   }
 
-  private buildAudioSection() {
+  private buildAudioSection(): void {
     const audioTitle = document.createElement('h3');
     audioTitle.innerText = 'Audio';
     this.htmlElement.append(audioTitle);
@@ -32,7 +32,7 @@ export class ConfigurationPanel {
     };
   }
 
-  private buildMIDISection() {
+  private buildMIDISection(): void {
     const midiTitle = document.createElement('h3');
     midiTitle.innerText = 'MIDI';
     this.htmlElement.append(midiTitle);
@@ -64,6 +64,7 @@ export class ConfigurationPanel {
         access.outputs.forEach((output: MIDIOutput) => buildRow('Output', output.name));
       },
       (err: any) => {
+        console.error(err);
         const errorMessage = document.createElement('span');
         errorMessage.innerText = 'Your browser doesn\'t support the WebMidi API.';
         this.htmlElement.append(errorMessage);
@@ -71,7 +72,7 @@ export class ConfigurationPanel {
     );
   }
 
-  private testBeep() {
+  private testBeep(): void {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

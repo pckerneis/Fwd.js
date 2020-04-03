@@ -42,6 +42,13 @@ export abstract class Scheduler<EventType extends Event> {
     public abstract readonly lookAhead: number;
 
     /**
+     * Set the scheduler's time keeper.
+     *
+     * @param timeProvider a function that returns the current time in milliseconds.
+     */
+    public abstract set timeProvider(timeProvider: () => number);
+
+    /**
      * Returns the current time position for the scheduler in milliseconds. It's only useful when called inside the
      * scheduler's execution stack as otherwise it will always return `0`.
      *
@@ -72,7 +79,7 @@ export abstract class Scheduler<EventType extends Event> {
      * Schedule an event at a specified time location.
      *
      * @param time If it is inferior to the current time, the event will be executed on the next run.
-     * @param time The event to schedule.
+     * @param event The event to schedule.
      *
      * @returns an EventRef that can used later on to cancel the event. See {@link cancel}.
      */

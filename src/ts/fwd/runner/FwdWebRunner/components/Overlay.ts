@@ -2,14 +2,12 @@ import { injectStyle } from '../StyleInjector';
 
 export class Overlay {
   public readonly container: HTMLElement;
-  
-  public get backdrop(): HTMLDivElement { return this._backdrop; }
-
-  private _backdrop: HTMLDivElement;
-
-  private _shadowElement: HTMLDivElement;
 
   public onclose: Function;
+
+  private readonly _backdrop: HTMLDivElement;
+
+  private readonly _shadowElement: HTMLDivElement;
   
   constructor() {
     this._shadowElement = document.createElement('div');
@@ -31,18 +29,20 @@ export class Overlay {
     });
   }
 
-  public show() {
+  public get backdrop(): HTMLDivElement { return this._backdrop; }
+
+  public show(): void {
     document.body.append(this._backdrop);
   }
 
-  public hide() {
+  public hide(): void {
     this._backdrop.remove();
     
     if (this.onclose !== null)
       this.onclose();
   }
 
-  public focusOnElement(element: HTMLElement) {
+  public focusOnElement(element: HTMLElement): void {
     if (element == null) {
       this._backdrop.classList.remove('hidden');
       this._shadowElement.classList.add('hidden');

@@ -1,13 +1,13 @@
 {
   "name": "sketch",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "./js/index.js",
   "license": "MIT",
   "scripts": {
     "webpack": "webpack --config webpack.config.js --display-error-details",
     "dev": "webpack-dev-server --open",
     "dev-hot": "webpack-dev-server --open --hot",
-    "doc": "typedoc --theme minimal"
+    "doc": "typedoc"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",

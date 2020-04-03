@@ -5,19 +5,9 @@ import { injectStyle } from '../StyleInjector';
 export class AudioMeter {
   public readonly htmlElement: HTMLElement;
 
-  private _averageMeter: HTMLMeterElement;
+  private readonly _averageMeter: HTMLMeterElement;
 
   private _releaseClipDebounced: any;
-
-  public set audioSource(source: GainNode) {
-    if (this._analyser != null) {
-      this._analyser.disconnect();
-    }
-
-    this._analyser = source.context.createAnalyser();
-    this._analyser.fftSize = 2048;
-    source.connect(this._analyser);
-  }
 
   private _analyser: AnalyserNode;
 
@@ -30,7 +20,7 @@ export class AudioMeter {
       meter.max = 10;
       meter.value = -100;
       return meter;
-    }
+    };
 
     this._averageMeter = createMeter();
     
@@ -38,7 +28,17 @@ export class AudioMeter {
     this.update();
   }
 
-  private update() {
+  public set audioSource(source: GainNode) {
+    if (this._analyser != null) {
+      this._analyser.disconnect();
+    }
+
+    this._analyser = source.context.createAnalyser();
+    this._analyser.fftSize = 2048;
+    source.connect(this._analyser);
+  }
+
+  private update(): void {
     if (this._analyser == null) {
       setTimeout(() => this.update(), 200);
       return;
@@ -61,13 +61,13 @@ export class AudioMeter {
     this._averageMeter.value = isFinite(average) ? average : this._averageMeter.min;
 
     if (clipping) {
-      this.clip();
+      this.blink();
     }
 
     requestAnimationFrame(() => this.update());
   }
 
-  private clip() {
+  private blink(): void {
     const releaseTime = 300;
     const cssClass = 'clipping';
 

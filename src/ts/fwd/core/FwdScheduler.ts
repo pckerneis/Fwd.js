@@ -1,5 +1,5 @@
 import { Event, EventRef, Time } from './EventQueue/EventQueue';
-import { Scheduler } from './Scheduler/Scheduler';
+import { Scheduler } from "./Scheduler/Scheduler";
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
 let NOW: Time = 0;
@@ -34,7 +34,7 @@ export class FwdScheduler {
    */
   public onEnded: Function;
 
-  private _scheduler: SchedulerImpl<FwdEvent>;
+  private _scheduler: Scheduler<FwdEvent>;
 
   private _state: State = 'ready';
 
@@ -55,6 +55,11 @@ export class FwdScheduler {
     }
   }
 
+  /**
+   * Set the time provider for the scheduler.
+   *
+   * @param timeProvider a function that returns a time position in milliseconds
+   */
   public set timeProvider(timeProvider: () => number) {
     this._scheduler.timeProvider = timeProvider;
   }
@@ -110,8 +115,8 @@ export class FwdScheduler {
    *
    * @param eventRef A reference to the scheduled action obtained from a call to {@link schedule}.
    */
-  public cancel(ref: EventRef): void {
-    this._scheduler.cancel(ref);
+  public cancel(eventRef: EventRef): void {
+    this._scheduler.cancel(eventRef);
   }
 
   /**

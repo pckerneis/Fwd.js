@@ -1,5 +1,5 @@
-import { AudioMeter } from './AudioMeter';
 import { injectStyle } from '../StyleInjector';
+import { AudioMeter } from './AudioMeter';
 
 export class MasterSlider {
   public readonly htmlElement: HTMLDivElement;

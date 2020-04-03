@@ -104,23 +104,6 @@ export interface Fwd {
 }
 
 /**
- * Global configuration for the FwdScheduler. See {@link FwdScheduler}.
- */
-export interface FwdInitOptions {
-  /**
-   * Interval between the end of an execution step and the next one, in milliseconds. Must be strictly positive.
-   */
-  interval: number,
-
-  /**
-   * A time range (in milliseconds) in which the scheduler will consider scheduled actions as ready to be executed.
-   * If an action is scheduled at `t1` and the current execution time is `t0`, the action is called if
-   * `t1 - t0 < lookAhead`.
-   */
-  lookAhead: number
-}
-
-/**
  * A utility function to set the global `fwd` runtime instance. It shouldn't be called from within sketches but
  * only when initializing the Fwd runtime.
  */

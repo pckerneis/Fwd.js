@@ -1,8 +1,10 @@
-import webmidi, { InputEventNoteon, InputEventControlchange } from 'webmidi';
-import { Overlay } from './Overlay';
+import webmidi, { InputEventControlchange, InputEventNoteon } from 'webmidi';
 import { injectStyle } from '../StyleInjector';
+import { Overlay } from './Overlay';
 
-export interface BindableControl {
+export type ControllerKind = 'button' | 'slider';
+
+export interface BindableController {
   controllerId: number;
   controllerName: string;
   controllerKind: string;
@@ -62,7 +64,7 @@ export class ControlBindingManager {
 
   private _midiBindings: MIDIBinding[] = [];
 
-  private _controlBeingEdited: BindableControl = null;
+  private _controlBeingEdited: BindableController = null;
 
   private readonly _overlay: Overlay;
 
@@ -70,7 +72,7 @@ export class ControlBindingManager {
 
   private _knownControllers: KnownController[] = [];
 
-  private _currentControllers: BindableControl[] = [];
+  private _currentControllers: BindableController[] = [];
 
   private constructor() {
     document.addEventListener('keydown', (evt) => this.handleKeyDown(evt.code));
@@ -80,7 +82,7 @@ export class ControlBindingManager {
     this.loadState();
   }
 
-  public static getInstance() {
+  public static getInstance(): ControlBindingManager {
     if (controlBindingManager === null) {
       controlBindingManager = new ControlBindingManager();
     }
@@ -88,7 +90,7 @@ export class ControlBindingManager {
     return controlBindingManager;
   }
 
-  setControlBeingEdited(control: BindableControl) {
+  public setControlBeingEdited(control: BindableController): void {
     if (this._controlBeingEdited !== null) {
       this._controlBeingEdited.setBindingMode(false);
     }
@@ -97,7 +99,7 @@ export class ControlBindingManager {
     this.showMappingsOverlay();
   }
 
-  registerController(control: BindableControl) {
+  public registerController(control: BindableController): void {
     const matchingKnownControllers: KnownController[] = this._knownControllers.filter(known => {
       return known.name === control.controllerName && known.controllerKind === control.controllerKind;
     });
@@ -109,7 +111,7 @@ export class ControlBindingManager {
         id: control.controllerId,
         keyBindings: [],
         midiBindings: [],
-        name: control.controllerName
+        name: control.controllerName,
       });
     } else {
       control.controllerId = matchingKnownControllers[0].id;
@@ -121,7 +123,13 @@ export class ControlBindingManager {
     this._currentControllers.push(control);
   }
 
-  private registerBinding(binding: ControlBinding) {
+  public clearCurrentControllers(): void {
+    this._currentControllers = [];
+    this._keyBindings = [];
+    this._midiBindings = [];
+  }
+
+  private registerBinding(binding: ControlBinding): void {
     this._knownControllers
       .filter(known => known.id === binding.controlId)
       .forEach(known => {
@@ -135,7 +143,7 @@ export class ControlBindingManager {
     this.saveStateOnIdle();
   }
 
-  private removeRegisteredBinding(binding: ControlBinding) {
+  private removeRegisteredBinding(binding: ControlBinding): void {
     this._knownControllers.forEach((known: KnownController) => {
       known.midiBindings = known.midiBindings.filter(b => binding != b);
       known.keyBindings = known.keyBindings.filter(b => binding != b);
@@ -144,13 +152,7 @@ export class ControlBindingManager {
     this.saveStateOnIdle();
   }
 
-  clearCurrentControllers() {
-    this._currentControllers = [];
-    this._keyBindings = [];
-    this._midiBindings = [];
-  }
-
-  private notifyControl(control: BindableControl) {
+  private notifyControl(control: BindableController): void {
     const bindingsForControl = [...this._keyBindings, ...this._midiBindings]
         .filter(binding => binding.controlId === control.controllerId);
 
@@ -159,17 +161,17 @@ export class ControlBindingManager {
 
   //=======================================================================================
 
-  private saveStateOnIdle() {
+  private saveStateOnIdle(): void {
     (window as any).requestIdleCallback(() => {
       const state = {
-        known: this._knownControllers
+        known: this._knownControllers,
       };
 
       localStorage.setItem('fwd-runner-state', JSON.stringify(state));
     });
   }
 
-  private loadState() {
+  private loadState(): void {
     const state = JSON.parse(localStorage.getItem('fwd-runner-state'));
 
     if (state != null && state.known != null) {
@@ -177,7 +179,7 @@ export class ControlBindingManager {
     }
   }
 
-  private showMappingsOverlay() {
+  private showMappingsOverlay(): void {
     if (this._controlBeingEdited !== null) {
       const control = this._controlBeingEdited;
       control.setBindingMode(true);
@@ -193,7 +195,7 @@ export class ControlBindingManager {
     }
   }
 
-  private handleKeyDown(code: string) {
+  private handleKeyDown(code: string): void {
     if (this._controlBeingEdited !== null) {
       if (code === 'Escape') {
         this._controlBeingEdited.setBindingMode(false);
@@ -207,11 +209,11 @@ export class ControlBindingManager {
     }
   }
 
-  private addKeyBinding(control: BindableControl, code: string) {
+  private addKeyBinding(control: BindableController, code: string): void {
     const newBinding = { 
       controlId: control.controllerId, 
       code, 
-      kind: 'KeyPress' 
+      kind: 'KeyPress',
     } as KeyBinding;
     
     if (! control.acceptsBinding(newBinding)) {
@@ -229,7 +231,7 @@ export class ControlBindingManager {
     }
   }
 
-  private getKeyBinding(control: BindableControl, code: string): KeyBinding {
+  private getKeyBinding(control: BindableController, code: string): KeyBinding {
     const results = this._keyBindings.filter((binding) => {
       return binding.code === code && binding.controlId === control.controllerId;
     });
@@ -249,8 +251,11 @@ export class ControlBindingManager {
 
   //=======================================================================================
 
-  private watchIncomingMidi() {
+  private watchIncomingMidi(): void {
     webmidi.enable((err) => {
+
+      if (err) console.error(err);
+
       webmidi.inputs.forEach((input) => {
         input.addListener('noteon', 'all', (event) => this.handleNoteOn(event));
         input.addListener('controlchange', 'all', (event) => this.handleControlChange(event));
@@ -258,7 +263,7 @@ export class ControlBindingManager {
     });
   }
 
-  private handleNoteOn(noteOn: InputEventNoteon) {
+  private handleNoteOn(noteOn: InputEventNoteon): void {
     if (this._controlBeingEdited !== null) {
       const deviceId = noteOn.target.id;
       const noteNumber = noteOn.note.number;
@@ -272,7 +277,7 @@ export class ControlBindingManager {
           midiChanel: channel,
           noteNumber,
           controlId: this._controlBeingEdited.controllerId,
-          displayName: `${noteOn.note.number} (${noteOn.note.name})`
+          displayName: `${noteOn.note.number} (${noteOn.note.name})`,
         } as MIDIBinding;
 
         if (! this._controlBeingEdited.acceptsBinding(newBinding)) {
@@ -290,7 +295,7 @@ export class ControlBindingManager {
     }
   }
   
-  private getNoteOnBinding(control: BindableControl, deviceId: string, noteNumber: number, channel: number) {
+  private getNoteOnBinding(control: BindableController, deviceId: string, noteNumber: number, channel: number): MIDIBinding {
     const results = this._midiBindings.filter(binding => {
       return binding.kind === 'NoteOn'
         && binding.controlId === control.controllerId
@@ -302,18 +307,19 @@ export class ControlBindingManager {
     return results.length > 0 ? results[0] : null;
   }
 
-  private dispatchNoteOn(event: InputEventNoteon) {
+  private dispatchNoteOn(event: InputEventNoteon): void {
     this._midiBindings
       .filter((binding) => binding.kind === 'NoteOn' 
                         && binding.deviceId === event.target.id 
                         && binding.midiChanel === event.channel
                         && binding.noteNumber === event.note.number)
       .forEach((binding) => {
-        this.findController(binding.controlId).handleNoteOn(event.note.number, event.velocity, event.channel, event.target.id);
+        this.findController(binding.controlId)
+            .handleNoteOn(event.note.number, event.velocity, event.channel, event.target.id);
       });
   }
 
-  private handleControlChange(controlChange: InputEventControlchange) {
+  private handleControlChange(controlChange: InputEventControlchange): void {
     if (this._controlBeingEdited !== null) {
       const deviceId = controlChange.target.id;
       const ccNumber = controlChange.controller.number;
@@ -327,7 +333,7 @@ export class ControlBindingManager {
           midiChanel: channel,
           ccNumber,
           controlId: this._controlBeingEdited.controllerId,
-          displayName: `${controlChange.controller.number} (${controlChange.controller.name})`
+          displayName: `${controlChange.controller.number} (${controlChange.controller.name})`,
         } as MIDIBinding;
 
         if (! this._controlBeingEdited.acceptsBinding(newBinding)) {
@@ -345,7 +351,8 @@ export class ControlBindingManager {
     }
   }
   
-  private getControlChangeBinding(control: BindableControl, deviceId: string, ccNumber: number, channel: number) {
+  private getControlChangeBinding(control: BindableController, deviceId: string,
+                                  ccNumber: number, channel: number): MIDIBinding {
     const results = this._midiBindings.filter(binding => {
       return binding.kind === 'ControlChange'
         && binding.controlId === control.controllerId
@@ -357,23 +364,24 @@ export class ControlBindingManager {
     return results.length > 0 ? results[0] : null;
   }
 
-  private dispatchControlChange(event: InputEventControlchange) {
+  private dispatchControlChange(event: InputEventControlchange): void {
     this._midiBindings
       .filter((binding) => binding.kind === 'ControlChange'
                         && binding.deviceId === event.target.id 
                         && binding.midiChanel === event.channel
                         && binding.ccNumber === event.controller.number)
       .forEach((binding) => {
-        this.findController(binding.controlId).handleControlChange(event.value, event.controller.number, event.channel, event.target.id);
+        this.findController(binding.controlId)
+            .handleControlChange(event.value, event.controller.number, event.channel, event.target.id);
       });
   }
 
-  private findController(controllerId: number) {
+  private findController(controllerId: number): BindableController {
     const results = this._currentControllers.filter(current => current.controllerId === controllerId);
     return results.length > 0 ? results[0] : null;
   }
   
-  buildMappingsOverlay() {
+  private buildMappingsOverlay(): void {
     const control = this._controlBeingEdited;
     const controlTop = control.controlElement.getBoundingClientRect().top;
     const controlIsInUpperHalf = controlTop < window.innerHeight / 2;
@@ -432,14 +440,14 @@ export class ControlBindingManager {
       container.append(row);
 
       closeImage.onclick = () => this.removeBinding(binding);
-    }
+    };
 
     const appendNone = () => {
       const p = document.createElement('p');
       p.innerText = '(none)';
       p.style.textAlign = 'center';
       container.append(p);
-    }
+    };
 
     const keySectionTitle = document.createElement('h3');
     keySectionTitle.innerText = 'Keyboard Mappings';
@@ -480,7 +488,7 @@ export class ControlBindingManager {
   }
 }
 
-injectStyle('BindableControl', `
+injectStyle('BindableController', `
 .control-binding-container {
   width: 360px;
   min-height: 200px;

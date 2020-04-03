@@ -1,16 +1,16 @@
 import { SliderOptions } from '../../../control/FwdControl';
-import audit from '../../../utils/audit';
-import { injectStyle } from '../StyleInjector';
-import { BindableControl, ControlBinding, KeyBinding, ControlBindingManager } from './BindableControl'
 import { map } from '../../../core/utils/numbers';
+import audit from '../../../utils/audit';
 import debounce from '../../../utils/debounce';
+import { injectStyle } from '../StyleInjector';
+import { BindableController, ControlBinding, ControlBindingManager, ControllerKind, KeyBinding } from './BindableController'
 
-export class BindableSlider implements BindableControl {
+export class BindableSlider implements BindableController {
   public readonly htmlElement: HTMLElement;
 
   public controllerId: number;
 
-  public readonly controllerKind = 'slider';
+  public readonly controllerKind: ControllerKind = 'slider';
 
   private readonly _input: HTMLInputElement;
 
@@ -56,7 +56,7 @@ export class BindableSlider implements BindableControl {
       input.classList.add('slider');
     } else {
       input.type = 'number';
-      input.classList.add('slider-textbox');
+      input.classList.add('slider-text-box');
     }
 
     return input;
@@ -66,29 +66,20 @@ export class BindableSlider implements BindableControl {
     return this._input.value === '' ? 0 : Number.parseFloat(this._input.value);
   }
 
-  private addBindingModeHandler() {
-    this.htmlElement.oncontextmenu = (evt: MouseEvent) => {
-      ControlBindingManager.getInstance().setControlBeingEdited(this);
-      evt.preventDefault();
-      evt.stopPropagation();
-      evt.cancelBubble = true;
-      return false;
-    }
-  }
   // ====================================================================================
 
-  get controlElement(): HTMLElement { return this.htmlElement; }
+  public get controlElement(): HTMLElement { return this.htmlElement; }
 
-  get active(): boolean { return true; }
+  public get active(): boolean { return true; }
 
-  acceptsBinding(binding: ControlBinding): boolean {
+  public acceptsBinding(binding: ControlBinding): boolean {
     return binding.kind === 'ControlChange';
   }
 
-  setBindingMode(bindingMode: boolean): void {
+  public setBindingMode(bindingMode: boolean): void {
   }
 
-  setBindings(bindings: ControlBinding[]): void {
+  public setBindings(bindings: ControlBinding[]): void {
     if (bindings === null || bindings.length === 0) {
       this._indicator.classList.remove('bound');
       return;
@@ -97,15 +88,15 @@ export class BindableSlider implements BindableControl {
     this._indicator.classList.add('bound');
   }
 
-  triggerKeyAction(sourceBinding: KeyBinding): void {
+  public triggerKeyAction(sourceBinding: KeyBinding): void {
     throw new Error('Method not implemented.');
   }
 
-  handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
+  public handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
     throw new Error('Method not implemented.');
   }
 
-  handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
+  public handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
     const mappedValue = map(value, 0, 127, Number(this._input.min), Number(this._input.max));
     this._input.value = mappedValue.toString();
     this._textInput.value = mappedValue.toFixed(1);
@@ -113,8 +104,18 @@ export class BindableSlider implements BindableControl {
   }
 
   // ====================================================================
-  
-  private blink() {
+
+  private addBindingModeHandler(): void {
+    this.htmlElement.oncontextmenu = (evt: MouseEvent) => {
+      ControlBindingManager.getInstance().setControlBeingEdited(this);
+      evt.preventDefault();
+      evt.stopPropagation();
+      evt.cancelBubble = true;
+      return false;
+    }
+  }
+
+  private blink(): void {
     const releaseTime = 300;
     const cssClass = 'blinking';
 
@@ -136,7 +137,7 @@ injectStyle('BindableSlider', `
   display: flex;
 }
 
-.slider-textbox {
+.slider-text-box {
   width: 65px;
   padding: 4px 5px;
   margin-left: 12px;

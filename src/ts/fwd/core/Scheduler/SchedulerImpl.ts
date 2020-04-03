@@ -1,4 +1,4 @@
-import { Event, EventQueue, EventRef, ScheduledEvent, Time } from '../EventQueue/EventQueue';
+import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
 import { Scheduler } from './Scheduler';
 
@@ -43,6 +43,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this._timeProvider = _timeProvider || systemNow;
   }
 
+  /** @inheritdoc */
   public set timeProvider(timeProvider: () => number) {
     this._timeProvider = timeProvider;
   }

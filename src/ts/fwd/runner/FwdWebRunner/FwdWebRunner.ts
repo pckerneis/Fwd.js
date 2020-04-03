@@ -4,17 +4,17 @@ import { FwdHTMLControls } from '../../control/FwdHtmlControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
+import { parseNumber } from '../../core/utils/numbers';
+import { formatTime } from '../../core/utils/time';
 import audit from '../../utils/audit';
 import FwdRunner from '../FwdRunner';
-import FwdWebImpl from "./FwdWebImpl";
-import { formatTime } from '../../core/utils/time';
-import { parseNumber } from '../../core/utils/numbers';
-import { FwdWebConsole } from './components/Console';
 import { BindableButton } from './components/BindableButton';
-import { Overlay } from './components/Overlay';
+import { ControlBindingManager } from './components/BindableController';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
+import { FwdWebConsole } from './components/Console';
 import { MasterSlider } from './components/MasterSlider';
-import { ControlBindingManager } from './components/BindableControl';
+import { Overlay } from './components/Overlay';
+import FwdWebImpl from "./FwdWebImpl";
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -36,6 +36,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _actionButtons: BindableButton[];
   private _settingsOverlay: Overlay;
   private _configurationPanel: ConfigurationPanel;
+  private _actions: string[];
 
   constructor() {
     this._controls = new FwdHTMLControls();
@@ -68,8 +69,6 @@ export default class FwdWebRunner implements FwdRunner {
     this.resetActionButtons(actions);
     this._actions = actions;
   }
-
-  private _actions: string[];
 
   //==================================================================
   
@@ -137,7 +136,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._audio.listeners.push({
       audioContextStarted: (ctx: AudioContext) => {
         masterSlider.meter.audioSource = this._audio.master.nativeNode;
-      }
+      },
     });
   }
 

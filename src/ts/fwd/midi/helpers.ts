@@ -3,18 +3,18 @@ type DOMString = string;
 enum MIDIPortType {
   "input",
   "output",
-};
+}
 
 enum MIDIPortDeviceState {
   "disconnected",
   "connected",
-};
+}
 
 enum MIDIPortConnectionState {
   "open",
   "closed",
   "pending",
-};
+}
 
 interface MIDIPort {
   readonly id: DOMString;

@@ -1,4 +1,3 @@
-
 type StyleMap = { [key: string]: string };
 
 const injectedStyles: StyleMap =  {};
@@ -7,7 +6,7 @@ const preloadStyle: StyleMap = {};
 let dynamicStyleContainer: HTMLStyleElement;
 let documentLoaded = false;
 
-export function injectStyle(id: string, css: string) {
+export function injectStyle(id: string, css: string): void {
   if (injectedStyles[id] == null) {
     if(documentLoaded) {
       doInject(id, css);
@@ -19,7 +18,7 @@ export function injectStyle(id: string, css: string) {
   }
 }
 
-function doInject(id: string, css: string) {
+function doInject(id: string, css: string): void {
   if (dynamicStyleContainer == null) {
     dynamicStyleContainer = document.createElement('style');
     document.body.append(dynamicStyleContainer);

@@ -1,23 +1,23 @@
-import { injectStyle } from '../StyleInjector';
 import debounce from '../../../utils/debounce';
-import { BindableControl, ControlBindingManager, KeyBinding, ControlBinding } from './BindableControl';
+import { injectStyle } from '../StyleInjector';
+import { BindableController, ControlBinding, ControlBindingManager, ControllerKind, KeyBinding } from './BindableController';
 
-export class BindableButton implements BindableControl {
+export class BindableButton implements BindableController {
   public readonly htmlElement: HTMLElement;
 
   public action: Function;
 
-  public readonly controllerKind = 'button';
+  public readonly controllerKind: ControllerKind = 'button';
 
   public controllerId: number;
 
   private _button: HTMLButtonElement;
 
-  private _indicator: HTMLSpanElement;
+  private readonly _indicator: HTMLSpanElement;
 
   private _releaseBlinkDebounced: Function;
 
-  private _active = true;
+  private _active: boolean = true;
 
   constructor(public readonly controllerName: string) {
     this.htmlElement = this._button = document.createElement('button');
@@ -28,7 +28,7 @@ export class BindableButton implements BindableControl {
       if (this._active && this.action != null) {
         this.action();
       }
-    }
+    };
     
     this._button.oncontextmenu = (evt: MouseEvent) => {
       ControlBindingManager.getInstance().setControlBeingEdited(this);
@@ -36,14 +36,14 @@ export class BindableButton implements BindableControl {
       evt.stopPropagation();
       evt.cancelBubble = true;
       return false;
-    }
+    };
 
     this._indicator = document.createElement('span');
     this._indicator.classList.add('indicator');
     this._button.append(this._indicator);
   }
 
-  set active(active: boolean) {
+  public set active(active: boolean) {
     if (active) {
       this._button.classList.add('active');
     } else {
@@ -53,7 +53,7 @@ export class BindableButton implements BindableControl {
     this._active = active;
   }
 
-  get active(): boolean {
+  public get active(): boolean {
     return this._active;
   }
 
@@ -67,18 +67,18 @@ export class BindableButton implements BindableControl {
   
   // ====================================================================
 
-  acceptsBinding(binding: ControlBinding): boolean {
+  public acceptsBinding(binding: ControlBinding): boolean {
     return binding.kind === 'NoteOn' || binding.kind === 'KeyPress';
   }
 
-  public triggerKeyAction(sourceBinding: KeyBinding) {
+  public triggerKeyAction(sourceBinding: KeyBinding): void {
     if (this._active) {
       this.blink();
       this.action();
     }
   }
 
-  setBindings(bindings: ControlBinding[]) {
+  public setBindings(bindings: ControlBinding[]): void {
     if (bindings === null || bindings.length === 0) {
       this._indicator.classList.remove('bound');
       return;
@@ -87,23 +87,23 @@ export class BindableButton implements BindableControl {
     this._indicator.classList.add('bound');
   }
 
-  setBindingMode(bindingMode: boolean) {
+  public setBindingMode(bindingMode: boolean): void {
   }
-  
-  handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
+
+  public handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
     if (this.active) {
       this.blink();
       this.action();
     }
   }
-  
-  handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
+
+  public handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void {
     throw new Error('Method not implemented.');
   }
 
   // ====================================================================
   
-  private blink() {
+  private blink(): void {
     const releaseTime = 300;
     const cssClass = 'blinking';
 

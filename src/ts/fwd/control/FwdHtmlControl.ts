@@ -1,14 +1,14 @@
-import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
-import { ValueSource, FwdController, SliderOptions, FwdControls, FwdSlider } from './FwdControl';
+import { ControlBindingManager } from '../runner/FwdWebRunner/components/BindableController';
 import { BindableSlider } from '../runner/FwdWebRunner/components/BindableSlider';
-import { ControlBindingManager } from '../runner/FwdWebRunner/components/BindableControl';
+import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
+import { FwdController, FwdControls, FwdSlider, SliderOptions, ValueSource } from './FwdControl';
 
 export class FwdHTMLControls implements FwdControls {
   public readonly htmlElement: HTMLDivElement;
 
   private _controls: Map<string, FwdController> = new Map<string, FwdController>();
 
-  private _controlsElement: HTMLDivElement;
+  private readonly _controlsElement: HTMLDivElement;
 
   constructor() {
     this.htmlElement = document.createElement('div');

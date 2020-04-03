@@ -1,6 +1,3 @@
-import { fwd } from '../core/Fwd';
-import audit from '../utils/audit';
-
 type ControlType = 'slider';
 
 export interface ValueSource<T> {
