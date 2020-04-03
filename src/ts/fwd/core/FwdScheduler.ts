@@ -34,7 +34,7 @@ export class FwdScheduler {
    */
   public onEnded: Function;
 
-  private _scheduler: Scheduler<FwdEvent>;
+  private _scheduler: SchedulerImpl<FwdEvent>;
 
   private _state: State = 'ready';
 
@@ -44,7 +44,7 @@ export class FwdScheduler {
    * @param interval The delay between the end of a run and the next one, in milliseconds.
    * @param lookAhead The time range in which events will be considered as ready to be fired, in milliseconds.
    */
-  constructor(interval: number = 5, lookAhead: number = 50) {
+  constructor(interval: number = 8, lookAhead: number = 70) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
     this._scheduler.onEnded = () => {
       this._state = 'stopped';
@@ -53,6 +53,10 @@ export class FwdScheduler {
         this.onEnded();
       }
     }
+  }
+
+  public set timeProvider(timeProvider: () => number) {
+    this._scheduler.timeProvider = timeProvider;
   }
 
   /**

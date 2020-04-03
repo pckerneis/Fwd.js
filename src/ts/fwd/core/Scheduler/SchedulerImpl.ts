@@ -31,7 +31,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       private _interval: number,
       private _lookAhead: number,
       private _eventQueue: EventQueue<EventType> = new EventQueueImpl<EventType>(),
-      private readonly _timeProvider: () => number = null,
+      private _timeProvider: () => number = null,
   ) {
     super();
 
@@ -41,6 +41,10 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     // Using default time provider if none is specified
     this._timeProvider = _timeProvider || systemNow;
+  }
+
+  public set timeProvider(timeProvider: () => number) {
+    this._timeProvider = timeProvider;
   }
 
   /** @inheritdoc */

@@ -7,7 +7,6 @@ import { FwdLogger } from '../../core/FwdLogger';
 import audit from '../../utils/audit';
 import FwdRunner from '../FwdRunner';
 import FwdWebImpl from "./FwdWebImpl";
-import { AudioMeter } from './components/AudioMeter';
 import { formatTime } from '../../core/utils/time';
 import { parseNumber } from '../../core/utils/numbers';
 import { FwdWebConsole } from './components/Console';

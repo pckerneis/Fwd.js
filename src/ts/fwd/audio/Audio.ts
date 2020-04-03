@@ -29,6 +29,10 @@ export class FwdAudio {
 
   public initializeModule(fwd: Fwd): void {
     this._fwd = fwd;
+  
+    this._fwd.scheduler.timeProvider = () => {
+      return this._ctx.currentTime * 1000;
+    }
   }
 
   public start(): void {
@@ -71,6 +75,7 @@ export class FwdAudio {
 
   private resetAudioContext(): void {
     this._ctx = new AudioContext();
+
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
