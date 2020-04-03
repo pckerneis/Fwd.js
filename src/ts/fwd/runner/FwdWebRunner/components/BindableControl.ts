@@ -17,7 +17,6 @@ export interface BindableControl {
 
   triggerKeyAction(sourceBinding: KeyBinding): void;
   handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void;
-  // handleControlChange(binding: MIDIBinding, event: InputEventControlchange): void;
   handleControlChange(value: number, ccNumber: number, channel: number, deviceId: string): void;
 }
 
@@ -77,6 +76,8 @@ export class ControlBindingManager {
     document.addEventListener('keydown', (evt) => this.handleKeyDown(evt.code));
     this._overlay = new Overlay();
     this.watchIncomingMidi();
+
+    this.loadState();
   }
 
   public static getInstance() {
@@ -130,6 +131,8 @@ export class ControlBindingManager {
           known.midiBindings.push(binding);
         }
       });
+
+    this.saveStateOnIdle();
   }
 
   private removeRegisteredBinding(binding: ControlBinding) {
@@ -137,6 +140,8 @@ export class ControlBindingManager {
       known.midiBindings = known.midiBindings.filter(b => binding != b);
       known.keyBindings = known.keyBindings.filter(b => binding != b);
     });
+
+    this.saveStateOnIdle();
   }
 
   clearCurrentControllers() {
@@ -153,6 +158,24 @@ export class ControlBindingManager {
   }
 
   //=======================================================================================
+
+  private saveStateOnIdle() {
+    (window as any).requestIdleCallback(() => {
+      const state = {
+        known: this._knownControllers
+      };
+
+      localStorage.setItem('fwd-runner-state', JSON.stringify(state));
+    });
+  }
+
+  private loadState() {
+    const state = JSON.parse(localStorage.getItem('fwd-runner-state'));
+
+    if (state != null && state.known != null) {
+      this._knownControllers = state.known;
+    }
+  }
 
   private showMappingsOverlay() {
     if (this._controlBeingEdited !== null) {
