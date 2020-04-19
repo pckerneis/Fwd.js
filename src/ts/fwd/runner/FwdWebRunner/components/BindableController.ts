@@ -174,8 +174,14 @@ export class ControlBindingManager {
   private loadState(): void {
     const state = JSON.parse(localStorage.getItem('fwd-runner-state'));
 
+    console.log('Loading state', state);
+
     if (state != null && state.known != null) {
       this._knownControllers = state.known;
+
+      for(const known of this._knownControllers.values()) {
+        this._latestControllerId = Math.max(known.id + 1, this._latestControllerId);
+      }
     }
   }
 
