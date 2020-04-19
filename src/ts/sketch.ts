@@ -1,41 +1,61 @@
 import {fwd} from './fwd';
+import { midiToFrequency } from './fwd/midi/helpers';
 
-fwd.controls.addSlider('kickTune', {
-  defaultValue: 42,
-  min: 20,
-  max: 200,
-  step: 0.1
-});
-
-let sampler: any;
-
-export function playSample() {
-  sampler.play();
-}
+const a = 12*      23;
 
 export function init(): void {
-  fwd.log('ready');
-  sampler = fwd.audio.sampler('Brushed_bell.wav').connectToMaster();
+  const chords = [
+    [0, 7, 11, 14, 16, 23],
+    [2, 9, 13, 16, 18, 25],
+    [-2, 6, 10, 13, 14, 21],
+    [0, 7, 11, 13, 14, 16, 23]
+  ];
+
+  let dur = 4;
+  let counter = 0;
+  let base = 52;
+  let detune = 0;
+
+  const oct = (v: number) => v * 12;
+
+  const next = () => {
+    detune = fwd.random(-0.2, 0.2);
+    fwd.log('detune', detune);
+    const c = chords[counter];
+
+    c.forEach((note) => playNote(base + note + detune, dur));
+    playNote(c[0] + base + detune - oct(2), dur, 0.2);
+    playNote(c[0] + base + detune - oct(1), dur, 0.2);
+
+    fwd.schedule(dur, next);
+
+    counter++;
+
+    if (counter === chords.length) {
+      counter = 0;
+      base = Math.round(fwd.random(50, 55));
+      fwd.log('base', base);
+    }
+  };
+
+  next();
 }
 
-export function kick(): void {
-  fwd.log('kick');
-  const baseFreq = fwd.controls.getSlider('kickTune').value;
+export function playNote(pitch: number, 
+                        dur: number, 
+                        vel: number = 0.1) {
+  fwd.schedule(0, () => {
+    const baseFreq = midiToFrequency(pitch);
+    const osc = fwd.audio.osc(baseFreq);
+    const gain = fwd.audio.gain(0.0);
+    osc.connect(gain).connectToMaster();
 
-  const osc = fwd.audio.osc(baseFreq * 5);
-  const gain = fwd.audio.gain();
+    gain.gain.rampTo(vel, dur / 2);
+    fwd.wait(dur / 2)
+    gain.gain.rampTo(0, dur / 2);
+    fwd.wait(dur / 2)
 
-  osc.connect(gain).connectToMaster();
-
-  gain.rampTo(1, 0.01);
-  osc.frequency.rampTo(baseFreq, 0.03);
-
-  fwd.wait(0.1);
-  gain.rampTo(0, 0.3);
-
-  fwd.wait(1);
-  gain.tearDown();
-  osc.tearDown();
-
-  // fwd.schedule(0, kick);
+    osc.tearDown();
+    gain.tearDown();
+  });
 }
