@@ -38,7 +38,7 @@ export class Overlay {
   public hide(): void {
     this._backdrop.remove();
     
-    if (this.onclose !== null)
+    if (this.onclose !== null && typeof this.onclose === 'function')
       this.onclose();
   }
 
@@ -52,8 +52,8 @@ export class Overlay {
       const bounds = element.getBoundingClientRect();
       this._shadowElement.style.top = bounds.top + 'px';
       this._shadowElement.style.left = bounds.left + 'px';
-      this._shadowElement.style.width = (bounds.right - bounds.left) + 'px';
-      this._shadowElement.style.height = (bounds.bottom - bounds.top) + 'px';
+      this._shadowElement.style.width = bounds.right - bounds.left + 'px';
+      this._shadowElement.style.height = bounds.bottom - bounds.top + 'px';
     }
   }
 }
