@@ -71,6 +71,6 @@ export default class FwdWebImpl implements Fwd {
       return a * Math.random();
     }
   
-    return a + (b * Math.random());
+    return a + ((b - a) * Math.random());
   }
 }
