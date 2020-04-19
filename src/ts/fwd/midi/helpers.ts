@@ -68,3 +68,11 @@ export interface MIDIAccess {
 export function requestMIDIAccess(): Promise<MIDIAccess> {
   return (navigator as any).requestMIDIAccess();
 }
+
+export function midiToFrequency(noteNumber: number): number {
+  return (2 ** ((noteNumber - 69) / 12)) * 440;
+}
+
+export function frequencyToMidi(frequency: number): number {
+  return 12 * Math.log2(frequency / 440) + 69;
+}
