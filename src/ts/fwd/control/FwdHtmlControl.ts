@@ -24,10 +24,10 @@ export class FwdHTMLControls implements FwdControls {
     this._controls = new Map<string, FwdController>();
   }
 
-  public addSlider(name: string, options: SliderOptions): void {
+  public addSlider(name: string, options: SliderOptions): FwdSlider {
     if (this.nameIsAlreadyUsed(name)) {
       // fwd.err(`There's already a controller with the name ${name}.`);
-      return;
+      return null;
     }
 
     // Create HTML controls
@@ -48,10 +48,14 @@ export class FwdHTMLControls implements FwdControls {
       },
     };
 
+    const fwdSlider = new FwdSlider(valueSource, options);
+
     // Add to internal array
-    this._controls.set(name, new FwdSlider(valueSource, options));
+    this._controls.set(name, fwdSlider);
 
     ControlBindingManager.getInstance().registerController(sliderController);
+
+    return fwdSlider;
   }
 
   public getSlider(name: string): FwdSlider {

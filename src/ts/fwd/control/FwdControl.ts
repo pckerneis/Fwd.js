@@ -40,7 +40,7 @@ export interface FwdControls {
   readonly htmlElement: HTMLElement;
 
   reset(): void;
-  addSlider(name: string, options: SliderOptions): any;
+  addSlider(name: string, options: SliderOptions): FwdSlider;
   getSlider(name: string): FwdSlider;
 }
 

@@ -1,16 +1,14 @@
 import {fwd} from './fwd';
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
 
-
-fwd.controls.addSlider('kick', {
+const kickSlider = fwd.controls.addSlider('kick', {
   defaultValue: 0.2,
   min: 0,
   max: 0.8,
   step: 0.001
 });
 
-
-fwd.controls.addSlider('pad', {
+const padSlider = fwd.controls.addSlider('pad', {
   defaultValue: 0.3,
   min: 0,
   max: 0.5,
@@ -47,7 +45,7 @@ export function init(): void {
     
 
     const voices = 4;
-    const padGain = fwd.controls.getSlider('pad').value;
+    const padGain = padSlider.value;
 
     for (let i = 0; i < voices; ++i) {
       chord.forEach((note) => playNote(base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
@@ -137,7 +135,7 @@ export function kick() {
     const gain = fwd.audio.gain();
     osc.connect(gain).connectToMaster();
 
-    gain.gain.rampTo(fwd.controls.getSlider('kick').value, 0.001)
+    gain.gain.rampTo(kickSlider.value, 0.001)
     osc.frequency.rampTo(50, 0.018);
     fwd.wait(0.02);
     gain.gain.rampTo(0.0, 0.2);
