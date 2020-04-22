@@ -13,6 +13,13 @@ export interface SliderOptions {
   step: number,
 }
 
+export const defaultSliderOptions: SliderOptions = {
+  defaultValue: 1,
+  min: 0,
+  max: 0,
+  step: 0.01
+}
+
 export class FwdSlider {
 
   public readonly min: number;
@@ -34,13 +41,45 @@ export class FwdSlider {
 
 //=============================================================
 
-export type FwdController = FwdSlider;
+// type EditMode = 'insert' | 'overtype';
+
+export interface TextEditorOptions {
+  maxLength: number,
+  defaultValue: string,
+  // editMode: EditMode
+}
+
+export const defaultTextEditorOptions: TextEditorOptions = {
+  maxLength: Infinity,
+  defaultValue: '',
+  // editMode: 'insert',
+}
+
+export class FwdTextEditor {
+
+  public readonly maxLength: number;
+
+  constructor(private _valueSource: ValueSource<string>, options: TextEditorOptions) {
+    this.maxLength = options.maxLength;
+  }
+
+  public get value(): string { return this._valueSource.get(); }
+
+}
+
+//=============================================================
+
+export type FwdController = FwdSlider | FwdTextEditor;
 
 export interface FwdControls {
   readonly htmlElement: HTMLElement;
 
   reset(): void;
-  addSlider(name: string, options: SliderOptions): FwdSlider;
+
+  addSlider(name: string, options: Partial<SliderOptions>): FwdSlider;
   getSlider(name: string): FwdSlider;
+
+  addTextEditor(name: string, options: Partial<TextEditorOptions>): FwdTextEditor;
+  getTextEditor(name: string): FwdTextEditor;
 }
 

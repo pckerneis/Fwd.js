@@ -1,8 +1,9 @@
 import {fwd} from './fwd';
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
+import { FwdTextEditor } from './fwd/control/FwdControl';
 
 const kickSlider = fwd.controls.addSlider('kick', {
-  defaultValue: 0.2,
+  defaultValue: 0.5,
   min: 0,
   max: 0.8,
   step: 0.001
@@ -61,10 +62,13 @@ export function init(): void {
   next();
 }
 
+const kick1Editor = fwd.controls.addTextEditor('kick1', { defaultValue: 'x---x-----x--x--', maxLength: 16 });
+const kick2Editor = fwd.controls.addTextEditor('kick2', { defaultValue: 'x-x-----x---x--x', maxLength: 16 });
+
 function kickSequence() {
   fwd.log('Kick1');
   
-  playSequence("x---x-----x--x--", {
+  playSequence(kick1Editor, {
     sign: 'x',
     action: kick
   });
@@ -73,7 +77,7 @@ function kickSequence() {
 function kickSequence2() {
   fwd.log('Kick2');
 
-  playSequence("x-x-----x---x--x", {
+  playSequence(kick2Editor, {
     sign: 'x',
     action: kick
   });
@@ -93,11 +97,12 @@ function arp() {
   }
 }
 
-function playSequence(pattern: string, ...mappings: { sign: string, action: Function}[]) {
+function playSequence(editor: FwdTextEditor, ...mappings: { sign: string, action: Function}[]) {
   let i = 0;
   next();
 
   function next() {
+    const pattern = editor.value.padEnd(16, '-');
     const step = pattern.substring(i % pattern.length)[0];
 
     mappings.forEach(({ sign, action }) => {
