@@ -6,6 +6,8 @@ import { gainToDecibels, decibelsToGain } from '../core/utils/decibels';
 
 export interface FwdAudioListener {
   audioContextStarted(context: AudioContext): void;
+  audioTrackAdded(track: FwdAudioTrack): void;
+  audioTrackRemoved(track: FwdAudioTrack): void;
 }
 
 export class FwdAudio {
@@ -21,11 +23,15 @@ export class FwdAudio {
 
   private _tracks: Map<string, FwdAudioTrack>;
 
-  private _soloTrack: string;
+  private _soloTrack: string = null;
 
-  constructor() {
+  constructor(private _contextReady = false) {
     // this.resetAudioContext();
     this._tracks = new Map<string, FwdAudioTrack>();
+  }
+
+  public get isContextReady(): boolean {
+    return this._contextReady;
   }
 
   public get context(): AudioContext { return this._ctx; }
@@ -62,9 +68,11 @@ export class FwdAudio {
     const track = new FwdAudioTrack(this, trackName);
     this._tracks.set(trackName, track);
 
-    if (this._soloTrack !== null) {
+    if (this.isContextReady && this._soloTrack !== null) {
       track['_muteForSolo']();
     }
+
+    this.listeners.forEach(l => l.audioTrackAdded(track));
 
     return track;
   }
@@ -83,6 +91,8 @@ export class FwdAudio {
     if (this._soloTrack === trackName) {
       this._tracks.forEach(t => t['_unmuteForSolo']);
     }
+
+    this.listeners.forEach(l => l.audioTrackRemoved(track));
   }
 
   public getTrack(trackName: string): FwdAudioTrack {
@@ -138,15 +148,21 @@ export class FwdAudio {
   private resetAudioContext(): void {
     this._ctx = new AudioContext();
 
-    this._tracks.forEach(t => t.tearDown());
+    if (this.isContextReady) {
+      this._tracks.forEach(t => t.tearDown());
+    }
+
+    this._contextReady = true;
+
+    this._tracks.forEach(track => {
+      this.listeners.forEach(l => l.audioTrackRemoved(track));
+    });
     this._tracks = new Map<string, FwdAudioTrack>();
 
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    for (const listener of this.listeners) {
-      listener.audioContextStarted(this._ctx);
-    }
+    this.listeners.forEach(l => l.audioContextStarted(this._ctx));
   }
 
   private assertInit(): void {
@@ -193,27 +209,23 @@ export class FwdAudioTrack extends FwdAudioNode {
 
   private _tornDown = false;
 
-  private readonly _muteForSoloGainNode: GainNode;
-
-  private readonly _muteGainNode: GainNode;
-
-  private readonly _panNode: StereoPannerNode;
-
-  private readonly _postGainNode: GainNode;
+  private _muteForSoloGainNode: GainNode;
+  private _muteGainNode: GainNode;
+  private _panNode: StereoPannerNode;
+  private _postGainNode: GainNode;
 
   constructor(public readonly fwdAudio: FwdAudio, public readonly trackName: string) {
     super();
 
-    this._muteForSoloGainNode = this.fwdAudio.context.createGain();
-    this._muteGainNode = this.fwdAudio.context.createGain();
-    this._panNode = this.fwdAudio.context.createStereoPanner();
-    this._postGainNode = this.fwdAudio.context.createGain();
-
-    this._muteForSoloGainNode
-      .connect(this._muteGainNode)
-      .connect(this._postGainNode)
-      .connect(this._panNode)
-      .connect(this.fwdAudio.master.nativeNode);
+    if (this.fwdAudio.isContextReady) {
+      this.prepareAudio();
+    } else {
+      this.fwdAudio.listeners.push({
+        audioContextStarted: () => this.prepareAudio(),
+        audioTrackAdded: () => {},
+        audioTrackRemoved: () => {}
+      });
+    }
   }
 
   public get inputNode(): AudioNode { return this._muteForSoloGainNode; }
@@ -273,6 +285,23 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   //=========================================================================
+
+  private prepareAudio() {
+    this._muteForSoloGainNode = this.fwdAudio.context.createGain();
+    this._muteGainNode = this.fwdAudio.context.createGain();
+    this._panNode = this.fwdAudio.context.createStereoPanner();
+    this._postGainNode = this.fwdAudio.context.createGain();
+
+    this._muteForSoloGainNode.gain.value = 1;
+    this._muteGainNode.gain.value = 1;
+    this._postGainNode.gain.value = 1;
+
+    this._muteForSoloGainNode
+      .connect(this._muteGainNode)
+      .connect(this._postGainNode)
+      .connect(this._panNode)
+      .connect(this.fwdAudio.master.nativeNode);
+  }
 
   private _muteForSolo() {
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 0);

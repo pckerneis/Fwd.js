@@ -1,6 +1,7 @@
 import {fwd} from './fwd';
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
 import { FwdTextEditor } from './fwd/control/FwdControl';
+import { FwdAudioTrack } from './fwd/audio/Audio';
 
 const kickSlider = fwd.controls.addSlider('kickAmount', {
   defaultValue: 0.5,
@@ -18,15 +19,11 @@ const padSlider = fwd.controls.addSlider('padAmount', {
 
 const kick1Editor = fwd.controls.addTextEditor('kick1', { defaultValue: 'x---x-----x--x--', maxLength: 16 });
 const kick2Editor = fwd.controls.addTextEditor('kick2', { defaultValue: 'x-x-----x---x--x', maxLength: 16 });
+const chordEditor = fwd.controls.addTextEditor('chord', { defaultValue: '0, 7, 11, 14, 16, 23, 26' });
 
-const c = [0, 7, 11, 14, 16, 23, 26];
-
-const chords = [
-  c,
-  c.map(c => c + 2),
-  c.map(c => c - 2),
-  c
-];
+const synthTrack = fwd.audio.addTrack('synth');
+const kick1Track = fwd.audio.addTrack('kick1');
+const kick2Track = fwd.audio.addTrack('kick2');
 
 let chord: number[];
 let base = 52;
@@ -41,6 +38,15 @@ export function init(): void {
   const oct = (v: number) => v * 12;
 
   const next = () => {
+    const c = chordEditor.value.split(',').map(s => Number(s));
+    
+    const chords = [
+      c,
+      c.map((c: number) => c + 2),
+      c.map((c: number) => c - 2),
+      c
+    ];
+
     chord = chords[counter % chords.length];
 
     if (counter === 4)    kickSequence();
@@ -52,8 +58,7 @@ export function init(): void {
     const padGain = padSlider.value;
 
     for (let i = 0; i < voices; ++i) {
-      const pan = fwd.random(-1, 1);
-      chord.forEach((note) => playNote(base + note + fwd.random(-detune, detune), dur, 0.1 * padGain, pan));
+      chord.forEach((note) => playNote(base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
       playNote(chord[0] + base + fwd.random(-detune, detune) - oct(2), dur, 0.2 * padGain);
       playNote(chord[0] + base + fwd.random(-detune, detune) - oct(1), dur, 0.2 * padGain);
     }
@@ -70,7 +75,7 @@ function kickSequence() {
   
   playSequence(kick1Editor, {
     sign: 'x',
-    action: () => kick(1)
+    action: () => kick(kick1Track)
   });
 }
 
@@ -79,7 +84,7 @@ function kickSequence2() {
 
   playSequence(kick2Editor, {
     sign: 'x',
-    action: () => kick(-1)
+    action: () => kick(kick2Track)
   });
 }
 
@@ -90,7 +95,7 @@ function arp() {
 
   function next() {
     const step = base + chord[i % chord.length] + Math.floor(i / chord.length) * 12;
-    playNote(step, 1/8, 0.2, fwd.random(-1, 1));
+    playNote(step, 1/8, 0.2);
     i++;
     i %= 16;
     fwd.schedule(1/8, next);
@@ -119,16 +124,12 @@ let trackCounter = 0;
 
 function playNote(pitch: number, 
                   dur: number, 
-                  vel: number = 0.05,
-                  pan: number = 0.0) {
+                  vel: number = 0.05) {
   fwd.schedule(0, () => {
     const baseFreq = mtof(pitch);
     const osc = fwd.audio.osc(baseFreq);
     const gain = fwd.audio.gain(0.0);
-    const track = fwd.audio.addTrack('track' + (trackCounter++));
-    osc.connect(gain).connect(track);
-    
-    track.pan = pan;
+    osc.connect(gain).connect(synthTrack);
 
     gain.gain.rampTo(vel, dur / 2);
     fwd.wait(dur / 2)
@@ -140,16 +141,12 @@ function playNote(pitch: number,
   });
 }
 
-export function kick(pan: number = 0) {
+export function kick(track: FwdAudioTrack) {
   fwd.schedule(0, () => {
     const osc = fwd.audio.osc(1000);
     const gain = fwd.audio.gain();
     
-    const track = fwd.audio.addTrack('track' + (trackCounter++));
     osc.connect(gain).connect(track);
-    
-    track.pan = pan;
-    osc.connect(gain).connectToMaster();
 
     gain.gain.rampTo(kickSlider.value, 0.001)
     osc.frequency.rampTo(50, 0.018);

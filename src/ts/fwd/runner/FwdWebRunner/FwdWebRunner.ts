@@ -1,4 +1,4 @@
-import { FwdAudio } from "../../audio/Audio";
+import { FwdAudio, FwdAudioTrack } from "../../audio/Audio";
 import { FwdControls } from '../../control/FwdControl';
 import { FwdHTMLControls } from '../../control/FwdHtmlControl';
 import { Time } from "../../core/EventQueue/EventQueue";
@@ -15,7 +15,7 @@ import { FwdWebConsole } from './components/Console';
 import { MasterSlider } from './components/MasterSlider';
 import { Overlay } from './components/Overlay';
 import FwdWebImpl from "./FwdWebImpl";
-import { MixerSection } from './components/MixerTrack';
+import { MixerSection, MixerTrack } from './components/MixerTrack';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -37,6 +37,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _settingsOverlay: Overlay;
   private _configurationPanel: ConfigurationPanel;
   private _actions: string[];
+  private _mixerSection: MixerSection;
 
   constructor() {
     this._controls = new FwdHTMLControls();
@@ -112,6 +113,8 @@ export default class FwdWebRunner implements FwdRunner {
     ControlBindingManager.getInstance().clearCurrentControllers();
     this.resetActionButtons(this._actions);
 
+    this._mixerSection.clearTracks();
+
     this._audio.start();
 
     this.entryPoint();
@@ -135,8 +138,14 @@ export default class FwdWebRunner implements FwdRunner {
     document.getElementById(containerId).append(masterSlider.htmlElement);
 
     this._audio.listeners.push({
-      audioContextStarted: (ctx: AudioContext) => {
+      audioContextStarted: (/*ctx: AudioContext*/) => {
         masterSlider.meter.audioSource = this._audio.master.nativeNode;
+      },
+      audioTrackAdded: (track: FwdAudioTrack) => {
+        this._mixerSection.addTrack(track);
+      },
+      audioTrackRemoved: (track: FwdAudioTrack) => {
+        this._mixerSection.removeTrack(track);
       },
     });
   }
@@ -205,8 +214,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private prepareMixerSection() {
-    const mixer = new MixerSection();
-    document.getElementById(containerId).append(mixer.htmlElement);
+    this._mixerSection = new MixerSection();
+    document.getElementById(containerId).append(this._mixerSection.htmlElement);
   }
-
 }
