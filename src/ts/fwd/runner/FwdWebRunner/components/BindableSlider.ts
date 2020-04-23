@@ -163,7 +163,7 @@ injectStyle('BindableSlider', `
   background: #69b2cfa1;
 }
 
-input[type=range]::-webkit-slider-thumb {
+input[type=range].slider::-webkit-slider-thumb {
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
   height: 16px;
   width: 16px;

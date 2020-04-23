@@ -127,15 +127,15 @@ button:hover:not([disabled]) {
 /* sliders */
 /* http://danielstern.ca/range.css/#/ */
 
-input[type=range] {
+input[type=range].slider {
   -webkit-appearance: none;
   margin: 4.6px 0;
   background: none;
 }
-input[type=range]:focus {
+input[type=range].slider:focus {
   outline: none;
 }
-input[type=range]::-webkit-slider-runnable-track {
+input[type=range].slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 8.8px;
   cursor: pointer;
@@ -144,7 +144,7 @@ input[type=range]::-webkit-slider-runnable-track {
   border-radius: 10px;
   border: 0;
 }
-input[type=range]::-webkit-slider-thumb {
+input[type=range].slider::-webkit-slider-thumb {
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
   background: #00000005;
   height: 16px;
@@ -155,13 +155,13 @@ input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   margin-top: -4.8px;
 }
-input[type=range]:focus::-webkit-slider-runnable-track {
+input[type=range].slider:focus::-webkit-slider-runnable-track {
   background: #00000015;
 }
-input[type=range]:focus::-webkit-slider-thumb {
+input[type=range].slider:focus::-webkit-slider-thumb {
   border: 1px solid #00000080;
 }
-input[type=range]::-moz-range-track {
+input[type=range].slider::-moz-range-track {
   width: 100%;
   height: 8.8px;
   cursor: pointer;
@@ -170,7 +170,7 @@ input[type=range]::-moz-range-track {
   border-radius: 6.9px;
   border: 0.2px solid #000101;
 }
-input[type=range]::-moz-range-thumb {
+input[type=range].slider::-moz-range-thumb {
   box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
   border: 0.5px solid rgba(0, 0, 0, 0.21);
   height: 18px;
@@ -179,7 +179,7 @@ input[type=range]::-moz-range-thumb {
   background: #ffffff;
   cursor: pointer;
 }
-input[type=range]::-ms-track {
+input[type=range].slider::-ms-track {
   width: 100%;
   height: 8.8px;
   cursor: pointer;
@@ -187,19 +187,19 @@ input[type=range]::-ms-track {
   border-color: transparent;
   color: transparent;
 }
-input[type=range]::-ms-fill-lower {
+input[type=range].slider::-ms-fill-lower {
   background: rgba(0, 0, 0, 0.07);
   border: 0.2px solid #000101;
   border-radius: 13.8px;
   box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
 }
-input[type=range]::-ms-fill-upper {
+input[type=range].slider::-ms-fill-upper {
   background: rgba(0, 0, 0, 0.07);
   border: 0.2px solid #000101;
   border-radius: 13.8px;
   box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
 }
-input[type=range]::-ms-thumb {
+input[type=range].slider::-ms-thumb {
   box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
   border: 0.5px solid rgba(0, 0, 0, 0.21);
   height: 18px;
@@ -209,10 +209,10 @@ input[type=range]::-ms-thumb {
   cursor: pointer;
   height: 8.8px;
 }
-input[type=range]:focus::-ms-fill-lower {
+input[type=range].slider:focus::-ms-fill-lower {
   background: rgba(0, 0, 0, 0.07);
 }
-input[type=range]:focus::-ms-fill-upper {
+input[type=range].slider:focus::-ms-fill-upper {
   background: rgba(13, 13, 13, 0.07);
 }
 

@@ -15,6 +15,7 @@ import { FwdWebConsole } from './components/Console';
 import { MasterSlider } from './components/MasterSlider';
 import { Overlay } from './components/Overlay';
 import FwdWebImpl from "./FwdWebImpl";
+import { MixerSection } from './components/MixerTrack';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -25,7 +26,6 @@ const actionContainerId = 'actions';
 const settingsButtonId = 'settings-button';
 
 export default class FwdWebRunner implements FwdRunner {
-
   public sketchModule: any;
   public entryPoint: Function;
 
@@ -58,6 +58,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.initializeMainControls();
     this.initializeTimeCode();
     this.prepareSettingsMenu();
+    this.prepareMixerSection();
     this.prepareMasterSlider();
   }
   
@@ -202,4 +203,10 @@ export default class FwdWebRunner implements FwdRunner {
       this._settingsOverlay.show();
     });
   }
+
+  private prepareMixerSection() {
+    const mixer = new MixerSection();
+    document.getElementById(containerId).append(mixer.htmlElement);
+  }
+
 }

@@ -15,7 +15,7 @@ export class MasterSlider {
     input.min = '0';
     input.max = '100';
     input.value = '77';
-    input.classList.add('master-slider');
+    input.classList.add('master-slider', 'slider');
     input.id = 'master-slider';
     this.slider = input;
 
