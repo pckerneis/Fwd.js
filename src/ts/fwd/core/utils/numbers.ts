@@ -27,3 +27,16 @@ export function parseNumber(str: any): number {
     (typeof str === 'number' ? str :
       (typeof str === 'string' ? Number.parseFloat(str) : 0));
 }
+
+/**
+ * Constrain a numeric value between two numeric bounds. The order between the bounds isn't revelant.
+ * 
+ * @param value the value to contrain
+ * @param a first bound 
+ * @param b second bound
+ */
+export function clamp(value: number, a: number, b: number) {
+  const min = Math.min(a, b);
+  const max = Math.max(a, b);
+  return Math.min(Math.max(min, value), max);
+}

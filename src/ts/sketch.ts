@@ -2,19 +2,22 @@ import {fwd} from './fwd';
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
 import { FwdTextEditor } from './fwd/control/FwdControl';
 
-const kickSlider = fwd.controls.addSlider('kick', {
+const kickSlider = fwd.controls.addSlider('kickAmount', {
   defaultValue: 0.5,
   min: 0,
   max: 0.8,
   step: 0.001
 });
 
-const padSlider = fwd.controls.addSlider('pad', {
+const padSlider = fwd.controls.addSlider('padAmount', {
   defaultValue: 0.3,
   min: 0,
   max: 0.5,
   step: 0.001
 });
+
+const kick1Editor = fwd.controls.addTextEditor('kick1', { defaultValue: 'x---x-----x--x--', maxLength: 16 });
+const kick2Editor = fwd.controls.addTextEditor('kick2', { defaultValue: 'x-x-----x---x--x', maxLength: 16 });
 
 const c = [0, 7, 11, 14, 16, 23, 26];
 
@@ -49,7 +52,8 @@ export function init(): void {
     const padGain = padSlider.value;
 
     for (let i = 0; i < voices; ++i) {
-      chord.forEach((note) => playNote(base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
+      const pan = fwd.random(-1, 1);
+      chord.forEach((note) => playNote(base + note + fwd.random(-detune, detune), dur, 0.1 * padGain, pan));
       playNote(chord[0] + base + fwd.random(-detune, detune) - oct(2), dur, 0.2 * padGain);
       playNote(chord[0] + base + fwd.random(-detune, detune) - oct(1), dur, 0.2 * padGain);
     }
@@ -61,16 +65,12 @@ export function init(): void {
 
   next();
 }
-
-const kick1Editor = fwd.controls.addTextEditor('kick1', { defaultValue: 'x---x-----x--x--', maxLength: 16 });
-const kick2Editor = fwd.controls.addTextEditor('kick2', { defaultValue: 'x-x-----x---x--x', maxLength: 16 });
-
 function kickSequence() {
   fwd.log('Kick1');
   
   playSequence(kick1Editor, {
     sign: 'x',
-    action: kick
+    action: () => kick(1)
   });
 }
 
@@ -79,7 +79,7 @@ function kickSequence2() {
 
   playSequence(kick2Editor, {
     sign: 'x',
-    action: kick
+    action: () => kick(-1)
   });
 }
 
@@ -90,7 +90,7 @@ function arp() {
 
   function next() {
     const step = base + chord[i % chord.length] + Math.floor(i / chord.length) * 12;
-    playNote(step, 1/8, 0.2);
+    playNote(step, 1/8, 0.2, fwd.random(-1, 1));
     i++;
     i %= 16;
     fwd.schedule(1/8, next);
@@ -115,14 +115,20 @@ function playSequence(editor: FwdTextEditor, ...mappings: { sign: string, action
   }
 }
 
+let trackCounter = 0;
+
 function playNote(pitch: number, 
-                        dur: number, 
-                        vel: number = 0.05) {
+                  dur: number, 
+                  vel: number = 0.05,
+                  pan: number = 0.0) {
   fwd.schedule(0, () => {
     const baseFreq = mtof(pitch);
     const osc = fwd.audio.osc(baseFreq);
     const gain = fwd.audio.gain(0.0);
-    osc.connect(gain).connectToMaster();
+    const track = fwd.audio.addTrack('track' + (trackCounter++));
+    osc.connect(gain).connect(track);
+    
+    track.pan = pan;
 
     gain.gain.rampTo(vel, dur / 2);
     fwd.wait(dur / 2)
@@ -134,10 +140,15 @@ function playNote(pitch: number,
   });
 }
 
-export function kick() {
+export function kick(pan: number = 0) {
   fwd.schedule(0, () => {
     const osc = fwd.audio.osc(1000);
     const gain = fwd.audio.gain();
+    
+    const track = fwd.audio.addTrack('track' + (trackCounter++));
+    osc.connect(gain).connect(track);
+    
+    track.pan = pan;
     osc.connect(gain).connectToMaster();
 
     gain.gain.rampTo(kickSlider.value, 0.001)
