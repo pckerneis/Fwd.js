@@ -406,11 +406,19 @@ export class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
 //=========================================================================
 
 export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
+
+  private static MIN_FREQ = 0;
+  private static MAX_FREQ = 40000;
   
   constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
     super(fwdAudio, fwdAudio.context.createOscillator());
 
-    this.nativeNode.frequency.value = freq;
+    if (! isNaN(freq)) {
+      this.nativeNode.frequency.value = clamp(freq, FwdOscillatorNode.MIN_FREQ, FwdOscillatorNode.MAX_FREQ);
+    } else {
+      this.nativeNode.frequency.value = 0;
+    }
+
     this.nativeNode.type = type;
     this.nativeNode.start();
   }
@@ -428,6 +436,12 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   }
 
   public setFrequency(fq: number): void {
+    if (isNaN(fq)) {
+      return;
+    }
+
+    fq = clamp(fq, FwdOscillatorNode.MIN_FREQ, FwdOscillatorNode.MAX_FREQ);
+
     const audioNow = this.fwdAudio.now();
     this.nativeNode.frequency.setValueAtTime(fq, audioNow);
   }
