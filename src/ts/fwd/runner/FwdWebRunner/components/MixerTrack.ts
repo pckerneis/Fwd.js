@@ -1,17 +1,19 @@
-import { injectStyle } from '../StyleInjector';
-import { clamp } from '../../../core/utils/numbers';
 import { FwdAudioTrack } from '../../../audio/Audio';
+import { clamp } from '../../../core/utils/numbers';
+import { injectStyle } from '../StyleInjector';
+
+type TrackElementsMap = Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>;
 
 export class MixerSection {
+
+  public static TRACK_WIDTH: number = 70;
+  public static TRACK_SECTION_HEIGHT: number = 200;
   public readonly htmlElement: HTMLDivElement;
 
-  private _tracksElement: HTMLDivElement;
-  private _labelsElement: HTMLDivElement;
+  private readonly _tracksElement: HTMLDivElement;
+  private readonly _labelsElement: HTMLDivElement;
 
-  public static TRACK_WIDTH = 70;
-  public static TRACK_SECTION_HEIGHT = 200;
-
-  private readonly _trackElements = new Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>();
+  private readonly _trackElements: TrackElementsMap = new Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>();
 
   constructor() {
     this.htmlElement = document.createElement('div');
@@ -26,7 +28,7 @@ export class MixerSection {
     this.htmlElement.append(this._tracksElement, this._labelsElement);
   }
 
-  addTrack(track: FwdAudioTrack) {
+  public addTrack(track: FwdAudioTrack): void {
     const mixerTrack = new MixerTrack(track);
     this._tracksElement.append(mixerTrack.htmlElement);
 
@@ -45,7 +47,7 @@ export class MixerSection {
     this._trackElements.set(track.trackName, { label, mixerTrack });
   }
 
-  removeTrack(track: FwdAudioTrack) {
+  public removeTrack(track: FwdAudioTrack): void {
     const elements = this._trackElements.get(track.trackName);
 
     if (elements == null) {
@@ -63,7 +65,7 @@ export class MixerSection {
     this._trackElements.delete(track.trackName);
   }
 
-  clearTracks() {
+  public clearTracks(): void {
     this._trackElements.forEach(({mixerTrack}) => {
       this.removeTrack(mixerTrack.audioTrack);
     });
@@ -114,17 +116,15 @@ injectStyle('MixerSection', `
 export class VerticalSlider {
   public readonly htmlElement: HTMLElement;
 
-  private trackElement: HTMLElement;
-
-  private preThumbElement: HTMLElement;
-  private thumbElement: HTMLElement;
-  private postThumbElement: HTMLElement;
-
   public oninput: Function;
+
+  private readonly trackElement: HTMLElement;
+  private readonly preThumbElement: HTMLElement;
+  private readonly thumbElement: HTMLElement;
   
   constructor() {
     this.htmlElement = document.createElement('div');
-    this.htmlElement.classList.add('vertical-slider')
+    this.htmlElement.classList.add('vertical-slider');
 
     this.trackElement = document.createElement('div');
     this.trackElement.classList.add('vertical-slider-track');
@@ -136,9 +136,6 @@ export class VerticalSlider {
     this.thumbElement = document.createElement('div');
     this.thumbElement.classList.add('vertical-slider-thumb');
 
-    this.postThumbElement = document.createElement('div');
-    this.postThumbElement.classList.add('vertical-slider-post-thumb');
-
     this.htmlElement.append(this.trackElement);
     
     this.trackElement.append(
@@ -149,7 +146,7 @@ export class VerticalSlider {
     dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
     this.htmlElement.draggable = true;
 
-    const focus = () => { this.trackElement.focus(); }
+    const focus = () => { this.trackElement.focus(); };
     const moveThumb = (event: MouseEvent) => {
       if (event.screenX === 0 && event.screenY === 0) { return; }
       const ratio = clamp(event.offsetY / this.trackElement.clientHeight, 0, 1);
@@ -159,7 +156,7 @@ export class VerticalSlider {
       if (typeof this.oninput === 'function') {
         this.oninput(1.0 - ratio);
       }
-    }
+    };
 
     this.thumbElement.style.pointerEvents = 'none';
     this.trackElement.style.pointerEvents = 'none';
@@ -222,16 +219,13 @@ export class MixerTrack {
   public readonly activeButton: HTMLInputElement;
   public readonly soloButton: HTMLInputElement;
 
-  private readonly minGain = -180.0;
-  private readonly maxGain = 6.0;
-
   public onvolumechange: Function;
 
   constructor(public readonly audioTrack: FwdAudioTrack) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('mixer-track');
 
-    this.panSlider = this.createRangeInput(0, -1, 1, 0.001);
+    this.panSlider = MixerTrack.createRangeInput(0, -1, 1, 0.001);
     this.panSlider.classList.add('slider', 'mixer-track-pan-slider');
 
     this.volumeSlider = new VerticalSlider();
@@ -250,7 +244,7 @@ export class MixerTrack {
       this.panSlider,
       this.volumeSlider.htmlElement,
       this.soloButton,
-      this.activeButton
+      this.activeButton,
     );
 
     
@@ -261,7 +255,7 @@ export class MixerTrack {
     };
   }
 
-  private createRangeInput(value: number, min: number, max: number, step: number): HTMLInputElement {
+  private static createRangeInput(value: number, min: number, max: number, step: number): HTMLInputElement {
     const input = document.createElement('input');
     input.type = 'range';
     input.value = value.toString();

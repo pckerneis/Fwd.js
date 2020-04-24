@@ -2,9 +2,9 @@ import { ControlBindingManager } from '../runner/FwdWebRunner/components/Bindabl
 import { BindableSlider } from '../runner/FwdWebRunner/components/BindableSlider';
 import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
 import { 
-  FwdController, FwdControls, ValueSource,
-  FwdSlider, SliderOptions, defaultSliderOptions,
-  FwdTextEditor, TextEditorOptions, defaultTextEditorOptions 
+  defaultSliderOptions, defaultTextEditorOptions, FwdController,
+  FwdControls, FwdSlider, FwdTextEditor,
+  SliderOptions, TextEditorOptions, ValueSource,
 } from './FwdControl';
 
 export class FwdHTMLControls implements FwdControls {
@@ -36,7 +36,7 @@ export class FwdHTMLControls implements FwdControls {
 
     const sliderOptions = {
       ...defaultSliderOptions,
-      ...options
+      ...options,
     };
 
     // Create HTML controls
@@ -80,7 +80,7 @@ export class FwdHTMLControls implements FwdControls {
 
     const textEditorOptions = {
       ...defaultTextEditorOptions,
-      ...options
+      ...options,
     };
 
     // Create HTML controls
@@ -104,7 +104,7 @@ export class FwdHTMLControls implements FwdControls {
 
       textarea.value = textarea.value.substring(0, textEditorOptions.maxLength);
       textarea.setSelectionRange(selection.start, selection.end, selection.direction);
-    }
+    };
 
     row.append(label);
     row.append(textarea);

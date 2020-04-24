@@ -1,7 +1,7 @@
 import { Time } from '../EventQueue/EventQueue';
 
 /**
- * Format a time value in milleseconds as `hh:mm:ss:mls`
+ * Format a time value in milliseconds as `hh:mm:ss:mls`
  * @param time the milliseconds value to format
  */
 export function formatTime(time: Time): string {

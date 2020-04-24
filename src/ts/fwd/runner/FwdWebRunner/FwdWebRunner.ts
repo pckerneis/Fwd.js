@@ -13,9 +13,9 @@ import { ControlBindingManager } from './components/BindableController';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { FwdWebConsole } from './components/Console';
 import { MasterSlider } from './components/MasterSlider';
+import { MixerSection } from './components/MixerTrack';
 import { Overlay } from './components/Overlay';
 import FwdWebImpl from "./FwdWebImpl";
-import { MixerSection, MixerTrack } from './components/MixerTrack';
 
 const containerId = 'container';
 const startButtonId = 'start-button';
@@ -213,7 +213,7 @@ export default class FwdWebRunner implements FwdRunner {
     });
   }
 
-  private prepareMixerSection() {
+  private prepareMixerSection(): void {
     this._mixerSection = new MixerSection();
     document.getElementById(containerId).append(this._mixerSection.htmlElement);
   }

@@ -17,8 +17,8 @@ export const defaultSliderOptions: SliderOptions = {
   defaultValue: 1,
   min: 0,
   max: 0,
-  step: 0.01
-}
+  step: 0.01,
+};
 
 export class FwdSlider {
 
@@ -41,7 +41,7 @@ export class FwdSlider {
 
 //=============================================================
 
-// type EditMode = 'insert' | 'overtype';
+// type EditMode = 'insert' | 'overwrite';
 
 export interface TextEditorOptions {
   maxLength: number,
@@ -53,7 +53,7 @@ export const defaultTextEditorOptions: TextEditorOptions = {
   maxLength: Infinity,
   defaultValue: '',
   // editMode: 'insert',
-}
+};
 
 export class FwdTextEditor {
 
