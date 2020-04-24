@@ -14,11 +14,20 @@ const padSlider = fwd.controls.addSlider('padAmount', {
   defaultValue: 0.3,
   min: 0,
   max: 0.5,
-  step: 0.001
+  step: 0.001,
 });
 
-const kick1Editor = fwd.controls.addTextEditor('kick1', { defaultValue: 'x---x-----x--x--', maxLength: 16 });
-const kick2Editor = fwd.controls.addTextEditor('kick2', { defaultValue: 'x-x-----x---x--x', maxLength: 16 });
+const kick1Editor = fwd.controls.addTextEditor('kick1', {
+  defaultValue: 'x---x-----x--x--',
+  maxLength: 16,
+  writeMode: 'overwrite',
+});
+
+const kick2Editor = fwd.controls.addTextEditor('kick2', {
+  defaultValue: 'x-x-----x---x--x',
+  maxLength: 16,
+  writeMode: 'overwrite',
+});
 const chordEditor = fwd.controls.addTextEditor('chord', { defaultValue: '0, 7, 11, 14, 16, 23, 26' });
 
 const synthTrack = fwd.audio.addTrack('synth');

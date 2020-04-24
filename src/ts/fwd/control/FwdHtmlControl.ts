@@ -1,5 +1,6 @@
 import { ControlBindingManager } from '../runner/FwdWebRunner/components/BindableController';
 import { BindableSlider } from '../runner/FwdWebRunner/components/BindableSlider';
+import { TextArea } from "../runner/FwdWebRunner/components/TextArea";
 import { injectStyle } from '../runner/FwdWebRunner/StyleInjector';
 import { 
   defaultSliderOptions, defaultTextEditorOptions, FwdController,
@@ -90,29 +91,16 @@ export class FwdHTMLControls implements FwdControls {
     const label = document.createElement('label');
     label.innerText = name;
 
-    const textarea = document.createElement('textarea');
-    textarea.classList.add('text-editor-controller');
-    textarea.value = textEditorOptions.defaultValue;
-    textarea.style.height = '0';
-    
-    textarea.oninput = () => {
-      const selection = {
-        start: textarea.selectionStart,
-        end: textarea.selectionEnd,
-        direction: textarea.selectionDirection,
-      };
-
-      textarea.value = textarea.value.substring(0, textEditorOptions.maxLength);
-      textarea.setSelectionRange(selection.start, selection.end, selection.direction);
-    };
+    const editor = new TextArea();
+    editor.htmlElement.classList.add('text-editor-controller');
 
     row.append(label);
-    row.append(textarea);
+    row.append(editor.htmlElement);
     this._controlsElement.append(row);
 
     const valueSource: ValueSource<string> = {
       get(): string {
-        return textarea.value;
+        return editor.value;
       },
     };
 
@@ -120,6 +108,10 @@ export class FwdHTMLControls implements FwdControls {
 
     // Add to internal array
     this._controls.set(name, fwdTextEditor);
+
+    editor.mode = textEditorOptions.writeMode;
+    editor.maxLength = textEditorOptions.maxLength;
+    editor.value = textEditorOptions.defaultValue;
 
     return fwdTextEditor;
   }
@@ -187,7 +179,6 @@ injectStyle('FwdWebControls', `
   min-height: 16px;
   border: 0;
   border-radius: 5px;
-  padding: 2px 5px;
   background-color: #00000003;
   box-shadow: 1px 1px 4px 0 inset #0000001f;
 }

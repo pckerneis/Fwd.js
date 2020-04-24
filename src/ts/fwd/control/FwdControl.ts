@@ -42,18 +42,18 @@ export class FwdSlider {
 
 //=============================================================
 
-// type EditMode = 'insert' | 'overwrite';
+export type WriteMode = 'insert' | 'overwrite';
 
 export interface TextEditorOptions {
   maxLength: number,
   defaultValue: string,
-  // editMode: EditMode
+  writeMode: WriteMode,
 }
 
 export const defaultTextEditorOptions: TextEditorOptions = {
   maxLength: Infinity,
   defaultValue: '',
-  // editMode: 'insert',
+  writeMode: 'insert',
 };
 
 export class FwdTextEditor {
