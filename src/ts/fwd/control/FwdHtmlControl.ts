@@ -121,8 +121,6 @@ export class FwdHTMLControls implements FwdControls {
     // Add to internal array
     this._controls.set(name, fwdTextEditor);
 
-    // ControlBindingManager.getInstance().registerController(sliderController);
-
     return fwdTextEditor;
   }
 

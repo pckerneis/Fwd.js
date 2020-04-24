@@ -119,8 +119,8 @@ export class FwdAudio {
   }
 
   public unsoloAllTracks(): void {
-    if (this._soloTrack != null) {
-      this._tracks.forEach((t) => t['_unmuteForSolo']);
+    if (this._soloTrack !== null) {
+      this._tracks.forEach((t) => t['_unmuteForSolo']());
       this._soloTrack = null;
     }
   }
@@ -315,11 +315,12 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   private _muteForSolo(): void {
-    DBG('mute');
+    DBG('mute for solo');
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 0);
   }
 
   private _unmuteForSolo(): void {
+    DBG('unmute for solo');
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 1);
   }
 

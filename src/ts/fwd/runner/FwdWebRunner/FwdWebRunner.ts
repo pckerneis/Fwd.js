@@ -13,7 +13,7 @@ import { ControlBindingManager } from './components/BindableController';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { FwdWebConsole } from './components/Console';
 import { MasterSlider } from './components/MasterSlider';
-import { MixerSection } from './components/MixerTrack';
+import { MixerSection } from './components/MixerSection';
 import { Overlay } from './components/Overlay';
 import FwdWebImpl from "./FwdWebImpl";
 
