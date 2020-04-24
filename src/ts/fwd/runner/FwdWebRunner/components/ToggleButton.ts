@@ -36,21 +36,37 @@ export class ToggleButton {
     }
 
     this._toggled = shouldBeToggled;
+    this._updateClasses();
 
-    if (shouldBeToggled) {
-      this.htmlElement.classList.add('toggled');
-    } else {
-      this.htmlElement.classList.remove('toggled');
-    }
-
-    this.notify();
+    this._notify();
   }
 
   public get toggled(): boolean {
     return this._toggled;
   }
 
-  private notify(): void {
+  public setToggled(shouldBeToggled: boolean, sendNotification: boolean): void {
+    if (this._toggled === shouldBeToggled) {
+      return;
+    }
+
+    this._toggled = shouldBeToggled;
+    this._updateClasses();
+
+    if (sendNotification) {
+      this._notify();
+    }
+  }
+
+  private _updateClasses(): void {
+    if (this._toggled) {
+      this.htmlElement.classList.add('toggled');
+    } else {
+      this.htmlElement.classList.remove('toggled');
+    }
+  }
+
+  private _notify(): void {
     if (typeof this.oninput === 'function') {
       this.oninput();
     }

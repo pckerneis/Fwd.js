@@ -102,7 +102,9 @@ export class FwdAudio {
   }
 
   public soloTrack(trackName: string): void {
-    if (this.getTrack(trackName) === null) {
+    const track = this.getTrack(trackName);
+
+    if (track === null) {
       fwd.err(`The track ${trackName} doesn't exist.`);
       return;
     }
@@ -115,12 +117,23 @@ export class FwdAudio {
       }
     });
 
+    if (this._soloTrack !== null) {
+      DBG('soloTrack(): transmit unsolo event for previous solo track', this._soloTrack);
+      this._tracks.get(this._soloTrack).listeners.forEach((l) => l.onTrackUnsolo());
+    }
+
     this._soloTrack = trackName;
+    track.listeners.forEach((l) => l.onTrackSolo());
   }
 
   public unsoloAllTracks(): void {
     if (this._soloTrack !== null) {
       this._tracks.forEach((t) => t['_unmuteForSolo']());
+      DBG('unsoloAllTracks: _unmuteForSolo called');
+      this._tracks.get(this._soloTrack).listeners.forEach((l) => {
+        l.onTrackUnsolo();
+        DBG('unsoloAllTracks: transmit unsolo event');
+      });
       this._soloTrack = null;
     }
   }
@@ -214,8 +227,18 @@ export abstract class FwdAudioNode {
 
 //=========================================================================
 
+export interface FwdAudioTrackListener {
+  onTrackMute: Function,
+  onTrackUnmute: Function,
+  onTrackSolo: Function,
+  onTrackUnsolo: Function,
+}
+
 export class FwdAudioTrack extends FwdAudioNode {
 
+  public readonly listeners: FwdAudioTrackListener[] = [];
+
+  private _audioReady: boolean = false;
   private _tornDown: boolean = false;
 
   private _muteForSoloGainNode: GainNode;
@@ -240,7 +263,11 @@ export class FwdAudioTrack extends FwdAudioNode {
   public get inputNode(): AudioNode { return this._muteForSoloGainNode; }
   public get outputNode(): AudioNode { return this._panNode; }
 
+  public get audioIsReady(): boolean { return this._audioReady; }
+  public get wasTornDown(): boolean { return this._tornDown; }
+
   public get gain(): number {
+    this.assertReady();
     return this._postGainNode.gain.value;
   }
 
@@ -251,6 +278,7 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public get volume(): number {
+    this.assertReady();
     return gainToDecibels(this._postGainNode.gain.value);
   }
 
@@ -259,33 +287,35 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public set pan(value: number) {
-    this.assertNotTornDown();
+    this.assertReady();
     const clamped = clamp(value, -1, 1);
     this.setValueSmoothed(this._panNode.pan, clamped);
   }
 
   public solo(): void {
-    this.assertNotTornDown();
-    this.fwdAudio.soloTrack(this.trackName)
+    this.assertReady();
+    this.fwdAudio.soloTrack(this.trackName);
   }
 
   public unsolo(): void {
-    this.assertNotTornDown();
+    this.assertReady();
     // this.fwdAudio.unsoloTrack(this.trackName)
-    // TODO: replace with previous line when implemented
+    // TODO: replace with previous line when multi-soloing is implemented
     this.fwdAudio.unsoloAllTracks();
   }
 
   public mute(): void {
     this.setValueSmoothed(this._postGainNode.gain, 0);
+    this.listeners.forEach((l) => l.onTrackMute());
   }
 
   public unmute(): void {
     this.setValueSmoothed(this._postGainNode.gain, 1);
+    this.listeners.forEach((l) => l.onTrackUnmute());
   }
 
   public tearDown(): void {
-    this.assertNotTornDown();
+    this.assertReady();
 
     this._muteForSoloGainNode.disconnect();
     this._muteGainNode.disconnect();
@@ -298,6 +328,10 @@ export class FwdAudioTrack extends FwdAudioNode {
   //=========================================================================
 
   private prepareAudio(): void {
+    if (this._audioReady) {
+      return;
+    }
+
     this._muteForSoloGainNode = this.fwdAudio.context.createGain();
     this._muteGainNode = this.fwdAudio.context.createGain();
     this._panNode = this.fwdAudio.context.createStereoPanner();
@@ -312,6 +346,8 @@ export class FwdAudioTrack extends FwdAudioNode {
       .connect(this._postGainNode)
       .connect(this._panNode)
       .connect(this.fwdAudio.master.nativeNode);
+
+    this._audioReady = true;
   }
 
   private _muteForSolo(): void {
@@ -326,6 +362,17 @@ export class FwdAudioTrack extends FwdAudioNode {
 
   private setValueSmoothed(audioParam: AudioParam, value: number): void {
     new FwdAudioParamWrapper(this.fwdAudio, audioParam).rampTo(value, 0.005);
+  }
+
+  private assertReady(): void {
+    this.assertInitialized();
+    this.assertNotTornDown();
+  }
+
+  private assertInitialized(): void {
+    if (! this._audioReady) {
+      throw new Error(`The track ${this.trackName} wasn't initialized.`);
+    }
   }
 
   private assertNotTornDown(): void {

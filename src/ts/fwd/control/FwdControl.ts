@@ -30,6 +30,7 @@ export class FwdSlider {
 
   public readonly type: ControlType = 'slider';
 
+  // TODO: FwdSlider should be the value source...
   constructor(private _valueSource: ValueSource<number>, options: SliderOptions) {
     this.min = options.min;
     this.max = options.max;

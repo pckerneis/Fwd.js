@@ -65,6 +65,13 @@ export class MixerTrack {
         this.onvolumechange(value);
       }
     };
+
+    this.audioTrack.listeners.push({
+      onTrackMute: () => { this.muteButton.setToggled(true, false); },
+      onTrackSolo: () => { this.soloButton.setToggled(true, false); },
+      onTrackUnmute: () => { this.muteButton.setToggled(false, false); },
+      onTrackUnsolo: () => { this.soloButton.setToggled(false, false); },
+    });
   }
 
   private static createRangeInput(value: number, min: number, max: number, step: number): HTMLInputElement {
