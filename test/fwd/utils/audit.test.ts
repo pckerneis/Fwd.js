@@ -3,15 +3,30 @@ import { seconds } from "../../test-utils";
 
 test('should filter events with audit', async () => {
   const spy = jest.fn();
-  const fire = audit(spy, 10);
+  const fire = audit(spy, 50);
 
-  for (let i = 0; i < 5; ++i) {
-    await seconds(0.0001);
-    fire();
-  }
+  setTimeout(fire, 0);
+  setTimeout(fire, 10);
+  setTimeout(fire, 20);
 
   expect(spy).toHaveBeenCalledTimes(0);
+  await seconds(0.055);
+  expect(spy).toHaveBeenCalledTimes(1);
+  await seconds(0.055);
+  expect(spy).toHaveBeenCalledTimes(1);
+});
 
-  await seconds(0.01);
+test('should still filter events with audit with default time', async () => {
+  const spy = jest.fn();
+  const fire = audit(spy);
+
+  setTimeout(fire, 0);
+  setTimeout(fire, 5);
+  setTimeout(fire, 10);
+
+  expect(spy).toHaveBeenCalledTimes(0);
+  await seconds(0.025);
+  expect(spy).toHaveBeenCalledTimes(1);
+  await seconds(0.025);
   expect(spy).toHaveBeenCalledTimes(1);
 });

@@ -1,4 +1,5 @@
 import { FwdScheduler } from "../../../src/fwd/core/FwdScheduler";
+import { SchedulerImpl } from "../../../src/fwd/core/Scheduler/SchedulerImpl";
 import { seconds } from "../../test-utils";
 
 const mockAction = jest.fn(() => {});
@@ -11,6 +12,13 @@ beforeEach(() => {
   scheduler = new FwdScheduler(0, 0);
 });
 
+it ('creates with default values', () => {
+  const defaultScheduler = new FwdScheduler();
+  expect(defaultScheduler['_scheduler'].interval).toBe(SchedulerImpl.MIN_INTERVAL);
+  expect(defaultScheduler['_scheduler'].lookAhead).toBe(SchedulerImpl.DEFAULT_LOOKAHEAD);
+});
+
+// TODO: this test (and others in this suite) will sometimes fail because of timing accuracy issues... Need to mock time
 it ('triggers scheduled events', async () => {
   const t1 = 0;
   const t2 = 0.01;
@@ -199,4 +207,12 @@ it ('non-cancellable events still fire when cancelled', async () => {
   await seconds(0.010);
   expect(scheduler.state).toBe('stopped');
   expect(action).toHaveBeenCalledTimes(1);
+});
+
+it ('sets time provider', async () => {
+  scheduler.timeProvider = () => 2;
+  scheduler.start();                        // start is 2
+  scheduler.timeProvider = () => 44;
+  await seconds(0);                   // start is now - start, 44 - 2
+  expect(scheduler.rtNow()).toBe(42);
 });

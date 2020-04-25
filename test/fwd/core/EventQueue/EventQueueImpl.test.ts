@@ -36,7 +36,7 @@ it ('events are cleared', () => {
   const events = new EventQueueImpl<DummyEvent>();
 
   for (let i = 0; i < 1000; i++) {
-    events.add(Math.random() * 100, new DummyEvent());
+    events.add(Math.round(Math.random()) * 100, new DummyEvent());
   }
   events.clear();
 

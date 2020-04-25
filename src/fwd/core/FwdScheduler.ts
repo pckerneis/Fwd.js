@@ -5,8 +5,6 @@ import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 let NOW: Time = 0;
 
 class FwdEvent extends Event {
-  private _stopped: boolean = false;
-
   constructor(
     public readonly time: Time,
     public readonly action: Function,
@@ -16,12 +14,10 @@ class FwdEvent extends Event {
   }
 
   public trigger(now: Time): void {
-    if (! this._stopped) {
-      const previous = NOW;
-      NOW = now;
-      this.action();
-      NOW = previous;
-    }
+    const previous = NOW;
+    NOW = now;
+    this.action();
+    NOW = previous;
   }
 }
 
