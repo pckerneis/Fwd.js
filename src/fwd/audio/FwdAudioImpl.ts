@@ -55,7 +55,7 @@ export class FwdAudioImpl implements FwdAudio {
   //===============================================================================
 
   public addTrack(trackName: string): FwdAudioTrack {
-    if (this.getTrack(trackName) != null) {
+    if (this._tracks.get(trackName) != null) {
       fwd.err(`A track already exists with the name ${trackName}.`);
       return null;
     }
@@ -73,10 +73,10 @@ export class FwdAudioImpl implements FwdAudio {
   }
 
   public removeTrack(trackName: string): void {
-    const track = this.getTrack(trackName);
+    const track = this.doGetTrack(trackName,
+      `The track "${trackName}" cannot be removed because it doesn't exist.`);
 
-    if (track === null) {
-      fwd.err(`The track ${trackName} doesn't exist.`);
+    if (track == null) {
       return;
     }
     
@@ -84,21 +84,23 @@ export class FwdAudioImpl implements FwdAudio {
     
     // Unsolo that track
     if (this._soloTrack === trackName) {
-      this._tracks.forEach(t => t['_unmuteForSolo']);
+      this._tracks.forEach(t => t['_unmuteForSolo']());
     }
 
+    this._tracks.delete(trackName);
     this.listeners.forEach(l => l.audioTrackRemoved(track));
   }
 
   public getTrack(trackName: string): FwdAudioTrack {
-    return this._tracks.get(trackName);
+    return this.doGetTrack(trackName,
+      `The track "${trackName}" doesn't exist.`);
   }
 
   public soloTrack(trackName: string): void {
-    const track = this.getTrack(trackName);
+    const track = this.doGetTrack(trackName,
+      `Cannot solo track "${trackName}" because it doesn't exist.`);
 
-    if (track === null) {
-      fwd.err(`The track ${trackName} doesn't exist.`);
+    if (track == null) {
       return;
     }
 
@@ -123,10 +125,12 @@ export class FwdAudioImpl implements FwdAudio {
     if (this._soloTrack !== null) {
       this._tracks.forEach((t) => t['_unmuteForSolo']());
       DBG('unsoloAllTracks: _unmuteForSolo called');
+
       this._tracks.get(this._soloTrack).listeners.forEach((l) => {
         l.onTrackUnsolo();
         DBG('unsoloAllTracks: transmit unsolo event');
       });
+
       this._soloTrack = null;
     }
   }
@@ -172,7 +176,9 @@ export class FwdAudioImpl implements FwdAudio {
     this._tracks.forEach(track => {
       this.listeners.forEach(l => l.audioTrackRemoved(track));
     });
+
     this._tracks = new Map<string, FwdAudioTrack>();
+    this._soloTrack = null;
 
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
@@ -181,9 +187,20 @@ export class FwdAudioImpl implements FwdAudio {
   }
 
   private assertInit(): void {
-    if (! this._fwd) {
+    if (this._fwd == null) {
       throw new Error('The module FwdAudio wasn\'t properly initialized!');
     }
+  }
+
+  private doGetTrack(trackName: string, errorMessage: string): FwdAudioTrack {
+    const track = this._tracks.get(trackName);
+
+    if (track == null) {
+      fwd.err(errorMessage);
+      return null;
+    }
+
+    return track;
   }
 }
 
