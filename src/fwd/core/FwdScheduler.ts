@@ -46,6 +46,7 @@ export class FwdScheduler {
    */
   constructor(interval: number = 8, lookAhead: number = 70) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
+    this._scheduler.keepAlive = true;
     this._scheduler.onEnded = () => {
       this._state = 'stopped';
 
@@ -159,7 +160,6 @@ export class FwdScheduler {
     }
 
     NOW = 0;
-    this._scheduler.keepAlive = true;
     this._scheduler.start(0);
     this._state = 'running';
   }
