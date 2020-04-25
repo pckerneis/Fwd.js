@@ -1,4 +1,4 @@
-import { FwdAudioTrack } from '../../../audio/Audio';
+import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
 import { injectStyle } from '../StyleInjector';
 import { TRACK_WIDTH } from "./MixerSection.constants";
 import { ToggleButton } from "./ToggleButton";

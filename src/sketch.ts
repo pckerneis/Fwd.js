@@ -1,8 +1,8 @@
 /* tslint:disable */
 import {fwd} from './fwd';
+import { FwdAudioTrack } from "./fwd/audio/nodes/FwdAudioTrack";
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
 import { FwdTextEditor } from './fwd/control/FwdControl';
-import { FwdAudioTrack } from './fwd/audio/Audio';
 
 const kickSlider = fwd.controls.addSlider('kickAmount', {
   defaultValue: 0.5,
@@ -123,14 +123,12 @@ function playSequence(editor: FwdTextEditor, ...mappings: { sign: string, action
     mappings.forEach(({ sign, action }) => {
       if (step === sign)
         action();
-    })
+    });
 
     i++;
     fwd.schedule(1/8, next);
   }
 }
-
-let trackCounter = 0;
 
 function playNote(pitch: number, 
                   dur: number, 
@@ -142,9 +140,9 @@ function playNote(pitch: number,
     osc.connect(gain).connect(synthTrack);
 
     gain.gain.rampTo(vel, dur / 2);
-    fwd.wait(dur / 2)
+    fwd.wait(dur / 2);
     gain.gain.rampTo(0, dur / 1.5);
-    fwd.wait(dur / 1.5)
+    fwd.wait(dur / 1.5);
 
     osc.tearDown();
     gain.tearDown();
@@ -158,7 +156,7 @@ export function kick(track: FwdAudioTrack) {
     
     osc.connect(gain).connect(track);
 
-    gain.gain.rampTo(kickSlider.value, 0.001)
+    gain.gain.rampTo(kickSlider.value, 0.001);
     osc.frequency.rampTo(50, 0.018);
     fwd.wait(0.02);
     gain.gain.rampTo(0.0, 0.2);

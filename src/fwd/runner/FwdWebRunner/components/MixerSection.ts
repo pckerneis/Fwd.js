@@ -1,4 +1,4 @@
-import { FwdAudioTrack } from "../../../audio/Audio";
+import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
 import { injectStyle } from "../StyleInjector";
 import { TRACK_SECTION_HEIGHT, TRACK_WIDTH } from "./MixerSection.constants";
 import { MixerTrack } from "./MixerTrack";

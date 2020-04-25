@@ -1,4 +1,6 @@
-import { FwdAudio, FwdAudioTrack } from "../../audio/Audio";
+import { FwdAudio } from "../../audio/FwdAudio";
+import { FwdAudioImpl } from "../../audio/FwdAudioImpl";
+import { FwdAudioTrack } from "../../audio/nodes/FwdAudioTrack";
 import { FwdControls } from '../../control/FwdControl';
 import { FwdHTMLControls } from '../../control/FwdHtmlControl';
 import { Time } from "../../core/EventQueue/EventQueue";
@@ -45,7 +47,7 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._logger = this.prepareLogger();
 
-    this._audio = new FwdAudio();
+    this._audio = new FwdAudioImpl();
     this._fwd = new FwdWebImpl(this);
     this._audio.initializeModule(this._fwd);
     putFwd(this._fwd);

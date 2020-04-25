@@ -1,4 +1,4 @@
-import { FwdAudio } from '../audio/Audio';
+import { FwdAudio } from "../audio/FwdAudio";
 import { FwdControls } from '../control/FwdControl';
 import { EventRef, Time } from './EventQueue/EventQueue';
 import { FwdLogger } from './FwdLogger';
