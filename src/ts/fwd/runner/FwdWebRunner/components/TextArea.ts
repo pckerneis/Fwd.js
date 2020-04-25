@@ -10,6 +10,7 @@ export class TextArea {
   private _textContent: string = '';
   private _mode: WriteMode;
   private _maxLength: number = Infinity;
+  private _caretContainer: HTMLDivElement;
 
   constructor() {
     this.htmlElement = document.createElement('div');
@@ -22,7 +23,7 @@ export class TextArea {
     this.htmlElement.append(this.editableDiv);
 
     this.editableDiv.oninput = (event: InputEvent) => {
-      this._textContent = this.editableDiv.textContent;
+      this._textContent = this.editableDiv.firstChild.textContent;
 
       if (event.inputType === 'insertText') {
         if (this._mode === 'overwrite') {
@@ -34,6 +35,16 @@ export class TextArea {
         }
       }
     };
+
+    ['mouseup', 'mousedown', 'mousemove', 'keyup', 'keydown', 'focus']
+      .forEach(event => this.editableDiv.addEventListener(event, () => {
+        setTimeout(() => this.putCaretAtEndOfSelection());
+      }));
+
+    this._caretContainer = document.createElement('div');
+    this._caretContainer.classList.add('text-area-caret-container');
+
+    this.addCaret(0);
   }
   
   private static getSelectionRange(): {start: number, end: number} {
@@ -53,8 +64,10 @@ export class TextArea {
     // support non type-checked assignation
     if (newMode === 'overwrite') {
       this._mode = 'overwrite';
+      this.editableDiv.classList.add('overwrite-mode');
     } else {
       this._mode = 'insert';
+      this.editableDiv.classList.remove('overwrite-mode');
     }
   }
 
@@ -68,6 +81,7 @@ export class TextArea {
 
   public set value(newValue: string) {
     this.setTextUnconstrained(this.constrainLength(newValue));
+    this.putCaretAtEndOfSelection();
   }
 
   private performOverwrite(newChar: string): void {
@@ -80,10 +94,7 @@ export class TextArea {
 
     const caretPosition = Math.min(newText.length, preSelection.length + 1);
     this.setSelectionRange(caretPosition, caretPosition);
-
-    const caret = document.createElement('div');
-    caret.classList.add('text-area-caret');
-    this.editableDiv.append(caret);
+    this.addCaret(caretPosition);
   }
 
   private performInsert(newChar: string): void {
@@ -106,6 +117,9 @@ export class TextArea {
       const rangeStart = Math.min(this._textContent.length, selectionRange.start);
       const rangeEnd = Math.min(this._textContent.length, selectionRange.end);
       this.setSelectionRange(rangeStart, rangeEnd);
+      this.addCaret(rangeEnd);
+    } else {
+      this.addCaret(0);
     }
   }
   
@@ -131,12 +145,36 @@ export class TextArea {
   private setTextUnconstrained(newContent: string): void {
     this.editableDiv.innerText = newContent;
     this._textContent = newContent;
+    this.editableDiv.append(this._caretContainer);
+  }
+
+  private addCaret(position: number): void {
+    this._caretContainer.innerHTML = '';
+
+    const preCaret = document.createElement('span');
+    preCaret.innerText = Array(position).fill('_').join('');
+    preCaret.style.visibility = 'hidden';
+
+    const caret = document.createElement('span');
+    caret.innerText = '_';
+    caret.classList.add('text-area-caret');
+
+    if (position === this._maxLength) {
+      caret.classList.add('reached-end');
+    }
+
+    this._caretContainer.append(preCaret, caret);
+  }
+
+  private putCaretAtEndOfSelection(): void {
+    const selectionRange = TextArea.getSelectionRange();
+    const caretPosition = Math.max(selectionRange.start + 1, selectionRange.end);
+    this.addCaret(caretPosition);
   }
 }
 
 injectStyle('TextArea', `
 .text-area {
-  position: relative;
   padding: 0;
   box-sizing: border-box;
 }
@@ -145,23 +183,35 @@ injectStyle('TextArea', `
   width: 100%;
   height: 100%;
   padding: 2px 5px;
-    box-sizing: border-box;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.text-area-caret-container {
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  right: 5px;
+  bottom: 2px;
 }
 
 .text-area-caret {
-    width: 8px;
-    height: 18px;
-    background: #4677ff47;
-    position: absolute;
-    top: 1px;
-    border: 1px solid #00000036;
-    left: 3px;
-    
-    visibility: hidden;
-    pointer-events: none;
+  width: 7px;
+  height: 1em;
+  background: #4677ff47;
+  
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.text-area-editable:focus .text-area-caret {
-  _visibility: visible;
+.text-area-caret.reached-end {
+  background: #ff000080;
+}
+
+.text-area-editable.overwrite-mode:focus .text-area-caret {
+  visibility: visible;
 }
 `);
