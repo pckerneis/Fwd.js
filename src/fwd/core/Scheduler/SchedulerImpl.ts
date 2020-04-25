@@ -13,6 +13,8 @@ export class BasicEvent {
 
 export class SchedulerImpl<EventType extends Event = BasicEvent> extends Scheduler<EventType> {
 
+  public static readonly MIN_INTERVAL: number = 0.001;
+
   /** @inheritdoc */
   public onEnded: Function;
 
@@ -60,7 +62,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
   /** @inheritdoc */
   public set interval(v: number) {
-    this._interval = Math.max(0, v);
+    this._interval = Math.max(SchedulerImpl.MIN_INTERVAL, v);
   }
 
   /** @inheritdoc */

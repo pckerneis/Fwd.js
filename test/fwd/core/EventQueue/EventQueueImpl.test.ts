@@ -1,16 +1,25 @@
 import { Event, Time } from '../../../../src/fwd/core/EventQueue/EventQueue';
 import { EventQueueImpl } from '../../../../src/fwd/core/EventQueue/EventQueueImpl';
+import { BasicEvent } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
 
 class DummyEvent extends Event {
   public trigger(t: Time): void {
   }
 }
 
+it ('Basic events should trigger their actions', () => {
+  const action = jest.fn();
+  const basicEvent = new BasicEvent(action);
+
+  basicEvent.trigger(123);
+  expect(action).toHaveBeenCalledWith(123);
+});
+
 it ('events added to the queue are kept sorted', () => {
   const events = new EventQueueImpl<DummyEvent>();
 
   for (let i = 0; i < 1000; i++) {
-    events.add((Math.random() * 100) | 0, new DummyEvent());
+    events.add(Math.random(), new DummyEvent());
   }
 
   let prev: any = null;
@@ -27,7 +36,7 @@ it ('events are cleared', () => {
   const events = new EventQueueImpl<DummyEvent>();
 
   for (let i = 0; i < 1000; i++) {
-    events.add((Math.random() * 100) | 0, new DummyEvent());
+    events.add(Math.random() * 100, new DummyEvent());
   }
   events.clear();
 
@@ -57,9 +66,9 @@ it ('events can be removed', () => {
   const evt2 = new DummyEvent();
   const evt3 = new DummyEvent();
 
-  const ref1 = events.add(1, evt1);
+  events.add(1, evt1);
   const ref2 = events.add(2, evt2);
-  const ref3 = events.add(3, evt3);
+  events.add(3, evt3);
 
   events.remove(ref2);
 
@@ -96,4 +105,18 @@ it ('should return next element at time', () => {
 
   next = events.next(4);
   expect(next).toBeNull();
+});
+
+it ('handle invalid time positions', () => {
+  const events = new EventQueueImpl<DummyEvent>();
+
+  // @ts-ignore
+  const ref1 = events.add('hello', new DummyEvent());
+  // @ts-ignore
+  const ref2 = events.add({}, new DummyEvent());
+  const ref3 = events.add(null, new DummyEvent());
+  expect(events.events).toHaveLength(3);
+  expect(events.events[0].ref).toBe(ref1);
+  expect(events.events[1].ref).toBe(ref2);
+  expect(events.events[2].ref).toBe(ref3);
 });

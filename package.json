@@ -8,7 +8,7 @@
     "dev": "webpack-dev-server --open",
     "dev-hot": "webpack-dev-server --open --hot",
     "doc": "typedoc",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",

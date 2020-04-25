@@ -14,18 +14,6 @@
     "typedocOptions": {
       "inputFiles": [
         "./src/fwd/"
-        // "./src/ts/fwd/runner/FwdWebRunner/FwdWebRunner.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/FwdWebImpl.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/StyleInjector.ts",
-
-        // "./src/ts/fwd/runner/FwdWebRunner/components/AudioMeter.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/BindableButton.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/BindableController.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/BindableSlider.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/ConfigurationPanel.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/Console.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/MasterSlider.ts",
-        // "./src/ts/fwd/runner/FwdWebRunner/components/Overlay.ts"
       ],
       "mode": "module",
       "out": "doc",
@@ -38,6 +26,6 @@
     "include": [
         "src/**/*"
     ],
-    "exclude": [ "node_modules" ] 
+    "exclude": [ "node_modules" ]
   }
   

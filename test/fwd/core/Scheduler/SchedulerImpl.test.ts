@@ -18,6 +18,32 @@ beforeEach(() => {
   mockEventTrigger.mockClear();
 });
 
+it ('should create', async () => {
+  const scheduler = new SchedulerImpl(1, 3);
+  expect(scheduler).toBeTruthy();
+  expect(scheduler.interval).toBe(1);
+  expect(scheduler.lookAhead).toBe(3);
+});
+
+it ('has interval greater than minimal interval', async () => {
+  const scheduler = new SchedulerImpl(-10, 0);
+  expect(scheduler.interval).toBe(SchedulerImpl.MIN_INTERVAL);
+  scheduler.interval = -100;
+  expect(scheduler.interval).toBe(SchedulerImpl.MIN_INTERVAL);
+  scheduler.interval = 100;
+  expect(scheduler.interval).toBe(100);
+});
+
+it ('has positive lookAhead', async () => {
+  const scheduler = new SchedulerImpl(-10, -10);
+
+  expect(scheduler.lookAhead).toBeGreaterThanOrEqual(0);
+  scheduler.lookAhead = -100;
+  expect(scheduler.lookAhead).toBeGreaterThanOrEqual(0);
+  scheduler.lookAhead = 100;
+  expect(scheduler.lookAhead).toBe(100);
+});
+
 it ('triggers scheduled events', async () => {
   const eventQueue = new EventQueueImpl<any>();
   const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
@@ -127,4 +153,48 @@ it ('fire no events when cleared', async () => {
   scheduler.stop();
 
   expect(mockEventTrigger).toHaveBeenCalledTimes(2);
+});
+
+it ('fire no events when stopping', async () => {
+  const eventQueue = new EventQueueImpl<any>();
+  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+
+  scheduler.schedule(0, mockBasicEvent());
+  scheduler.schedule(0, mockBasicEvent());
+  scheduler.schedule(0.2, mockBasicEvent());
+  scheduler.schedule(0.2, mockBasicEvent());
+
+  scheduler.start(0);
+  await seconds(0.1);
+  scheduler.clearQueue();
+  await seconds(0.2);
+  scheduler.stop();
+
+  expect(mockEventTrigger).toHaveBeenCalledTimes(2);
+});
+
+it ('cannot run if state is not "running"', async () => {
+  const scheduler = new SchedulerImpl(0.01, 10);
+
+  const action = jest.fn();
+  scheduler.schedule(0, mockBasicEvent());
+
+  scheduler['run']();
+
+  expect(action).not.toHaveBeenCalled();
+});
+
+it ('uses performance.now() as a default time provider', async () => {
+  const performanceNowMock = jest.fn();
+  const performanceMock = jest.fn().mockImplementation(() => {
+    return { now: performanceNowMock }
+  });
+
+  (global as any).performance = performanceMock();
+
+  const scheduler = new SchedulerImpl(0.01, 10);
+  scheduler.start(0);
+  await seconds(0);
+  scheduler.stop();
+  expect(performanceNowMock).toHaveBeenCalled();
 });

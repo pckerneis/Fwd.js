@@ -15,6 +15,7 @@ it('maps a value from a range to another', () => {
 });
 
 it('parses strings as numbers', () => {
+  expect(parseNumber(null)).toBe(0);
   expect(parseNumber('12354')).toBe(12354);
   expect(parseNumber(':)')).toBe(0);
   expect(parseNumber('-0.123')).toBe(-0.123);

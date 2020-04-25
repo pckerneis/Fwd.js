@@ -25,6 +25,10 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
 
   /** @inheritdoc */
   public add(time: Time, event: EventType): EventRef {
+      if (isNaN(time)) {
+        time = 0;
+      }
+
       const idx = this.insertIndex(time, 0, this._events.length);
       const scheduledEvent: ScheduledEvent<EventType> = {
         event,
@@ -51,9 +55,11 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
   private insertIndex(time: Time, min: number, max: number): number {
     const range = max - min;
 
+    /*
     if (isNaN(range) || max < min) {
       return undefined;
     }
+     */
 
     if (range === 0) {
       return min;
@@ -70,10 +76,6 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       }
 
       timeAtPivot = this._events[pivot].time;
-
-      if (timeAtPivot > time) {
-        return pivot;
-      }
     }
 
     if (timeAtPivot > time) {
