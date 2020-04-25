@@ -11,7 +11,10 @@
 export function map(value: number,
     sourceMin: number, sourceMax: number, 
     targetMin: number, targetMax: number): number {
-  return (value - sourceMin) 
+
+  const sourceRange = sourceMax - sourceMin;
+
+  return sourceRange === 0 ? sourceMin : (value - sourceMin)
       * (targetMax - targetMin) / (sourceMax - sourceMin) 
       + targetMin;
 }
@@ -23,9 +26,12 @@ export function map(value: number,
  * @returns the parsed number. Defaults to 0 if the provided argument is not a string
  */
 export function parseNumber(str: any): number {
+  const nativeParse = Number.parseFloat(str);
+
   return str == null ? 0 :
     (typeof str === 'number' ? str :
-      (typeof str === 'string' ? Number.parseFloat(str) : 0));
+      (typeof str !== 'string' ? 0 :
+        (isNaN(nativeParse) ? 0 : nativeParse)));
 }
 
 /**
