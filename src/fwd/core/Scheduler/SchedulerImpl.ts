@@ -110,7 +110,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
   /** @inheritdoc */
   public schedule(time: Time, event: EventType): EventRef {
-    this._eventQueue.add(time, event);
+    return this._eventQueue.add(time, event);
   }
 
   /** @inheritDoc */
@@ -135,8 +135,12 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     if (this._eventQueue.events.length > 0 || this.keepAlive) {
       this._timeout = setTimeout(() => this.run(), this.interval);
-    } else if (this.onEnded != null) {
-      this.onEnded();
+    } else {
+      this._running = false;
+
+      if (this.onEnded != null) {
+        this.onEnded();
+      }
     }
   }
 }
