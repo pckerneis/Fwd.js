@@ -1,5 +1,5 @@
 import path from "path";
-import { fwd } from "../../core/fwd";
+import { fwd } from "../../core/Fwd";
 import { clamp } from "../../core/utils/numbers";
 import { FwdAudio } from "../FwdAudio";
 import { FwdAudioNode } from "./FwdAudioNode";

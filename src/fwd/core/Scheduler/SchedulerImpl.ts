@@ -1,6 +1,10 @@
+import { Logger } from "../../utils/dbg";
 import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
+import parentLogger from '../logger.core';
 import { Scheduler } from './Scheduler';
+
+const DBG = new Logger('SchedulerImpl', parentLogger);
 
 export class BasicEvent {
   constructor(private _action: Function) {
@@ -37,6 +41,8 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       private _timeProvider: () => number = null,
   ) {
     super();
+
+    DBG.info('Build SchedulerImpl', this);
 
     // Constrain values by using public setters
     this.interval = _interval;

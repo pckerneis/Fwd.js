@@ -1,6 +1,9 @@
 import { FwdScheduler } from "../../../src/fwd/core/FwdScheduler";
 import { SchedulerImpl } from "../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
 import { seconds } from "../../test-utils";
+
+Logger.runtimeLevel = LoggerLevel.none;
 
 const mockAction = jest.fn(() => {});
 let scheduler: FwdScheduler;

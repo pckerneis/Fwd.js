@@ -1,12 +1,14 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { FwdControls } from '../../control/FwdControl';
 import { EventRef, Time } from '../../core/EventQueue/EventQueue';
-import { Fwd } from '../../core/Fwd';
+import { Fwd, FwdPerformanceListener } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
 import { FwdScheduler } from '../../core/FwdScheduler';
 import FwdWebRunner from './FwdWebRunner';
 
 export default class FwdWebImpl implements Fwd {
+
+  public readonly performanceListeners: FwdPerformanceListener[] = [];
 
   private readonly _scheduler: FwdScheduler;
 
@@ -40,14 +42,6 @@ export default class FwdWebImpl implements Fwd {
   }
   public cancel(ref: EventRef): void {
     this._scheduler.cancel(ref);
-  }
-
-  public start(): void {
-    this._scheduler.start();
-  }
-
-  public stop(): void {
-    this._scheduler.stop();
   }
 
   public log(...messages: any[]): void {

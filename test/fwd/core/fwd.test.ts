@@ -1,4 +1,7 @@
 import { fwd, putFwd } from "../../../src/fwd/core/fwd";
+import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
+
+Logger.runtimeLevel = LoggerLevel.none;
 
 beforeEach(() => {
   console.log = jest.fn();

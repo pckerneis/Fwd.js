@@ -115,12 +115,11 @@ export default class FwdWebRunner implements FwdRunner {
     ControlBindingManager.getInstance().clearCurrentControllers();
     this.resetActionButtons(this._actions);
 
-    this._mixerSection.clearTracks();
-
+    this._fwd.performanceListeners.forEach((l) => l.onPerformanceAboutToStart());
     this._audio.start();
-
+    this._fwd.performanceListeners.forEach((l) => l.onPerformanceStart());
     this.entryPoint();
-    this._fwd.start();
+    this._fwd.scheduler.start();
 
     this.applyMasterValue();
     this.initializeTimeCode();
@@ -130,7 +129,8 @@ export default class FwdWebRunner implements FwdRunner {
 
   private stop(): void {
     if (this._fwd != null) {
-      this._fwd.stop();
+      this._fwd.scheduler.stop();
+      this._fwd.performanceListeners.forEach((l) => l.onPerformanceEnd());
     }
   }
 

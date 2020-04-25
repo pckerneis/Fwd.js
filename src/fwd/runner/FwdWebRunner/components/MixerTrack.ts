@@ -1,4 +1,5 @@
 import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
+import { parseNumber } from "../../../core/utils/numbers";
 import { injectStyle } from '../StyleInjector';
 import { TRACK_WIDTH } from "./MixerSection.constants";
 import { ToggleButton } from "./ToggleButton";
@@ -7,12 +8,10 @@ import { VerticalSlider } from "./VerticalSlider";
 export class MixerTrack {
   public readonly htmlElement: HTMLDivElement;
 
-  public readonly volumeSlider: VerticalSlider;
+  public readonly gainSlider: VerticalSlider;
   public readonly panSlider: HTMLInputElement;
   public readonly muteButton: ToggleButton;
   public readonly soloButton: ToggleButton;
-
-  public onvolumechange: Function;
 
   constructor(public readonly audioTrack: FwdAudioTrack) {
     this.htmlElement = document.createElement('div');
@@ -21,8 +20,8 @@ export class MixerTrack {
     this.panSlider = MixerTrack.createRangeInput(0, -1, 1, 0.001);
     this.panSlider.classList.add('slider', 'mixer-track-pan-slider');
 
-    this.volumeSlider = new VerticalSlider();
-    this.volumeSlider.htmlElement.classList.add('mixer-track-volume-slider');
+    this.gainSlider = new VerticalSlider();
+    this.gainSlider.htmlElement.classList.add('mixer-track-volume-slider');
 
     this.muteButton = new ToggleButton('M');
     this.muteButton.htmlElement.classList.add('mixer-track-mute-button');
@@ -45,7 +44,6 @@ export class MixerTrack {
         this.audioTrack.solo();
       } else {
         this.audioTrack.unsolo();
-        console.log('unsolo');
       }
     };
 
@@ -56,14 +54,16 @@ export class MixerTrack {
 
     this.htmlElement.append(
       this.panSlider,
-      this.volumeSlider.htmlElement,
+      this.gainSlider.htmlElement,
       buttonDiv,
     );
 
-    this.volumeSlider.oninput = (value: number) => {
-      if (typeof this.onvolumechange === 'function') {
-        this.onvolumechange(value);
-      }
+    this.gainSlider.oninput = (value: number) => {
+      this.audioTrack.gain = value;
+    };
+
+    this.panSlider.oninput = (/* event */) => {
+      this.audioTrack.pan = parseNumber(this.panSlider.value);
     };
 
     this.audioTrack.listeners.push({
@@ -71,7 +71,13 @@ export class MixerTrack {
       onTrackSolo: () => { this.soloButton.setToggled(true, false); },
       onTrackUnmute: () => { this.muteButton.setToggled(false, false); },
       onTrackUnsolo: () => { this.soloButton.setToggled(false, false); },
+      onTrackVolumeChange: (newValue) => { this.gainSlider.setValue(newValue, false); },
+      onTrackPanChange: (newValue) => { this.panSlider.value = newValue.toString(); },
     });
+
+    this.panSlider.value = this.audioTrack.pan.toString();
+    this.gainSlider.setValue(this.audioTrack.gain, false);
+    this.muteButton.setToggled(this.audioTrack.isMute, false);
   }
 
   private static createRangeInput(value: number, min: number, max: number, step: number): HTMLInputElement {

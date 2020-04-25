@@ -4,6 +4,12 @@ import { EventRef, Time } from './EventQueue/EventQueue';
 import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';
 
+export interface FwdPerformanceListener {
+  onPerformanceAboutToStart(): void;
+  onPerformanceStart(): void;
+  onPerformanceEnd(): void;
+}
+
 /**
  * The Fwd runtime main interface. It exposes the scheduler as well as core modules such as `audio` or `controls`
  * and utility methods such as `log`. Its main purpose is to offer a nice way to manipulate data over time in a
@@ -54,17 +60,6 @@ export interface Fwd {
   scheduler: FwdScheduler;
 
   /**
-   * Starts the scheduler from time origin.
-   */
-  start: () => void;
-
-  /**
-   * Cancel all cancelable actions to be executed.
-   * @remark The scheduler won't actually be stopped until all actions were executed.
-   */
-  stop: () => void;
-
-  /**
    * Log debug messages based on the linked {@link FwdLogger} configuration.
    */
   log: (...messages: any[]) => void;
@@ -101,6 +96,11 @@ export interface Fwd {
    * @param b Upper bound.
    */
   random: (a?: number, b?: number) => number;
+
+  /**
+   * An array of listeners to be notified when the performance state changes.
+   */
+  performanceListeners: FwdPerformanceListener[];
 }
 
 /**

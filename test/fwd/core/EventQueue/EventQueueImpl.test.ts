@@ -1,122 +1,127 @@
 import { Event, Time } from '../../../../src/fwd/core/EventQueue/EventQueue';
 import { EventQueueImpl } from '../../../../src/fwd/core/EventQueue/EventQueueImpl';
 import { BasicEvent } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
 
 class DummyEvent extends Event {
   public trigger(t: Time): void {
   }
 }
 
-it ('Basic events should trigger their actions', () => {
-  const action = jest.fn();
-  const basicEvent = new BasicEvent(action);
+Logger.runtimeLevel = LoggerLevel.none;
 
-  basicEvent.trigger(123);
-  expect(action).toHaveBeenCalledWith(123);
-});
+describe('EventQueueImpl', () => {
+  it ('Basic events should trigger their actions', () => {
+    const action = jest.fn();
+    const basicEvent = new BasicEvent(action);
 
-it ('events added to the queue are kept sorted', () => {
-  const events = new EventQueueImpl<DummyEvent>();
-
-  for (let i = 0; i < 1000; i++) {
-    events.add(Math.random(), new DummyEvent());
-  }
-
-  let prev: any = null;
-
-  events.events.forEach((element) => {
-    if (prev != null) {
-      expect(element.time).toBeGreaterThanOrEqual(prev.time);
-    }
-    prev = element;
+    basicEvent.trigger(123);
+    expect(action).toHaveBeenCalledWith(123);
   });
-});
 
-it ('events are cleared', () => {
-  const events = new EventQueueImpl<DummyEvent>();
+  it ('events added to the queue are kept sorted', () => {
+    const events = new EventQueueImpl<DummyEvent>();
 
-  for (let i = 0; i < 1000; i++) {
-    events.add(Math.round(Math.random()) * 100, new DummyEvent());
-  }
-  events.clear();
+    for (let i = 0; i < 1000; i++) {
+      events.add(Math.random(), new DummyEvent());
+    }
 
-  expect(events.events).toHaveLength(0);
-});
+    let prev: any = null;
 
-it ('events inserted at the same time should be in correct order', () => {
-  const events = new EventQueueImpl<DummyEvent>();
+    events.events.forEach((element) => {
+      if (prev != null) {
+        expect(element.time).toBeGreaterThanOrEqual(prev.time);
+      }
+      prev = element;
+    });
+  });
 
-  const evt1 = new DummyEvent();
-  const evt2 = new DummyEvent();
-  const evt3 = new DummyEvent();
+  it ('events are cleared', () => {
+    const events = new EventQueueImpl<DummyEvent>();
 
-  const ref1 = events.add(123, evt1);
-  const ref2 = events.add(123, evt2);
-  const ref3 = events.add(123, evt3);
+    for (let i = 0; i < 1000; i++) {
+      events.add(Math.round(Math.random()) * 100, new DummyEvent());
+    }
+    events.clear();
 
-  expect(events.events[0].ref).toBe(ref1);
-  expect(events.events[1].ref).toBe(ref2);
-  expect(events.events[2].ref).toBe(ref3);
-});
+    expect(events.events).toHaveLength(0);
+  });
 
-it ('events can be removed', () => {
-  const events = new EventQueueImpl<DummyEvent>();
+  it ('events inserted at the same time should be in correct order', () => {
+    const events = new EventQueueImpl<DummyEvent>();
 
-  const evt1 = new DummyEvent();
-  const evt2 = new DummyEvent();
-  const evt3 = new DummyEvent();
+    const evt1 = new DummyEvent();
+    const evt2 = new DummyEvent();
+    const evt3 = new DummyEvent();
 
-  events.add(1, evt1);
-  const ref2 = events.add(2, evt2);
-  events.add(3, evt3);
+    const ref1 = events.add(123, evt1);
+    const ref2 = events.add(123, evt2);
+    const ref3 = events.add(123, evt3);
 
-  events.remove(ref2);
+    expect(events.events[0].ref).toBe(ref1);
+    expect(events.events[1].ref).toBe(ref2);
+    expect(events.events[2].ref).toBe(ref3);
+  });
 
-  expect(events.events).toHaveLength(2);
-  expect(events.events[0].event).toBe(evt1);
-  expect(events.events[1].event).toBe(evt3);
-});
+  it ('events can be removed', () => {
+    const events = new EventQueueImpl<DummyEvent>();
 
-it ('should return next element at time', () => {
-  const events = new EventQueueImpl<DummyEvent>();
+    const evt1 = new DummyEvent();
+    const evt2 = new DummyEvent();
+    const evt3 = new DummyEvent();
 
-  const evt1 = new DummyEvent();
-  const evt2 = new DummyEvent();
-  const evt3 = new DummyEvent();
+    events.add(1, evt1);
+    const ref2 = events.add(2, evt2);
+    events.add(3, evt3);
 
-  events.add(1, evt1);
-  events.add(2, evt2);
-  events.add(3, evt3);
+    events.remove(ref2);
 
-  let next = events.next(0);
-  expect(next).toBeNull();
+    expect(events.events).toHaveLength(2);
+    expect(events.events[0].event).toBe(evt1);
+    expect(events.events[1].event).toBe(evt3);
+  });
 
-  next = events.next(1.1);
-  expect(next.event).toBe(evt1);
+  it ('should return next element at time', () => {
+    const events = new EventQueueImpl<DummyEvent>();
 
-  next = events.next(1.1);
-  expect(next).toBeNull();
+    const evt1 = new DummyEvent();
+    const evt2 = new DummyEvent();
+    const evt3 = new DummyEvent();
 
-  next = events.next(4);
-  expect(next.event).toBe(evt2);
+    events.add(1, evt1);
+    events.add(2, evt2);
+    events.add(3, evt3);
 
-  next = events.next(4);
-  expect(next.event).toBe(evt3);
+    let next = events.next(0);
+    expect(next).toBeNull();
 
-  next = events.next(4);
-  expect(next).toBeNull();
-});
+    next = events.next(1.1);
+    expect(next.event).toBe(evt1);
 
-it ('handle invalid time positions', () => {
-  const events = new EventQueueImpl<DummyEvent>();
+    next = events.next(1.1);
+    expect(next).toBeNull();
 
-  // @ts-ignore
-  const ref1 = events.add('hello', new DummyEvent());
-  // @ts-ignore
-  const ref2 = events.add({}, new DummyEvent());
-  const ref3 = events.add(null, new DummyEvent());
-  expect(events.events).toHaveLength(3);
-  expect(events.events[0].ref).toBe(ref1);
-  expect(events.events[1].ref).toBe(ref2);
-  expect(events.events[2].ref).toBe(ref3);
+    next = events.next(4);
+    expect(next.event).toBe(evt2);
+
+    next = events.next(4);
+    expect(next.event).toBe(evt3);
+
+    next = events.next(4);
+    expect(next).toBeNull();
+  });
+
+  it ('handle invalid time positions', () => {
+    const events = new EventQueueImpl<DummyEvent>();
+
+    // @ts-ignore
+    const ref1 = events.add('hello', new DummyEvent());
+    // @ts-ignore
+    const ref2 = events.add({}, new DummyEvent());
+    const ref3 = events.add(null, new DummyEvent());
+    expect(events.events).toHaveLength(3);
+    expect(events.events[0].ref).toBe(ref1);
+    expect(events.events[1].ref).toBe(ref2);
+    expect(events.events[2].ref).toBe(ref3);
+  });
 });

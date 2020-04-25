@@ -1,4 +1,8 @@
+import { Logger } from "../../utils/dbg";
+import parentLogger from "../logger.core";
 import { Event, EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
+
+const DBG = new Logger('EventQueueImpl', parentLogger);
 
 export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
   private latestRefIdx: number = 0;
@@ -48,6 +52,7 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
 
   /** @inheritdoc */
   public clear(): void {
+      DBG.info('Clear events');
       this._events = [];
     }
 

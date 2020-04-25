@@ -1,6 +1,6 @@
 import { Time } from "../core/EventQueue/EventQueue";
 import { Fwd } from "../core/fwd";
-import { FwdAudioTrack } from "./nodes/FwdAudioTrack";
+import { FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
 import { FwdGainNode, FwdLFONode, FwdNoiseNode, FwdOscillatorNode, FwdSamplerNode } from "./nodes/StandardAudioNodes";
 
 export interface FwdAudioListener {
@@ -14,12 +14,14 @@ export interface FwdAudio {
   readonly isContextReady: boolean;
   readonly context: AudioContext;
   readonly master: FwdGainNode;
+  readonly tracks: FwdAudioTrack[];
+  readonly soloedTrack: string;
 
   initializeModule(fwd: Fwd): void;
   start(): void;
   now(): Time;
 
-  addTrack(trackName: string): FwdAudioTrack;
+  addTrack(trackName: string, options?: Partial<FwdAudioTrackOptions>): FwdAudioTrack;
   removeTrack(trackName: string): void;
   getTrack(trackName: string): FwdAudioTrack;
 

@@ -1,9 +1,13 @@
 import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
+import { Logger } from "../../../utils/dbg";
+import parentLogger from '../logger.web';
 import { injectStyle } from "../StyleInjector";
 import { TRACK_SECTION_HEIGHT, TRACK_WIDTH } from "./MixerSection.constants";
 import { MixerTrack } from "./MixerTrack";
 
 type TrackElementsMap = Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>;
+
+const DBG = new Logger('MixerSection', parentLogger);
 
 export class MixerSection {
   public readonly htmlElement: HTMLDivElement;
@@ -26,6 +30,10 @@ export class MixerSection {
     this.htmlElement.append(this._tracksElement, this._labelsElement);
   }
 
+  public get mixerTracks(): MixerTrack[] {
+    return Array.from(this._trackElements.values()).map(value => value.mixerTrack);
+  }
+
   public addTrack(track: FwdAudioTrack): void {
     const mixerTrack = new MixerTrack(track);
     this._tracksElement.append(mixerTrack.htmlElement);
@@ -38,14 +46,12 @@ export class MixerSection {
     label.append(span);
     this._labelsElement.append(label);
 
-    mixerTrack.onvolumechange = (value: number) => {
-      track.gain = value;
-    };
-
     this._trackElements.set(track.trackName, { label, mixerTrack });
   }
 
   public removeTrack(track: FwdAudioTrack): void {
+    DBG.info('track removed', track);
+
     const elements = this._trackElements.get(track.trackName);
 
     if (elements == null) {

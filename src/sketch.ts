@@ -31,14 +31,17 @@ const kick2Editor = fwd.controls.addTextEditor('kick2', {
 });
 const chordEditor = fwd.controls.addTextEditor('chord', { defaultValue: '0, 7, 11, 14, 16, 23, 26' });
 
-const synthTrack = fwd.audio.addTrack('synth');
-const kick1Track = fwd.audio.addTrack('kick1');
-const kick2Track = fwd.audio.addTrack('kick2');
+const synthTrack = fwd.audio.addTrack('synth', { gain: 0.3 });
+const kick1Track = fwd.audio.addTrack('kick1', { pan: 0.3 });
+const kick2Track = fwd.audio.addTrack('kick2', { pan: -0.3, mute: true });
 
 let chord: number[];
 let base = 52;
 
 export function init(): void {
+  synthTrack.gain = 0.8;
+  kick1Track.pan = 0.8;
+
   fwd.log('Start');
 
   let dur = 4;

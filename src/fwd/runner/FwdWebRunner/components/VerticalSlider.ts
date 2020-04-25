@@ -2,9 +2,12 @@ import { clamp } from "../../../core/utils/numbers";
 import { injectStyle } from "../StyleInjector";
 
 export class VerticalSlider {
+
   public readonly htmlElement: HTMLElement;
 
   public oninput: Function;
+
+  private _value: number;
 
   private readonly trackElement: HTMLElement;
   private readonly preThumbElement: HTMLElement;
@@ -37,13 +40,10 @@ export class VerticalSlider {
     const focus = () => { this.trackElement.focus(); };
     const moveThumb = (event: MouseEvent) => {
       if (event.screenX === 0 && event.screenY === 0) { return; }
-      const ratio = clamp(event.offsetY / this.trackElement.clientHeight, 0, 1);
-      this.preThumbElement.style.height = ratio * 100 + '%';
-      setTimeout(focus, 0);
 
-      if (typeof this.oninput === 'function') {
-        this.oninput(1.0 - ratio);
-      }
+      const ratio = clamp(event.offsetY / this.trackElement.clientHeight, 0, 1);
+      setTimeout(focus, 0);
+      this.setValue(1.0 - ratio, true);
     };
 
     this.thumbElement.style.pointerEvents = 'none';
@@ -56,6 +56,25 @@ export class VerticalSlider {
     this.htmlElement.ondragstart = event => {
       event.dataTransfer.setDragImage(dragImage, 0, 0);
       moveThumb(event);
+    }
+  }
+
+  public get value(): number {
+    return this._value;
+  }
+
+  public setValue(newValue: number, notify: boolean): void {
+    newValue = clamp(newValue, 0, 1);
+
+    if (this._value === newValue) {
+      return;
+    }
+
+    this._value = newValue;
+    this.preThumbElement.style.height = (1.0 - this._value) * 100 + '%';
+
+    if (notify && typeof this.oninput === 'function') {
+      this.oninput(newValue);
     }
   }
 }

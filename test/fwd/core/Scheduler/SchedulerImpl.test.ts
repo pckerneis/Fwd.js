@@ -1,5 +1,8 @@
 import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
 import { seconds } from "../../../test-utils";
+
+Logger.runtimeLevel = LoggerLevel.none;
 
 const mockEventTrigger = jest.fn(() => {});
 

@@ -2,11 +2,15 @@ import { FwdAudioImpl } from "../../../src/fwd/audio/FwdAudioImpl";
 import * as FwdAudioTrackModule from '../../../src/fwd/audio/nodes/FwdAudioTrack';
 import * as FwdEntryPoint from "../../../src/fwd/core/fwd";
 import { fwd } from "../../../src/fwd/core/fwd";
+import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
 import Mock = jest.Mock;
+
+Logger.runtimeLevel = LoggerLevel.none;
 
 const mockFwd = jest.fn().mockImplementation(() => {
   return {
     err: mockError,
+    performanceListeners: [],
   };
 });
 
@@ -52,13 +56,13 @@ const mockAudioContext = jest.fn().mockImplementation(() => {
   }
 });
 
-const mockError = jest.fn().mockImplementation((...messages) => console.log(...messages));
+const mockError = jest.fn();
 
 const mockAudioTrack = jest.fn().mockImplementation((fwdAudio, trackName) => {
   return {
     _muteForSoloGainNode: mockAudioNode('gain'),
-    _muteForSolo: jest.fn(),
-    _unmuteForSolo: jest.fn(),
+    muteForSolo: jest.fn(),
+    unmuteForSolo: jest.fn(),
     listeners: [],
     trackName,
     tearDown: jest.fn(),
@@ -121,28 +125,30 @@ it('manages solo tracks', () => {
   const track3 = fwdAudio.addTrack('track3');
 
   fwdAudio.soloTrack(track1.trackName);
-  expect(track1['_unmuteForSolo']).toHaveBeenCalledTimes(1);
-  expect(track2['_muteForSolo']).toHaveBeenCalledTimes(1);
-  expect(track3['_muteForSolo']).toHaveBeenCalledTimes(1);
+  expect(track1.unmuteForSolo).toHaveBeenCalledTimes(1);
+  expect(track2.muteForSolo).toHaveBeenCalledTimes(1);
+  expect(track3.muteForSolo).toHaveBeenCalledTimes(1);
 
   track3.listeners.push({
     onTrackSolo: jest.fn(),
     onTrackUnsolo: jest.fn(),
     onTrackMute: undefined,
     onTrackUnmute: undefined,
+    onTrackPanChange: undefined,
+    onTrackVolumeChange: undefined,
   });
 
   fwdAudio.soloTrack(track3.trackName);
-  expect(track1['_muteForSolo']).toHaveBeenCalledTimes(1);
-  expect(track2['_muteForSolo']).toHaveBeenCalledTimes(2);
-  expect(track3['_unmuteForSolo']).toHaveBeenCalledTimes(1);
+  expect(track1.muteForSolo).toHaveBeenCalledTimes(1);
+  expect(track2.muteForSolo).toHaveBeenCalledTimes(2);
+  expect(track3.unmuteForSolo).toHaveBeenCalledTimes(1);
 
   expect(track3.listeners[0].onTrackSolo).toHaveBeenCalledTimes(1);
 
   fwdAudio.unsoloAllTracks();
-  expect(track1['_unmuteForSolo']).toHaveBeenCalledTimes(2);
-  expect(track2['_unmuteForSolo']).toHaveBeenCalledTimes(1);
-  expect(track3['_unmuteForSolo']).toHaveBeenCalledTimes(2);
+  expect(track1.unmuteForSolo).toHaveBeenCalledTimes(2);
+  expect(track2.unmuteForSolo).toHaveBeenCalledTimes(1);
+  expect(track3.unmuteForSolo).toHaveBeenCalledTimes(2);
 
   expect(track3.listeners[0].onTrackUnsolo).toHaveBeenCalledTimes(1);
 });
@@ -154,10 +160,10 @@ it('mutes new tracks if a track is in solo', () => {
 
   const track1 = fwdAudio.addTrack('track1');
   fwdAudio.soloTrack('track1');
-  expect(track1['_unmuteForSolo']).toHaveBeenCalled();
+  expect(track1.unmuteForSolo).toHaveBeenCalled();
 
   const track2 = fwdAudio.addTrack('track2');
-  expect(track2['_muteForSolo']).toHaveBeenCalledTimes(1);
+  expect(track2.muteForSolo).toHaveBeenCalledTimes(1);
 });
 
 it('unmute all tracks when the soloed track was removed', () => {
@@ -170,8 +176,8 @@ it('unmute all tracks when the soloed track was removed', () => {
   fwdAudio.soloTrack(track1.trackName);
   fwdAudio.removeTrack(track1.trackName);
 
-  expect(track2['_unmuteForSolo']).toHaveBeenCalledTimes(1);
-  expect(track3['_unmuteForSolo']).toHaveBeenCalledTimes(1);
+  expect(track2.unmuteForSolo).toHaveBeenCalledTimes(1);
+  expect(track3.unmuteForSolo).toHaveBeenCalledTimes(1);
 });
 
 it('shows error message when trying to solo a non existing track', () => {
@@ -186,7 +192,7 @@ it('does nothing when unsoling all tracks but none was soloed', () => {
   const track = fwdAudio.addTrack('not in solo');
   fwdAudio.unsoloAllTracks();
 
-  expect(track['_unmuteForSolo']).not.toHaveBeenCalled();
+  expect(track.unmuteForSolo).not.toHaveBeenCalled();
 });
 
 it('creates various audio nodes', () => {
@@ -242,7 +248,7 @@ test('tears down all tracks on audio context reset', () => {
   const track = fwdAudio.addTrack('');
   fwdAudio.start();
   expect(track.tearDown).toHaveBeenCalledTimes(1);
-  expect(fwdAudio['_soloTrack']).toBeNull();
+  expect(fwdAudio.soloedTrack).toBeNull();
 });
 
 test('throws error when trying to create a node before initialization', () => {
