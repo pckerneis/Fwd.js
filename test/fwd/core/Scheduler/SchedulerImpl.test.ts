@@ -1,7 +1,8 @@
 import { EventQueueImpl } from "../../../../src/fwd/core/EventQueue/EventQueueImpl";
 import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { seconds } from "../../../test-utils";
 
-export const mockEventTrigger = jest.fn((time: number) => {});
+const mockEventTrigger = jest.fn(() => {});
 
 const mockBasicEvent = jest.fn().mockImplementation(() => {
   return {
@@ -17,14 +18,6 @@ beforeEach(() => {
   mockEventTrigger.mockClear();
 });
 
-async function seconds(time: number): Promise<any> {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, time * 1000);
-  });
-}
-
 it ('triggers scheduled events', async () => {
   const eventQueue = new EventQueueImpl<any>();
   const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
@@ -37,7 +30,7 @@ it ('triggers scheduled events', async () => {
   scheduler.schedule(t3, mockBasicEvent());
   scheduler.start(0);
 
-  await seconds(t1);
+  await seconds(t1 + 0.01);
   expect(mockEventTrigger).toHaveBeenCalledWith(t1);
 
   await seconds(t2 - t1);

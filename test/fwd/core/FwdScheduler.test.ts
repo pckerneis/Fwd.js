@@ -1,6 +1,7 @@
 import { FwdScheduler } from "../../../src/fwd/core/FwdScheduler";
+import { seconds } from "../../test-utils";
 
-const mockAction = jest.fn((now: number) => {});
+const mockAction = jest.fn(() => {});
 
 const timeProvider = () => Date.now() / 1000;
 
@@ -8,14 +9,6 @@ beforeEach(() => {
   // Clear all instances and calls to constructor and all methods:
   mockAction.mockClear();
 });
-
-async function seconds(time: number): Promise<any> {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, time * 1000);
-  });
-}
 
 it ('triggers scheduled events', async () => {
   const scheduler = new FwdScheduler(1, 0);
