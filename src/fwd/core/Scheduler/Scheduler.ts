@@ -32,27 +32,27 @@ export abstract class Scheduler<EventType extends Event> {
     public abstract readonly running: boolean;
 
     /**
-     * The delay between the end of a run and the next one, in milliseconds.
+     * The delay between the end of a run and the next one, in seconds.
      */
     public abstract readonly interval: number;
 
     /**
-     * The time range in which events will be considered as ready to be fired, in milliseconds.
+     * The time range in which events will be considered as ready to be fired, in seconds.
      */
     public abstract readonly lookAhead: number;
 
     /**
      * Set the scheduler's time keeper.
      *
-     * @param timeProvider a function that returns the current time in milliseconds.
+     * @param timeProvider a function that returns the current time in seconds.
      */
     public abstract set timeProvider(timeProvider: () => number);
 
     /**
-     * Returns the current time position for the scheduler in milliseconds. It's only useful when called inside the
+     * Returns the current time position for the scheduler in seconds. It's only useful when called inside the
      * scheduler's execution stack as otherwise it will always return `0`.
      *
-     * @returns The current position of the scheduler's head in milliseconds.
+     * @returns The current position of the scheduler's head in seconds.
      */
     public abstract now(): Time;
 
@@ -60,7 +60,7 @@ export abstract class Scheduler<EventType extends Event> {
      * Start processing the event queue from a specified time position. If the scheduler is already started then this method
      * won't do anything.
      *
-     * @param position A time position to start at, in milliseconds.
+     * @param position A time position to start at, in seconds.
      */
     public abstract start(position: Time): void;
 

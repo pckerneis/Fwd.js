@@ -13,7 +13,8 @@ export class BasicEvent {
 
 export class SchedulerImpl<EventType extends Event = BasicEvent> extends Scheduler<EventType> {
 
-  public static readonly MIN_INTERVAL: number = 0.001;
+  public static readonly MIN_INTERVAL: number = 0;
+  public static readonly DEFAULT_LOOKAHEAD: number = 0;
 
   /** @inheritdoc */
   public onEnded: Function;
@@ -42,7 +43,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this.lookAhead = _lookAhead;
 
     // Using default time provider if none is specified
-    this._timeProvider = _timeProvider || systemNow;
+    this._timeProvider = _timeProvider || systemNowInSeconds;
   }
 
   /** @inheritdoc */
@@ -127,16 +128,20 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     }
 
     this._now = this._timeProvider() - this._startTime;
+    const t1 = this._now;
+    const when = this._now + this.lookAhead;
 
-    let next = this._eventQueue.next(this._now);
+    let next = this._eventQueue.next(when);
 
     while (next != null) {
       next.event.trigger(next.time);
-      next = this._eventQueue.next(this._now);
+      next = this._eventQueue.next(when);
     }
 
+    const elapsed = (this._timeProvider() - this._startTime) - t1;
+
     if (this._eventQueue.events.length > 0 || this.keepAlive) {
-      this._timeout = setTimeout(() => this.run(), this.interval);
+      this._timeout = setTimeout(() => this.run(), this.interval - elapsed);
     } else {
       this._running = false;
 
@@ -147,6 +152,6 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
   }
 }
 
-function systemNow(): number {
-  return performance.now();
+function systemNowInSeconds(): number {
+  return performance.now() / 1000;
 }

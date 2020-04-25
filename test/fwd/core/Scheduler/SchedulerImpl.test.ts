@@ -1,4 +1,3 @@
-import { EventQueueImpl } from "../../../../src/fwd/core/EventQueue/EventQueueImpl";
 import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
 import { seconds } from "../../../test-utils";
 
@@ -10,15 +9,13 @@ const mockBasicEvent = jest.fn().mockImplementation(() => {
   }
 });
 
-const timeProvider = () => Date.now() / 1000;
-
 beforeEach(() => {
   // Clear all instances and calls to constructor and all methods:
   mockBasicEvent.mockClear();
   mockEventTrigger.mockClear();
 });
 
-it ('should create', async () => {
+it ('creates', async () => {
   const scheduler = new SchedulerImpl(1, 3);
   expect(scheduler).toBeTruthy();
   expect(scheduler.interval).toBe(1);
@@ -34,6 +31,15 @@ it ('has interval greater than minimal interval', async () => {
   expect(scheduler.interval).toBe(100);
 });
 
+it ('starts counting time', async () => {
+  const scheduler = new SchedulerImpl(1, 3);
+  expect(scheduler.now()).toBe(0);
+  scheduler.start(0);
+  expect(scheduler.now()).toBeGreaterThan(0);
+  expect(scheduler.now()).toBeLessThan(0.010);
+});
+
+
 it ('has positive lookAhead', async () => {
   const scheduler = new SchedulerImpl(-10, -10);
 
@@ -45,8 +51,7 @@ it ('has positive lookAhead', async () => {
 });
 
 it ('triggers scheduled events', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
   const t1 = 0;
   const t2 = 0.1;
   const t3 = 0.2;
@@ -68,8 +73,7 @@ it ('triggers scheduled events', async () => {
 });
 
 it ('stops when all events were triggered and keepAlive is set to false', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
   scheduler.keepAlive = false;
   scheduler.onEnded = jest.fn();
 
@@ -85,8 +89,7 @@ it ('stops when all events were triggered and keepAlive is set to false', async 
 });
 
 it ('goes on when all events were triggered and keepAlive is set to true', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
   scheduler.keepAlive = true;
   scheduler.onEnded = jest.fn();
 
@@ -104,25 +107,23 @@ it ('goes on when all events were triggered and keepAlive is set to true', async
 });
 
 it ('trigger non canceled events', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
 
   scheduler.schedule(0, mockBasicEvent());
   const ref1 = scheduler.schedule(0, mockBasicEvent());
   const ref2 = scheduler.schedule(0, mockBasicEvent());
 
   scheduler.cancel(ref1);
-  scheduler.start(0);
   scheduler.cancel(ref2);
-  await seconds(0.1);
+  scheduler.start(0);
+  await seconds(0);
   scheduler.stop();
 
   expect(mockEventTrigger).toHaveBeenCalledTimes(1);
 });
 
 it ('stops firing events when not running', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
 
   scheduler.schedule(0, mockBasicEvent());
   scheduler.schedule(0, mockBasicEvent());
@@ -130,7 +131,7 @@ it ('stops firing events when not running', async () => {
   scheduler.schedule(0.2, mockBasicEvent());
 
   scheduler.start(0);
-  await seconds(0.1);
+  await seconds(0);
   scheduler.stop();
   await seconds(0.2);
 
@@ -138,8 +139,7 @@ it ('stops firing events when not running', async () => {
 });
 
 it ('fire no events when cleared', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
 
   scheduler.schedule(0, mockBasicEvent());
   scheduler.schedule(0, mockBasicEvent());
@@ -156,8 +156,7 @@ it ('fire no events when cleared', async () => {
 });
 
 it ('fire no events when stopping', async () => {
-  const eventQueue = new EventQueueImpl<any>();
-  const scheduler = new SchedulerImpl(1, 0, eventQueue, timeProvider);
+  const scheduler = new SchedulerImpl(0, 0);
 
   scheduler.schedule(0, mockBasicEvent());
   scheduler.schedule(0, mockBasicEvent());
@@ -174,7 +173,7 @@ it ('fire no events when stopping', async () => {
 });
 
 it ('cannot run if state is not "running"', async () => {
-  const scheduler = new SchedulerImpl(0.01, 10);
+  const scheduler = new SchedulerImpl(0, 10);
 
   const action = jest.fn();
   scheduler.schedule(0, mockBasicEvent());
@@ -192,7 +191,7 @@ it ('uses performance.now() as a default time provider', async () => {
 
   (global as any).performance = performanceMock();
 
-  const scheduler = new SchedulerImpl(0.01, 10);
+  const scheduler = new SchedulerImpl(0, 10);
   scheduler.start(0);
   await seconds(0);
   scheduler.stop();

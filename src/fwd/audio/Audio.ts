@@ -46,7 +46,7 @@ export class FwdAudio {
     this._fwd = fwd;
   
     this._fwd.scheduler.timeProvider = () => {
-      return this._ctx.currentTime * 1000;
+      return this._ctx.currentTime;
     }
   }
 

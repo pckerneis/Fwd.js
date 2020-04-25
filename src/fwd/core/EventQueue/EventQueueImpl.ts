@@ -16,7 +16,7 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
         return null;
       }
 
-      if (this._events[0].time < now) {
+      if (this._events[0].time <= now) {
         return this._events.splice(0, 1)[0];
       }
 
@@ -76,6 +76,10 @@ export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
       }
 
       timeAtPivot = this._events[pivot].time;
+
+      if (timeAtPivot > time) {
+        return pivot;
+      }
     }
 
     if (timeAtPivot > time) {

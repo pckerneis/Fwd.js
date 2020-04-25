@@ -44,7 +44,7 @@ export class FwdScheduler {
    * @param interval The delay between the end of a run and the next one, in milliseconds.
    * @param lookAhead The time range in which events will be considered as ready to be fired, in milliseconds.
    */
-  constructor(interval: number = 8, lookAhead: number = 70) {
+  constructor(interval: number = SchedulerImpl.MIN_INTERVAL, lookAhead: number = SchedulerImpl.DEFAULT_LOOKAHEAD) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
     this._scheduler.keepAlive = true;
     this._scheduler.onEnded = () => {
@@ -77,7 +77,7 @@ export class FwdScheduler {
    * @returns The current position of the scheduler's head in seconds.
    */
   public now(): Time {
-    return NOW / 1000;
+    return NOW;
   }
 
   /**
@@ -88,7 +88,7 @@ export class FwdScheduler {
    * @returns The time elapsed since the FwdScheduler's start in seconds.
    */
   public rtNow(): Time {
-    return this._scheduler.now() / 1000;
+    return this._scheduler.now();
   }
 
   /**
@@ -106,7 +106,7 @@ export class FwdScheduler {
       return null;
     }
 
-    const nextTime = NOW + time * 1000;
+    const nextTime = NOW + time;
     return this._scheduler.schedule(nextTime, new FwdEvent(nextTime, action, ! preventCancel));
   }
 
@@ -126,7 +126,7 @@ export class FwdScheduler {
    * @param time A positive duration in seconds.
    */
   public wait(time: Time): void {
-    NOW += time * 1000;
+    NOW += time;
   }
 
   /**
