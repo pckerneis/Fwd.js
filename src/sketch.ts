@@ -1,3 +1,4 @@
+/* tslint:disable */
 import {fwd} from './fwd';
 import { midiToFrequency as mtof } from './fwd/midi/helpers';
 import { FwdTextEditor } from './fwd/control/FwdControl';

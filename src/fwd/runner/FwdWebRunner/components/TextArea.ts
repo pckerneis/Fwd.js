@@ -10,7 +10,7 @@ export class TextArea {
   private _textContent: string = '';
   private _mode: WriteMode;
   private _maxLength: number = Infinity;
-  private _caretContainer: HTMLDivElement;
+  private readonly _caretContainer: HTMLDivElement;
 
   constructor() {
     this.htmlElement = document.createElement('div');

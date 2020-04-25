@@ -13,7 +13,7 @@
     },
     "typedocOptions": {
       "inputFiles": [
-        "./src/ts/fwd/"
+        "./src/fwd/"
         // "./src/ts/fwd/runner/FwdWebRunner/FwdWebRunner.ts",
         // "./src/ts/fwd/runner/FwdWebRunner/FwdWebImpl.ts",
         // "./src/ts/fwd/runner/FwdWebRunner/StyleInjector.ts",
@@ -36,7 +36,7 @@
       "exclude": "**/*+(index|.spec|.e2e|.test).ts"
     },
     "include": [
-        "src/ts/**/*"
+        "src/**/*"
     ],
     "exclude": [ "node_modules" ] 
   }

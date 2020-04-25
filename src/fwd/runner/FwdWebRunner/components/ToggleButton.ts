@@ -17,7 +17,7 @@ export class ToggleButton {
 
     this.text = text;
 
-    this.htmlElement.onclick = (event) => {
+    this.htmlElement.onclick = (/* event */) => {
       this.toggled = ! this._toggled;
     }
   }
