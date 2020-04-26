@@ -105,24 +105,26 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   public get outputNode(): AudioNode { return this.nativeNode; }
 
   public get frequency(): FwdAudioParamWrapper {
+    this.assertIsReady('get frequency');
     return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.frequency);
   }
 
   public get type(): OscillatorType {
+    this.assertIsReady('get type');
     return this._type;
   }
 
   public setType(type: OscillatorType): void {
     fwd.schedule(fwd.now(), () => {
+      this.assertIsReady('set type');
       this._type = type;
-
-      if (this.nativeNode !== null) {
-        this.nativeNode.type = type;
-      }
+      this.nativeNode.type = type;
     });
   }
 
   public setFrequency(fq: number): void {
+    this.assertIsReady('set frequency');
+
     if (isNaN(fq)) {
       return;
     }
@@ -134,6 +136,7 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   }
 
   public stop(): void {
+    this.assertIsReady('stop');
     const audioNow = this.fwdAudio.now();
     this.nativeNode.stop(audioNow);
   }
@@ -273,7 +276,7 @@ export class FwdNoiseNode extends FwdAudioNode {
   }
 }
 
-function tearDownNativeNode(nativeNode: AudioNode, when: Time): Promise<void> {
+export async function tearDownNativeNode(nativeNode: AudioNode, when: Time): Promise<void> {
   return new Promise(resolve => {
     setTimeout(() => {
       if (nativeNode != null) {
@@ -284,8 +287,9 @@ function tearDownNativeNode(nativeNode: AudioNode, when: Time): Promise<void> {
         }
 
         nativeNode = null;
-        resolve();
       }
+
+      resolve();
     }, when * 1000);
   });
 }

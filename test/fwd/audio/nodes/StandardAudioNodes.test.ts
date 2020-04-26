@@ -1,17 +1,18 @@
+import { FwdAudioImpl } from "../../../../src/fwd/audio/FwdAudioImpl";
 import { FwdAudioNode } from "../../../../src/fwd/audio/nodes/FwdAudioNode";
 import {
   FwdAudioNodeWrapper, FwdAudioParamWrapper,
   FwdGainNode,
   FwdLFONode, FwdNoiseNode,
   FwdOscillatorNode,
-  FwdSamplerNode,
+  FwdSamplerNode, tearDownNativeNode,
 } from "../../../../src/fwd/audio/nodes/StandardAudioNodes";
 import { Time } from "../../../../src/fwd/core/EventQueue/EventQueue";
 import * as FwdEntryPoint from "../../../../src/fwd/core/fwd";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
-import { mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";
+import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";
 import { seconds } from "../../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;
@@ -26,6 +27,20 @@ describe('StandardAudioNodes', () => {
   });
 
   describe('FwdAudioParamWrapper ', () => {
+    it('wraps an audio parameter', () => {
+      const param = mockAudioParam();
+
+      class ConcreteParam extends FwdAudioParamWrapper {
+        constructor() {
+          super(mockFwdAudio(), param);
+        }
+      }
+
+      const wrapper = new ConcreteParam();
+      expect(wrapper.inputNode).toBe(param);
+      expect(wrapper.value).toBe(param.value);
+    });
+
     it('throws when calling doTearDown', () => {
       class ConcreteParam extends FwdAudioParamWrapper {
         constructor() {
@@ -33,8 +48,8 @@ describe('StandardAudioNodes', () => {
         }
       }
 
-      const node = new ConcreteParam();
-      expect(node['doTearDown']).toThrowError();
+      const wrapper = new ConcreteParam();
+      expect(wrapper['doTearDown']).toThrowError();
     });
   });
 
@@ -56,7 +71,7 @@ describe('StandardAudioNodes', () => {
     it('throw when calling assertIsReady with null native node', () => {
       const node = new ConcreteNode();
       expect(node.nativeNode).toBeNull();
-      expect(node['assertIsReady']).toThrowError();
+      expect(() => node['assertIsReady']('')).toThrowError();
     });
 
     it('set native node to null when teared down', async () => {
@@ -155,41 +170,98 @@ describe('StandardAudioNodes', () => {
   });
 
 
-  it ('creates a lfo node', () => {
-    const node = new FwdLFONode(mockFwdAudio(), 0.1, 'square');
+  describe('FwdLFONode', () => {
+    it('creates a lfo node', () => {
+      const node = new FwdLFONode(mockFwdAudio(), 0.1, 'square');
 
-    expect(node).toBeTruthy();
-    expect(node.inputNode).toBeNull();
-    expect(node.outputNode).not.toBeNull();
-    expect(node.frequency).not.toBeNull();
+      expect(node).toBeTruthy();
+      expect(node.inputNode).toBeNull();
+      expect(node.outputNode).not.toBeNull();
+      expect(node.frequency).not.toBeNull();
 
-    checkTearDown(node);
-  });
-
-  it ('creates a sampler node', () => {
-    // We need to provide fetch
-    (global as any).fetch = jest.fn().mockImplementation(() => {
-      return new Promise(jest.fn());
+      checkTearDown(node);
     });
 
-    const node = new FwdSamplerNode(mockFwdAudio(), '');
+    it('allow to change type and frequency', () => {
+      (global as any).AudioParam = mockAudioParam;
+      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
 
-    expect(node).toBeTruthy();
-    expect(node.inputNode).toBeNull();
-    expect(node.outputNode).not.toBeNull();
-    expect(node.pathToFile).not.toBeNull();
+      const node = new FwdLFONode(mockFwdAudio(), 0.1, 'square');
 
-    checkTearDown(node);
+      node.frequency = 3;
+      node.type = 'triangle';
+
+      expect(node.oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(3, undefined);
+      expect(node.oscillator.type).toBe('triangle');
+    });
   });
 
-  it ('creates a noise node', () => {
-    const node = new FwdNoiseNode(mockFwdAudio());
+  describe('FwdSamplerNode', () => {
+    it('creates a sampler node', () => {
+      // We need to provide fetch
+      (global as any).fetch = jest.fn().mockImplementation(() => {
+        return new Promise(jest.fn());
+      });
 
-    expect(node).toBeTruthy();
-    expect(node.inputNode).toBeNull();
-    expect(node.outputNode).not.toBeNull();
+      const node = new FwdSamplerNode(mockFwdAudio(), '');
 
-    checkTearDown(node);
+      expect(node).toBeTruthy();
+      expect(node.inputNode).toBeNull();
+      expect(node.outputNode).not.toBeNull();
+      expect(node.pathToFile).not.toBeNull();
+
+      checkTearDown(node);
+    });
+
+    it('can be played', () => {
+      (global as any).AudioParam = mockAudioParam;
+      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+
+      // We need to provide fetch
+      (global as any).fetch = jest.fn().mockImplementation(() => {
+        return new Promise(jest.fn());
+      });
+
+      const node = new FwdSamplerNode(mockFwdAudio(), '');
+      // @ts-ignore
+      node.outputNode['context'] = mockAudioContext();
+
+      node.play();
+
+      expect(node.outputNode.context.createBufferSource).toHaveBeenCalled();
+    });
+  });
+
+  describe('FwdNoiseNode', () => {
+    it('creates a noise node', () => {
+      (global as any).AudioContext = mockAudioContext;
+      const fwdAudio = new FwdAudioImpl();
+      fwdAudio.initializeModule(mockFwd());
+      fwdAudio.start();
+      const node = new FwdNoiseNode(fwdAudio);
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).toBeNull();
+      expect(node.outputNode).not.toBeNull();
+
+      checkTearDown(node);
+    });
+  });
+
+  describe('tearDownNativeNode', () => {
+    it('tears down a native audio node', async () => {
+      (global as any).AudioScheduledSourceNode = mockAudioNode;
+      const audioNode = mockAudioNode();
+
+      await tearDownNativeNode(audioNode, 0);
+      await seconds(0);
+
+      expect(audioNode.disconnect).toHaveBeenCalled();
+    });
+
+    it('doesn\'t do anything if the node is null', async () => {
+      await tearDownNativeNode(null, 0);
+    });
   });
 
   function checkTearDown(node: FwdAudioNode): void {

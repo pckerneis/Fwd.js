@@ -47,6 +47,7 @@ export function createAudioNodeFactoryMock(...audioParams: string[]): Mock {
 export const mockAudioContext = jest.fn().mockImplementation(() => {
   return {
     currentTime: 42,
+    sampleRate: 44000,
     createGain: createAudioNodeFactoryMock('gain'),
     createOscillator: createAudioNodeFactoryMock('frequency'),
     createBufferSource: createAudioNodeFactoryMock(),
@@ -54,7 +55,7 @@ export const mockAudioContext = jest.fn().mockImplementation(() => {
     createStereoPanner: createAudioNodeFactoryMock('pan'),
     createBuffer: jest.fn().mockImplementation(() => {
       return {
-        getChannelData: jest.fn(),
+        getChannelData: jest.fn().mockImplementation(() => []),
       }
     }),
   }
