@@ -1,38 +1,11 @@
-import { FwdAudio } from "../../../../src/fwd/audio/FwdAudio";
 import { FwdAudioImpl } from "../../../../src/fwd/audio/FwdAudioImpl";
 import { FwdAudioTrack } from "../../../../src/fwd/audio/nodes/FwdAudioTrack";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
-import { mockFwd } from "../../../Fwd.mock";
-import { mockAudioContext } from "../../../WebAudio.mock";
-import Mock = jest.Mock;
+import { mockFwd } from "../../../mocks/Fwd.mock";
+import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
+import { mockAudioContext } from "../../../mocks/WebAudio.mock";
 
 Logger.runtimeLevel = LoggerLevel.none;
-
-const mockFwdAudio: Mock<FwdAudio> = jest.fn().mockImplementation(() => {
-  return {
-    listeners: [],
-    isContextReady: false,
-    master: {},
-    tracks: [],
-    soloedTrack: null,
-
-    initializeModule: jest.fn(),
-    start: jest.fn(),
-    now: jest.fn(),
-
-    addTrack: jest.fn(),
-    removeTrack: jest.fn(),
-    getTrack: jest.fn(),
-    soloTrack: jest.fn(),
-    unsoloAllTracks: jest.fn(),
-
-    gain: jest.fn(),
-    osc: jest.fn(),
-    lfo: jest.fn(),
-    sampler: jest.fn(),
-    noise: jest.fn(),
-  };
-});
 
 describe('FwdAudioTrack', () => {
   beforeEach(() => {

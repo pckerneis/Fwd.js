@@ -3,8 +3,8 @@ import * as FwdAudioTrackModule from '../../../src/fwd/audio/nodes/FwdAudioTrack
 import * as FwdEntryPoint from "../../../src/fwd/core/fwd";
 import { fwd } from "../../../src/fwd/core/fwd";
 import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
-import { mockError, mockFwd } from "../../Fwd.mock";
-import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../WebAudio.mock";
+import { mockError, mockFwd } from "../../mocks/Fwd.mock";
+import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../mocks/WebAudio.mock";
 
 Logger.runtimeLevel = LoggerLevel.none;
 

@@ -10,7 +10,14 @@ export const mockAudioParam = jest.fn().mockImplementation(() => {
 
 export const mockAudioNode = jest.fn().mockImplementation(() => {
   return {
-    start: jest.fn(),
+    channelCount: 1,
+    channelCountMode: '',
+    channelInterpretation: '',
+    context: null,
+    numberOfInputs: 1,
+    numberOfOutputs: 1,
+    start: jest.fn(),   // Only for scheduled nodes...
+    stop: jest.fn(),    // Only for scheduled nodes...
     connect: jest.fn().mockImplementation(() => {
       return mockAudioNode();
     }),
