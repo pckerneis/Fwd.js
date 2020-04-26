@@ -1,5 +1,6 @@
 import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
+import { waitSeconds } from "../../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;
 
@@ -76,13 +77,13 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(t3, mockBasicEvent());
     scheduler.start(0);
 
-    waitSeconds(0);
+    waitSeconds(0, TIME);
     expect(mockEventTrigger).toHaveBeenCalledWith(t1);
 
-    waitSeconds(t2);
+    waitSeconds(t2, TIME);
     expect(mockEventTrigger).toHaveBeenCalledWith(t2);
 
-    waitSeconds(t2);
+    waitSeconds(t2, TIME);
     scheduler.stop();
     expect(mockEventTrigger).toHaveBeenCalledWith(t3);
   });
@@ -97,7 +98,7 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(0, mockBasicEvent());
     scheduler.start(0);
 
-    waitSeconds(0.5);
+    waitSeconds(0.5, TIME);
     expect(mockEventTrigger).toHaveBeenCalledTimes(3);
     expect(scheduler.running).toBeFalsy();
     expect(scheduler.onEnded).toHaveBeenCalledWith();
@@ -113,7 +114,7 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(0, mockBasicEvent());
     scheduler.start(0);
 
-    waitSeconds(0.1);
+    waitSeconds(0.1, TIME);
     expect(mockEventTrigger).toHaveBeenCalledTimes(3);
     expect(scheduler.running).toBeTruthy();
     expect(scheduler.onEnded).not.toHaveBeenCalled();
@@ -131,7 +132,7 @@ describe('SchedulerImpl', () => {
     scheduler.cancel(ref1);
     scheduler.cancel(ref2);
     scheduler.start(0);
-    waitSeconds(0);
+    waitSeconds(0, TIME);
     scheduler.stop();
 
     expect(mockEventTrigger).toHaveBeenCalledTimes(1);
@@ -146,9 +147,9 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(0.2, mockBasicEvent());
 
     scheduler.start(0);
-    waitSeconds(0);
+    waitSeconds(0, TIME);
     scheduler.stop();
-    waitSeconds(0.2);
+    waitSeconds(0.2, TIME);
 
     expect(mockEventTrigger).toHaveBeenCalledTimes(2);
   });
@@ -162,9 +163,9 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(0.2, mockBasicEvent());
 
     scheduler.start(0);
-    waitSeconds(0.1);
+    waitSeconds(0.1, TIME);
     scheduler.clearQueue();
-    waitSeconds(0.2);
+    waitSeconds(0.2, TIME);
     scheduler.stop();
 
     expect(mockEventTrigger).toHaveBeenCalledTimes(2);
@@ -179,9 +180,9 @@ describe('SchedulerImpl', () => {
     scheduler.schedule(0.2, mockBasicEvent());
 
     scheduler.start(0);
-    waitSeconds(0.1);
+    waitSeconds(0.1, TIME);
     scheduler.clearQueue();
-    waitSeconds(0.2);
+    waitSeconds(0.2, TIME);
     scheduler.stop();
 
     expect(mockEventTrigger).toHaveBeenCalledTimes(2);
@@ -203,13 +204,4 @@ describe('SchedulerImpl', () => {
     scheduler.start(0);
     expect(mockPerformanceNow).toHaveBeenCalled();
   });
-
-  function waitMs(howMany: number): void {
-    TIME.now += howMany;
-    jest.runOnlyPendingTimers();
-  }
-
-  function waitSeconds(howMany: number): void {
-    return waitMs(howMany * 1000);
-  }
 });

@@ -11,6 +11,14 @@ export async function seconds(time: number): Promise<any> {
   });
 }
 
+export async function waitMs(howMany: number, timeKeeper: {now: number}): Promise<void> {
+  timeKeeper.now += howMany;
+  jest.runOnlyPendingTimers();
+}
+
+export async function waitSeconds(howMany: number, timeKeeper: {now: number}): Promise<void> {
+  return await waitMs(howMany * 1000, timeKeeper);
+}
 
 /**
  * Compared two numbers with a tolerance margin

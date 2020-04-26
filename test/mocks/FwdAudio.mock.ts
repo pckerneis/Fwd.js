@@ -1,4 +1,5 @@
 import { FwdAudio } from "../../src/fwd/audio/FwdAudio";
+import { mockAudioContext } from "./WebAudio.mock";
 import Mock = jest.Mock;
 
 export const mockFwdAudio: Mock<FwdAudio> = jest.fn().mockImplementation(() => {
@@ -8,6 +9,7 @@ export const mockFwdAudio: Mock<FwdAudio> = jest.fn().mockImplementation(() => {
     master: {},
     tracks: [],
     soloedTrack: null,
+    context: mockAudioContext(),
 
     initializeModule: jest.fn(),
     start: jest.fn(),

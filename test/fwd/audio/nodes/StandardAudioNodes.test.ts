@@ -1,0 +1,199 @@
+import { FwdAudioNode } from "../../../../src/fwd/audio/nodes/FwdAudioNode";
+import {
+  FwdAudioNodeWrapper, FwdAudioParamWrapper,
+  FwdGainNode,
+  FwdLFONode, FwdNoiseNode,
+  FwdOscillatorNode,
+  FwdSamplerNode,
+} from "../../../../src/fwd/audio/nodes/StandardAudioNodes";
+import { Time } from "../../../../src/fwd/core/EventQueue/EventQueue";
+import * as FwdEntryPoint from "../../../../src/fwd/core/fwd";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
+import { mockFwd } from "../../../mocks/Fwd.mock";
+import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
+import { mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";
+import { seconds } from "../../../test-utils";
+
+Logger.runtimeLevel = LoggerLevel.none;
+
+describe('StandardAudioNodes', () => {
+  beforeEach(() => {
+    mockFwdAudio.mockClear();
+
+    mockFwd.mockClear();
+
+    (FwdEntryPoint as any).fwd = mockFwd();
+  });
+
+  describe('FwdAudioParamWrapper ', () => {
+    it('throws when calling doTearDown', () => {
+      class ConcreteParam extends FwdAudioParamWrapper {
+        constructor() {
+          super(null, null);
+        }
+      }
+
+      const node = new ConcreteParam();
+      expect(node['doTearDown']).toThrowError();
+    });
+  });
+
+  describe('FwdAudioNodeWrapper', () => {
+    class ConcreteNode extends FwdAudioNodeWrapper<AudioNode> {
+      constructor() {
+        super(null, null);
+      }
+
+      public get inputNode(): AudioNode | AudioParam {
+        return undefined;
+      }
+
+      public get outputNode(): AudioNode {
+        return undefined;
+      }
+    }
+
+    it('throw when calling assertIsReady with null native node', () => {
+      const node = new ConcreteNode();
+      expect(node.nativeNode).toBeNull();
+      expect(node['assertIsReady']).toThrowError();
+    });
+
+    it('set native node to null when teared down', async () => {
+      (global as any).AudioScheduledSourceNode = mockAudioNode;
+      const node = new ConcreteNode();
+
+      // @ts-ignore
+      node['_nativeNode'] = mockAudioNode();
+      // @ts-ignore
+      node['_fwdAudio'] = mockFwdAudio();
+      expect(node.nativeNode).not.toBeNull();
+
+      node.tearDown();
+      await seconds(0);
+      expect(node.nativeNode).toBeNull();
+    });
+  });
+
+  describe('FwdGainNode', () => {
+    it('creates a gain node', () => {
+      const node = new FwdGainNode(mockFwdAudio());
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
+      expect(node.outputNode).not.toBeNull();
+      expect(node.gain).not.toBeNull();
+
+      checkTearDown(node);
+    });
+
+    it('uses "rampTo" shortcut to gain.rampTo', () => {
+      const node = new FwdGainNode(mockFwdAudio());
+      node.gain.rampTo = jest.fn();
+      node.rampTo(0, 0);
+      expect(node.gain.rampTo).toHaveBeenCalled();
+    });
+  });
+
+  describe('FwdOscillatorNode', () => {
+    it ('creates a oscillator node', () => {
+      const node = new FwdOscillatorNode(mockFwdAudio(), 220, 'square');
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).toBeNull();
+      expect(node.outputNode).not.toBeNull();
+      expect(node.frequency).not.toBeNull();
+
+      checkTearDown(node);
+    });
+
+    it ('uses default frequency value if the value provided isn\'t a number', () => {
+      (global as any).AudioParam = mockAudioParam;
+      // @ts-ignore
+      const node = new FwdOscillatorNode(mockFwdAudio(), {foo: 'bar'}, 'square');
+
+      expect(node).toBeTruthy();
+      expect(node.nativeNode.frequency.value).toBe(0);
+    });
+
+    it ('accept frequencies and types', () => {
+      (global as any).AudioParam = mockAudioParam;
+      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+
+      const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
+      node.setFrequency(220);
+      node.setType('triangle');
+
+      expect(node.nativeNode.frequency.setValueAtTime).toHaveBeenCalledWith(220, undefined);
+      expect(node.type).toBe('triangle');
+    });
+
+    it ('reject invalid frequencies', () => {
+      (global as any).AudioParam = mockAudioParam;
+      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+
+      const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
+
+      // @ts-ignore
+      node.setFrequency('foo');
+      expect(node.nativeNode.frequency.setValueAtTime).not.toHaveBeenCalled();
+
+      // @ts-ignore
+      node.setFrequency({foo: 'bar'});
+      expect(node.nativeNode.frequency.setValueAtTime).not.toHaveBeenCalled();
+    });
+
+    it ('can be stopped', () => {
+      (global as any).AudioNode = mockAudioNode;
+      (FwdEntryPoint as any).fwd['fwdAudio'] = mockFwdAudio();
+
+      const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
+      node.stop();
+
+      expect(node.nativeNode.stop).toHaveBeenCalled();
+    });
+  });
+
+
+  it ('creates a lfo node', () => {
+    const node = new FwdLFONode(mockFwdAudio(), 0.1, 'square');
+
+    expect(node).toBeTruthy();
+    expect(node.inputNode).toBeNull();
+    expect(node.outputNode).not.toBeNull();
+    expect(node.frequency).not.toBeNull();
+
+    checkTearDown(node);
+  });
+
+  it ('creates a sampler node', () => {
+    // We need to provide fetch
+    (global as any).fetch = jest.fn().mockImplementation(() => {
+      return new Promise(jest.fn());
+    });
+
+    const node = new FwdSamplerNode(mockFwdAudio(), '');
+
+    expect(node).toBeTruthy();
+    expect(node.inputNode).toBeNull();
+    expect(node.outputNode).not.toBeNull();
+    expect(node.pathToFile).not.toBeNull();
+
+    checkTearDown(node);
+  });
+
+  it ('creates a noise node', () => {
+    const node = new FwdNoiseNode(mockFwdAudio());
+
+    expect(node).toBeTruthy();
+    expect(node.inputNode).toBeNull();
+    expect(node.outputNode).not.toBeNull();
+
+    checkTearDown(node);
+  });
+
+  function checkTearDown(node: FwdAudioNode): void {
+    expect(() => node.tearDown()).not.toThrowError();
+    expect(() => node.tearDown()).toThrowError();
+  }
+});

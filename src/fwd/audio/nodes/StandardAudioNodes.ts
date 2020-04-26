@@ -1,4 +1,5 @@
 import path from "path";
+import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd } from "../../core/Fwd";
 import { clamp } from "../../core/utils/numbers";
 import { FwdAudio } from "../FwdAudio";
@@ -10,14 +11,21 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
   constructor(readonly fwdAudio: FwdAudio, private _param: AudioParam) {
     super();
   }
+
   public get inputNode(): AudioParam {
     return this._param;
   }
+
+  public get value(): number { return this._param.value}
 
   public rampTo(value: number, time: number): void {
     const audioNow = this.fwdAudio.now();
     this._param.cancelAndHoldAtTime(audioNow);
     this._param.linearRampToValueAtTime(value, audioNow + time);
+  }
+
+  protected doTearDown(/* when: Time */): void {
+    throw new Error('You shouldn\'t call "tearDown" on a audio parameter.');
   }
 }
 
@@ -25,58 +33,45 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
 
 export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
 
-  private tearedDownCalled: boolean = false;
-
   protected constructor(private readonly _fwdAudio: FwdAudio, private _nativeNode: T) {
     super();
   }
-  public get inputNode(): AudioNode | AudioParam { return this.nativeNode; }
+  public abstract get inputNode(): AudioNode | AudioParam;
 
-  public get outputNode(): AudioNode { return this.nativeNode; }
+  public abstract get outputNode(): AudioNode;
 
   public get nativeNode(): T { return this._nativeNode; }
 
   public get fwdAudio(): FwdAudio { return this._fwdAudio; }
-
-  public tearDown(): void {
-    if (this.tearedDownCalled) {
-      throw new Error('You cannot call tearDown more than once on the same audio node!');
-    }
-
-    this.tearedDownCalled = true;
-
-    const dueTime = this.fwdAudio.now();
-    const when = dueTime - this.fwdAudio.context.currentTime;
-
-    setTimeout(() => {
-      if (this._nativeNode != null) {
-        this._nativeNode.disconnect();
-
-        if (this._nativeNode instanceof AudioScheduledSourceNode) {
-          this._nativeNode.stop();
-        }
-
-        this._nativeNode = null;
-      }
-    }, when * 1000);
-  }
 
   protected assertIsReady(context: string): void {
     if (this._nativeNode == null) {
       throw new Error(context + ': this audio node was teared down or not initialized.');
     }
   }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._nativeNode, when).then(() => {
+      this._nativeNode = null;
+    });
+  }
 }
 
 //=========================================================================
 
 export class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
+  private readonly _gainWrapper: FwdAudioParamWrapper;
+
   constructor(fwdAudio: FwdAudio, defaultValue: number = 0) {
     super(fwdAudio, fwdAudio.context.createGain());
     this.nativeNode.gain.setValueAtTime(defaultValue, 0);
+    this._gainWrapper = new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.gain);
   }
 
-  public get gain(): FwdAudioParamWrapper { return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.gain); }
+  public get inputNode(): AudioNode | AudioParam { return this.nativeNode; }
+  public get outputNode(): AudioNode { return this.nativeNode; }
+
+  public get gain(): FwdAudioParamWrapper { return this._gainWrapper; }
 
   public rampTo(value: number, time: number): void {
     this.gain.rampTo(value, time);
@@ -90,6 +85,8 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
   private static MIN_FREQ: number = 0;
   private static MAX_FREQ: number = 40000;
 
+  private _type: OscillatorType;
+
   constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
     super(fwdAudio, fwdAudio.context.createOscillator());
 
@@ -99,16 +96,26 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
       this.nativeNode.frequency.value = 0;
     }
 
+    this._type = type;
     this.nativeNode.type = type;
     this.nativeNode.start();
   }
+
+  public get inputNode(): AudioNode | AudioParam { return null; }
+  public get outputNode(): AudioNode { return this.nativeNode; }
 
   public get frequency(): FwdAudioParamWrapper {
     return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.frequency);
   }
 
+  public get type(): OscillatorType {
+    return this._type;
+  }
+
   public setType(type: OscillatorType): void {
     fwd.schedule(fwd.now(), () => {
+      this._type = type;
+
       if (this.nativeNode !== null) {
         this.nativeNode.type = type;
       }
@@ -135,8 +142,8 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
 //===============================================================
 
 export class FwdLFONode extends FwdAudioNode {
-  private readonly _output: GainNode;
-  private readonly _osc: OscillatorNode;
+  private _output: GainNode;
+  private _osc: OscillatorNode;
 
   constructor(public fwdAudio: FwdAudio, frequency: number, type: OscillatorType) {
     super();
@@ -175,12 +182,22 @@ export class FwdLFONode extends FwdAudioNode {
       this._osc.type = type;
     });
   }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._osc, when).then(() => {
+      this._osc = null;
+    });
+
+    tearDownNativeNode(this._osc, when).then(() => {
+      this._output = null;
+    });
+  }
 }
 
 //===============================================================
 
 export class FwdSamplerNode extends FwdAudioNode {
-  private readonly _output: GainNode;
+  private _output: GainNode;
   private _buffer: AudioBuffer;
 
   constructor(public fwdAudio: FwdAudio, public readonly pathToFile: string) {
@@ -204,6 +221,12 @@ export class FwdSamplerNode extends FwdAudioNode {
     });
   }
 
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._output, when).then(() => {
+      this._output = null;
+    });
+  }
+
   private load(): void {
     const url = path.resolve('../../data', this.pathToFile);
 
@@ -217,7 +240,7 @@ export class FwdSamplerNode extends FwdAudioNode {
 //===============================================================
 
 export class FwdNoiseNode extends FwdAudioNode {
-  private readonly _output: AudioBufferSourceNode;
+  private _output: AudioBufferSourceNode;
 
   constructor(public readonly fwdAudio: FwdAudio) {
     super();
@@ -231,6 +254,12 @@ export class FwdNoiseNode extends FwdAudioNode {
   public get inputNode(): AudioNode { return null; }
   public get outputNode(): AudioNode { return this._output; }
 
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._output, when).then(() => {
+      this._output = null;
+    });
+  }
+
   private generateWhiteNoise(): AudioBuffer {
     const sampleRate = this.fwdAudio.context.sampleRate;
     const buffer = this.fwdAudio.context.createBuffer(1, 2 * sampleRate, sampleRate);
@@ -242,4 +271,21 @@ export class FwdNoiseNode extends FwdAudioNode {
 
     return buffer;
   }
+}
+
+function tearDownNativeNode(nativeNode: AudioNode, when: Time): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      if (nativeNode != null) {
+        nativeNode.disconnect();
+
+        if (nativeNode instanceof AudioScheduledSourceNode) {
+          nativeNode.stop();
+        }
+
+        nativeNode = null;
+        resolve();
+      }
+    }, when * 1000);
+  });
 }

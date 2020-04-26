@@ -2,10 +2,11 @@ import Mock = jest.Mock;
 
 export const mockAudioParam = jest.fn().mockImplementation(() => {
   return {
+    value: 42,
     setValueAtTime: jest.fn(),
     cancelAndHoldAtTime: jest.fn(),
     linearRampToValueAtTime: jest.fn(),
-  }
+  };
 });
 
 export const mockAudioNode = jest.fn().mockImplementation(() => {

@@ -1,6 +1,7 @@
 import { FwdScheduler } from "../../../src/fwd/core/FwdScheduler";
 import { SchedulerImpl } from "../../../src/fwd/core/Scheduler/SchedulerImpl";
 import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
+import { waitSeconds } from "../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;
 
@@ -54,11 +55,11 @@ describe('FwdScheduler', () => {
     scheduler.start();
     expect(mockAction).toHaveBeenCalledTimes(1);
 
-    await waitSeconds(0.01);
+    await waitSeconds(0.01, TIME);
 
     expect(mockAction).toHaveBeenCalledTimes(2);
 
-    await waitSeconds(0.01);
+    await waitSeconds(0.01, TIME);
     scheduler.stop();
     expect(mockAction).toHaveBeenCalledTimes(3);
   });
@@ -71,7 +72,7 @@ describe('FwdScheduler', () => {
     scheduler.cancel(ref1);
     scheduler.cancel(ref2);
     scheduler.start();
-    await waitSeconds(0.1);
+    await waitSeconds(0.1, TIME);
     scheduler.stop();
 
     expect(mockAction).toHaveBeenCalledTimes(1);
@@ -87,9 +88,9 @@ describe('FwdScheduler', () => {
 
     scheduler.start();
     expect(mockAction).toHaveBeenCalledTimes(2);
-    await waitSeconds(0);
+    await waitSeconds(0, TIME);
     scheduler.stop();
-    await waitSeconds(t2);
+    await waitSeconds(t2, TIME);
     expect(mockAction).toHaveBeenCalledTimes(2);
   });
 
@@ -101,11 +102,11 @@ describe('FwdScheduler', () => {
     scheduler.start();
     expect(scheduler.state).toBe('running');
 
-    await waitSeconds(0);
+    await waitSeconds(0, TIME);
     scheduler.stop();
     expect(scheduler.state).toBe('stopping');
 
-    await waitSeconds(0.01);
+    await waitSeconds(0.01, TIME);
     expect(scheduler.state).toBe('stopped');
     expect(onEnded).toHaveBeenCalledTimes(1);
   });
@@ -124,7 +125,7 @@ describe('FwdScheduler', () => {
     scheduler.start();
     // expect(tolerantCompare(scheduler.rtNow(), 0, timeTolerance)).toBeTruthy();
     expect(scheduler.now()).toBe(0);
-    await waitSeconds(0.03);
+    await waitSeconds(0.03, TIME);
     // expect(tolerantCompare(scheduler.rtNow(), 0.03, timeTolerance)).toBeTruthy();
     expect(scheduler.now()).toBe(0);
 
@@ -139,7 +140,7 @@ describe('FwdScheduler', () => {
     scheduler.schedule(0, action);
 
     expect(scheduler.state).toBe('stopping');
-    await waitSeconds(0.001);
+    await waitSeconds(0.001, TIME);
     expect(scheduler.state).toBe('stopped');
 
     expect(action).not.toHaveBeenCalled();
@@ -159,7 +160,7 @@ describe('FwdScheduler', () => {
     scheduler.schedule(0, action2);
     scheduler.start();
     expect(scheduler.now()).toBe(0);
-    await waitSeconds(0.03);
+    await waitSeconds(0.03, TIME);
     expect(scheduler.now()).toBe(0);
 
     scheduler.stop();
@@ -170,7 +171,7 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.clearEvents()).toThrowError();
     scheduler.stop();
 
-    await waitSeconds(0);
+    await waitSeconds(0, TIME);
     expect(() => scheduler.clearEvents()).not.toThrowError();
   });
 
@@ -203,7 +204,7 @@ describe('FwdScheduler', () => {
     expect(scheduler.state).toBe('stopping');
     expect(() => scheduler.stop()).toThrowError();
 
-    await waitSeconds(0);
+    await waitSeconds(0, TIME);
     expect(scheduler.state).toBe('stopped');
     expect(() => scheduler.stop()).toThrowError();
   });
@@ -214,7 +215,7 @@ describe('FwdScheduler', () => {
     });
 
     scheduler.start();
-    await waitSeconds(0.01);
+    await waitSeconds(0.01, TIME);
     scheduler.stop();
   });
 
@@ -229,7 +230,7 @@ describe('FwdScheduler', () => {
     expect(scheduler['_scheduler'].eventQueue.events).toHaveLength(1);
     expect(scheduler.state).toBe('stopping');
 
-    await waitSeconds(0.010);
+    await waitSeconds(0.010, TIME);
 
     expect(scheduler.state).toBe('stopped');
     expect(action).toHaveBeenCalledTimes(1);
@@ -239,16 +240,7 @@ describe('FwdScheduler', () => {
     scheduler.timeProvider = () => 2;
     scheduler.start();                        // start is 2
     scheduler.timeProvider = () => 44;
-    await waitSeconds(0);                   // start is now - start, 44 - 2
+    await waitSeconds(0, TIME);                   // start is now - start, 44 - 2
     expect(scheduler.rtNow()).toBe(42);
   });
-
-  async function waitMs(howMany: number): Promise<void> {
-    TIME.now += howMany;
-    jest.runOnlyPendingTimers();
-  }
-
-  async function waitSeconds(howMany: number): Promise<void> {
-    return await waitMs(howMany * 1000);
-  }
 });

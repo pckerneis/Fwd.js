@@ -7,6 +7,13 @@ import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/
 
 Logger.runtimeLevel = LoggerLevel.none;
 
+class ConcreteNode extends FwdAudioNode {
+  public readonly fwdAudio: FwdAudio;
+  public inputNode: AudioNode | AudioParam;
+  public outputNode: AudioNode;
+  protected doTearDown(): void {}
+}
+
 describe('FwdAudioNode', () => {
   beforeEach(() => {
     mockFwd.mockClear();
@@ -17,23 +24,11 @@ describe('FwdAudioNode', () => {
   });
 
   it ('creates a node', () => {
-    class ConcreteNode extends FwdAudioNode {
-      public readonly fwdAudio: FwdAudio;
-      public inputNode: AudioNode | AudioParam;
-      public outputNode: AudioNode;
-    }
-
     const node = new ConcreteNode();
     expect(node).toBeTruthy();
   });
 
   it ('connects nodes', () => {
-    class ConcreteNode extends FwdAudioNode {
-      public readonly fwdAudio: FwdAudio;
-      public inputNode: AudioNode | AudioParam;
-      public outputNode: AudioNode;
-    }
-
     const node1 = new ConcreteNode();
     node1.inputNode = mockAudioNode();
     node1.outputNode = mockAudioNode();
@@ -59,12 +54,6 @@ describe('FwdAudioNode', () => {
   });
 
   it ('throws when trying to connect to invalid nodes', () => {
-    class ConcreteNode extends FwdAudioNode {
-      public readonly fwdAudio: FwdAudio;
-      public inputNode: AudioNode | AudioParam;
-      public outputNode: AudioNode;
-    }
-
     const node1 = new ConcreteNode();
     node1.inputNode = mockAudioNode();
     node1.outputNode = mockAudioNode();
@@ -73,12 +62,6 @@ describe('FwdAudioNode', () => {
   });
 
   it ('throws when trying to connect while having invalid input/output', () => {
-    class ConcreteNode extends FwdAudioNode {
-      public readonly fwdAudio: FwdAudio;
-      public inputNode: AudioNode | AudioParam;
-      public outputNode: AudioNode;
-    }
-
     const node1 = new ConcreteNode();
 
     const node2 = new ConcreteNode();
