@@ -56,10 +56,6 @@ export class MixerTrack {
 
     this.audioMeter = new AudioMeter();
 
-    this.audioTrack.listeners.push({
-
-    });
-
     this.htmlElement.append(
       this.panSlider,
       this.gainSlider.htmlElement,
@@ -77,13 +73,13 @@ export class MixerTrack {
     };
 
     this.audioTrack.listeners.push({
-      onTrackMute: () => { this.muteButton.setToggled(true, false); },
+      onTrackMute: () => this.onTrackMute(),
+      onTrackUnmute: () => this.onTrackUnmute(),
       onTrackSolo: () => { this.soloButton.setToggled(true, false); },
-      onTrackUnmute: () => { this.muteButton.setToggled(false, false); },
       onTrackUnsolo: () => { this.soloButton.setToggled(false, false); },
       onTrackVolumeChange: (newValue) => { this.gainSlider.setValue(newValue, false); },
       onTrackPanChange: (newValue) => { this.panSlider.value = newValue.toString(); },
-      onTrackAudioReady: () => this.audioMeter.audioSource = this.audioTrack.outputNode,
+      onTrackAudioReady: () => this.audioMeter.audioSource = this.audioTrack.meteringNode,
     });
 
     this.panSlider.value = this.audioTrack.pan.toString();
@@ -99,6 +95,16 @@ export class MixerTrack {
     input.max = max.toString();
     input.step = step.toString();
     return input;
+  }
+
+  private onTrackMute(): void {
+    this.muteButton.setToggled(true, false);
+    this.audioMeter.mute = true;
+  }
+
+  private onTrackUnmute(): void {
+    this.muteButton.setToggled(false, false);
+    this.audioMeter.mute = false;
   }
 }
 

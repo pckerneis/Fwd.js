@@ -64,7 +64,9 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public get inputNode(): AudioNode { return this._muteForSoloGainNode; }
-  public get outputNode(): AudioNode { return this._postGainNode; }
+  public get outputNode(): AudioNode { return this._muteGainNode; }
+
+  public get meteringNode(): AudioNode { return this._postGainNode; }
 
   public get audioIsReady(): boolean { return this._audioReady; }
 
@@ -224,9 +226,9 @@ export class FwdAudioTrack extends FwdAudioNode {
     this._postGainNode.gain.value = 1;
 
     this._muteForSoloGainNode
-      .connect(this._muteGainNode)
       .connect(this._panNode)
       .connect(this._postGainNode)
+      .connect(this._muteGainNode)
       .connect(this.fwdAudio.master.nativeNode);
 
     this._audioReady = true;

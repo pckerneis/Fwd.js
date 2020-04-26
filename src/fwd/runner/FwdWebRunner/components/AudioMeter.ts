@@ -11,6 +11,8 @@ export class AudioMeter {
 
   private _analyser: AnalyserNode;
 
+  private _isMute: boolean = false;
+
   constructor() {
     this.htmlElement = document.createElement('div');
     
@@ -36,6 +38,20 @@ export class AudioMeter {
     this._analyser = source.context.createAnalyser();
     this._analyser.fftSize = 2048;
     source.connect(this._analyser);
+  }
+
+  public get mute(): boolean {
+    return this._isMute;
+  }
+
+  public set mute(shouldBeMute: boolean) {
+    this._isMute = shouldBeMute;
+
+    if (this._isMute) {
+      this.htmlElement.classList.add('mute');
+    } else {
+      this.htmlElement.classList.remove('mute');
+    }
   }
 
   private update(): void {
@@ -104,5 +120,9 @@ meter::-webkit-meter-optimum-value {
 
 .clipping meter::-webkit-meter-optimum-value {
   background-image: linear-gradient(90deg, #dd4620 0%, #dd1515 100%);
+}
+
+.mute meter::-webkit-meter-optimum-value {
+  background-image: linear-gradient(90deg, #878787 0%, #adadad 100%);
 }
 `);
