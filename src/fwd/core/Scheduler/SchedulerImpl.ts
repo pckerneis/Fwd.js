@@ -95,8 +95,12 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
   /** @inheritdoc */
   public start(position: Time): void {
     if (this._running) {
+      DBG.info('Scheduler started while already running. About to stop.');
       this.stop();
     }
+
+    DBG.info('Scheduler started at position ' + position + '. About to run.');
+    // DBG.info('Time provider is :', this._timeProvider);
 
     this._running = true;
     this._startTime = this._timeProvider();
@@ -133,9 +137,13 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       return;
     }
 
-    this._now = this._timeProvider() - this._startTime;
+    const rtNow = this._timeProvider();
+
+    this._now = rtNow - this._startTime;
     const t1 = this._now;
     const when = this._now + this.lookAhead;
+
+    DBG.info('Processing events at ' + this._now + ' with lookAhead ' + this.lookAhead);
 
     let next = this._eventQueue.next(when);
 
@@ -147,12 +155,16 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     const elapsed = (this._timeProvider() - this._startTime) - t1;
 
     if (this._eventQueue.events.length > 0 || this.keepAlive) {
-      this._timeout = setTimeout(() => this.run(), this.interval - elapsed);
+      const waitTime = Math.max(0, this.interval - elapsed);
+      this._timeout = setTimeout(() => this.run(), waitTime);
+      DBG.info('Timeout set with computed interval ' + waitTime);
     } else {
       this._running = false;
+      DBG.info('Scheduler stops running at ', this.now());
 
       if (this.onEnded != null) {
         this.onEnded();
+        DBG.info('onEnded callback was called');
       }
     }
   }
