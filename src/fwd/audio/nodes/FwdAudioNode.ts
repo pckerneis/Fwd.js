@@ -6,6 +6,8 @@ export abstract class FwdAudioNode {
   public abstract readonly fwdAudio: FwdAudio;
 
   protected tearedDownCalled: boolean = false;
+  
+  public get wasTornDown(): boolean { return this.tearedDownCalled; }
 
   public connect(destination: FwdAudioNode, output?: number, input?: number): FwdAudioNode {
     if (this.outputNode == null || destination.inputNode == null) {

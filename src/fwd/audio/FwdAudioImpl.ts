@@ -66,8 +66,6 @@ export class FwdAudioImpl implements FwdAudio {
 
         this._firstPerformanceStarted = true;
       },
-      onPerformanceStart: () => {},
-      onPerformanceEnd: () => {},
     });
   }
 
@@ -162,11 +160,19 @@ export class FwdAudioImpl implements FwdAudio {
 
     if (this._soloedTrack !== null) {
       DBG.info('soloTrack(): transmit unsolo event for previous solo track', this._soloedTrack);
-      this._tracks.get(this._soloedTrack).listeners.forEach((l) => l.onTrackUnsolo());
+      this._tracks.get(this._soloedTrack).listeners.forEach((l) => {
+        if (typeof l.onTrackUnsolo === 'function') {
+          l.onTrackUnsolo();
+        }
+      });
     }
 
     this._soloedTrack = trackName;
-    track.listeners.forEach((l) => l.onTrackSolo());
+    track.listeners.forEach((l) => {
+      if (typeof l.onTrackSolo === 'function') {
+        l.onTrackSolo()
+      }
+    });
   }
 
   public unsoloAllTracks(): void {
@@ -175,8 +181,10 @@ export class FwdAudioImpl implements FwdAudio {
       DBG.info('unsoloAllTracks: unmuteForSolo called');
 
       this._tracks.get(this._soloedTrack).listeners.forEach((l) => {
-        l.onTrackUnsolo();
-        DBG.info('unsoloAllTracks: transmit unsolo event');
+        if (typeof l.onTrackUnsolo === 'function') {
+          l.onTrackUnsolo();
+          DBG.info('unsoloAllTracks: transmit unsolo event');
+        }
       });
 
       this._soloedTrack = null;

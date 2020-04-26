@@ -6,7 +6,6 @@ import { FwdScheduler } from './FwdScheduler';
 
 export interface FwdPerformanceListener {
   onPerformanceAboutToStart(): void;
-  onPerformanceStart(): void;
   onPerformanceEnd(): void;
 }
 
@@ -100,7 +99,7 @@ export interface Fwd {
   /**
    * An array of listeners to be notified when the performance state changes.
    */
-  performanceListeners: FwdPerformanceListener[];
+  performanceListeners: Partial<FwdPerformanceListener>[];
 }
 
 /**

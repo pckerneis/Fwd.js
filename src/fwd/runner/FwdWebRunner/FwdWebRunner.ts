@@ -115,9 +115,13 @@ export default class FwdWebRunner implements FwdRunner {
     ControlBindingManager.getInstance().clearCurrentControllers();
     this.resetActionButtons(this._actions);
 
-    this._fwd.performanceListeners.forEach((l) => l.onPerformanceAboutToStart());
+    this._fwd.performanceListeners.forEach((l) => {
+      if (typeof l.onPerformanceAboutToStart === 'function') {
+        l.onPerformanceAboutToStart()
+      }
+    });
+
     this._audio.start();
-    this._fwd.performanceListeners.forEach((l) => l.onPerformanceStart());
     this.entryPoint();
     this._fwd.scheduler.start();
 
@@ -130,7 +134,12 @@ export default class FwdWebRunner implements FwdRunner {
   private stop(): void {
     if (this._fwd != null) {
       this._fwd.scheduler.stop();
-      this._fwd.performanceListeners.forEach((l) => l.onPerformanceEnd());
+
+      this._fwd.performanceListeners.forEach((l) => {
+        if (typeof l.onPerformanceEnd === 'function') {
+          l.onPerformanceEnd();
+        }
+      });
     }
   }
 

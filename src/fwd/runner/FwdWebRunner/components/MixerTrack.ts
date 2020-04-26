@@ -1,6 +1,7 @@
 import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
 import { parseNumber } from "../../../core/utils/numbers";
 import { injectStyle } from '../StyleInjector';
+import { AudioMeter } from "./AudioMeter";
 import { TRACK_WIDTH } from "./MixerSection.constants";
 import { ToggleButton } from "./ToggleButton";
 import { VerticalSlider } from "./VerticalSlider";
@@ -12,6 +13,7 @@ export class MixerTrack {
   public readonly panSlider: HTMLInputElement;
   public readonly muteButton: ToggleButton;
   public readonly soloButton: ToggleButton;
+  public readonly audioMeter: AudioMeter;
 
   constructor(public readonly audioTrack: FwdAudioTrack) {
     this.htmlElement = document.createElement('div');
@@ -52,12 +54,20 @@ export class MixerTrack {
       this.muteButton.htmlElement,
     );
 
+    this.audioMeter = new AudioMeter();
+
+    this.audioTrack.listeners.push({
+
+    });
+
     this.htmlElement.append(
       this.panSlider,
       this.gainSlider.htmlElement,
       buttonDiv,
+      this.audioMeter.htmlElement,
     );
 
+    // Bindings
     this.gainSlider.oninput = (value: number) => {
       this.audioTrack.gain = value;
     };
@@ -73,6 +83,7 @@ export class MixerTrack {
       onTrackUnsolo: () => { this.soloButton.setToggled(false, false); },
       onTrackVolumeChange: (newValue) => { this.gainSlider.setValue(newValue, false); },
       onTrackPanChange: (newValue) => { this.panSlider.value = newValue.toString(); },
+      onTrackAudioReady: () => this.audioMeter.audioSource = this.audioTrack.outputNode,
     });
 
     this.panSlider.value = this.audioTrack.pan.toString();

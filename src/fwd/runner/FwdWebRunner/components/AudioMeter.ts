@@ -28,7 +28,7 @@ export class AudioMeter {
     this.update();
   }
 
-  public set audioSource(source: GainNode) {
+  public set audioSource(source: AudioNode) {
     if (this._analyser != null) {
       this._analyser.disconnect();
     }

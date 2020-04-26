@@ -15,6 +15,7 @@ export interface FwdAudioTrackListener {
   onTrackUnsolo: Function,
   onTrackPanChange: (newValue: number) => void,
   onTrackVolumeChange: (newValue: number) => void,
+  onTrackAudioReady: () => void,
 }
 
 export interface FwdAudioTrackOptions {
@@ -33,10 +34,9 @@ export const defaultFwdAudioTrackOptions: FwdAudioTrackOptions = {
 
 export class FwdAudioTrack extends FwdAudioNode {
 
-  public readonly listeners: FwdAudioTrackListener[] = [];
+  public readonly listeners: Partial<FwdAudioTrackListener>[] = [];
 
   private _audioReady: boolean = false;
-  private _tornDown: boolean = false;
 
   private _muteForSoloGainNode: GainNode;
   private _muteGainNode: GainNode;
@@ -61,14 +61,12 @@ export class FwdAudioTrack extends FwdAudioNode {
     this.fwdAudio.listeners.push({
       audioContextStarted: () => this.prepareAudio(),
     });
-
   }
 
   public get inputNode(): AudioNode { return this._muteForSoloGainNode; }
-  public get outputNode(): AudioNode { return this._panNode; }
+  public get outputNode(): AudioNode { return this._postGainNode; }
 
   public get audioIsReady(): boolean { return this._audioReady; }
-  public get wasTornDown(): boolean { return this._tornDown; }
 
   public get gain(): number {
     this.assertNotTornDown();
@@ -85,7 +83,11 @@ export class FwdAudioTrack extends FwdAudioNode {
       this.setValueSmoothed(this._postGainNode.gain, clamped);
     }
 
-    this.listeners.forEach((l) => l.onTrackVolumeChange(clamped));
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackVolumeChange === 'function') {
+        l.onTrackVolumeChange(clamped);
+      }
+    });
   }
 
   public get volume(): number {
@@ -113,7 +115,11 @@ export class FwdAudioTrack extends FwdAudioNode {
       this.setValueSmoothed(this._panNode.pan, clamped);
     }
 
-    this.listeners.forEach((l) => l.onTrackPanChange(clamped));
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackPanChange === 'function') {
+        l.onTrackPanChange(clamped);
+      }
+    });
   }
 
   public get isMute(): boolean {
@@ -141,7 +147,11 @@ export class FwdAudioTrack extends FwdAudioNode {
       this.setValueSmoothed(this._muteGainNode.gain, 0);
     }
 
-    this.listeners.forEach((l) => l.onTrackMute());
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackMute === 'function') {
+        l.onTrackMute()
+      }
+    });
   }
 
   public unmute(): void {
@@ -154,7 +164,11 @@ export class FwdAudioTrack extends FwdAudioNode {
       this.setValueSmoothed(this._muteGainNode.gain, 1);
     }
 
-    this.listeners.forEach((l) => l.onTrackUnmute());
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackUnmute === 'function') {
+        l.onTrackUnmute()
+      }
+    });
   }
 
   public muteForSolo(): void {
@@ -169,25 +183,35 @@ export class FwdAudioTrack extends FwdAudioNode {
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 1);
   }
 
+  // Overrides AudioNode.tearDown
   public tearDown(): void {
-    this.assertReady();
+    this.assertInitialized();
+
+    if (this.tearedDownCalled) {
+      throw new Error('You cannot call tearDown more than once on the same audio node!');
+    }
+
+    this.tearedDownCalled = true;
+
+    const dueTime = this.fwdAudio.now();
+    const when = dueTime - this.fwdAudio.context.currentTime;
+    this.doTearDown(when);
+  }
+
+  //=========================================================================
+
+  protected doTearDown(when: number): void {
+    this.assertInitialized();
 
     this._muteForSoloGainNode.disconnect();
     this._muteGainNode.disconnect();
     this._panNode.disconnect();
     this._postGainNode.disconnect();
-
-    this._tornDown = true;
   }
-
-  //=========================================================================
 
   private prepareAudio(): void {
     if (this._audioReady) {
-      this._muteForSoloGainNode.disconnect();
-      this._muteGainNode.disconnect();
-      this._panNode.disconnect();
-      this._postGainNode.disconnect();
+      this.doTearDown(0);
     }
 
     this._muteForSoloGainNode = this.fwdAudio.context.createGain();
@@ -201,8 +225,8 @@ export class FwdAudioTrack extends FwdAudioNode {
 
     this._muteForSoloGainNode
       .connect(this._muteGainNode)
-      .connect(this._postGainNode)
       .connect(this._panNode)
+      .connect(this._postGainNode)
       .connect(this.fwdAudio.master.nativeNode);
 
     this._audioReady = true;
@@ -215,6 +239,12 @@ export class FwdAudioTrack extends FwdAudioNode {
 
     this.gain = this._gain;
     this.pan = this._pan;
+
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackAudioReady === 'function') {
+        l.onTrackAudioReady();
+      }
+    });
   }
 
   private setValueSmoothed(audioParam: AudioParam, value: number): void {
@@ -233,7 +263,7 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   private assertNotTornDown(): void {
-    if (this._tornDown) {
+    if (this.wasTornDown) {
       throw new Error(`The track ${this.trackName} was torn down and therefore shouldn't be used.`);
     }
   }
