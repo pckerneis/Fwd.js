@@ -3,60 +3,10 @@ import * as FwdAudioTrackModule from '../../../src/fwd/audio/nodes/FwdAudioTrack
 import * as FwdEntryPoint from "../../../src/fwd/core/fwd";
 import { fwd } from "../../../src/fwd/core/fwd";
 import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
-import Mock = jest.Mock;
+import { mockError, mockFwd } from "../../Fwd.mock";
+import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../WebAudio.mock";
 
 Logger.runtimeLevel = LoggerLevel.none;
-
-const mockFwd = jest.fn().mockImplementation(() => {
-  return {
-    err: mockError,
-    performanceListeners: [],
-  };
-});
-
-const mockAudioParam = jest.fn().mockImplementation(() => {
-  return {
-    setValueAtTime: jest.fn(),
-  }
-});
-
-const mockAudioNode = jest.fn().mockImplementation(() => {
-  return {
-    start: jest.fn(),
-    connect: jest.fn().mockImplementation(() => {
-      return mockAudioNode();
-    }),
-  }
-});
-
-function createAudioNodeFactoryMock(...audioParams: string[]): Mock {
-  const audioNode = mockAudioNode();
-
-  audioParams.forEach(param => {
-    audioNode[param] = mockAudioParam()
-  });
-
-  return jest.fn().mockImplementation(() => {
-    return audioNode;
-  });
-}
-
-const mockAudioContext = jest.fn().mockImplementation(() => {
-  return {
-    currentTime: 42,
-    createGain: createAudioNodeFactoryMock('gain'),
-    createOscillator: createAudioNodeFactoryMock('frequency'),
-    createBufferSource: createAudioNodeFactoryMock(),
-    createConstantSource: createAudioNodeFactoryMock(),
-    createBuffer: jest.fn().mockImplementation(() => {
-      return {
-        getChannelData: jest.fn(),
-      }
-    }),
-  }
-});
-
-const mockError = jest.fn();
 
 const mockAudioTrack = jest.fn().mockImplementation((fwdAudio, trackName) => {
   return {

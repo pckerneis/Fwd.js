@@ -10,7 +10,7 @@ export interface FwdAudioListener {
 }
 
 export interface FwdAudio {
-  listeners: FwdAudioListener[];
+  listeners: Partial<FwdAudioListener>[];
   readonly isContextReady: boolean;
   readonly context: AudioContext;
   readonly master: FwdGainNode;

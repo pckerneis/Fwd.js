@@ -60,8 +60,6 @@ export class FwdAudioTrack extends FwdAudioNode {
 
     this.fwdAudio.listeners.push({
       audioContextStarted: () => this.prepareAudio(),
-      audioTrackAdded: () => {},
-      audioTrackRemoved: () => {},
     });
 
   }
@@ -135,6 +133,7 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public mute(): void {
+    this.assertNotTornDown();
     DBG.info('mute ' + this.trackName);
     this._mute = true;
 
@@ -146,6 +145,7 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public unmute(): void {
+    this.assertNotTornDown();
     DBG.info('unmute ' + this.trackName);
 
     this._mute = false;
@@ -158,11 +158,13 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   public muteForSolo(): void {
+    this.assertNotTornDown();
     DBG.info('mute for solo ' + this.trackName);
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 0);
   }
 
   public unmuteForSolo(): void {
+    this.assertNotTornDown();
     DBG.info('unmute for solo');
     this.setValueSmoothed(this._muteForSoloGainNode.gain, 1);
   }
@@ -232,7 +234,7 @@ export class FwdAudioTrack extends FwdAudioNode {
 
   private assertNotTornDown(): void {
     if (this._tornDown) {
-      throw new Error(`The track ${this.trackName} was removed.`);
+      throw new Error(`The track ${this.trackName} was torn down and therefore shouldn't be used.`);
     }
   }
 }

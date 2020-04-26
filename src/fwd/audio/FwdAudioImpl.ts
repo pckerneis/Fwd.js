@@ -106,7 +106,10 @@ export class FwdAudioImpl implements FwdAudio {
       track.muteForSolo();
     }
 
-    this.listeners.forEach(l => l.audioTrackAdded(track));
+    this.listeners.forEach(l => {
+      if (typeof l.audioTrackAdded === 'function')
+        l.audioTrackAdded(track)
+    });
 
     return track;
   }
@@ -129,7 +132,11 @@ export class FwdAudioImpl implements FwdAudio {
     }
 
     this._tracks.delete(trackName);
-    this.listeners.forEach(l => l.audioTrackRemoved(track));
+
+    this.listeners.forEach(l => {
+      if (typeof l.audioTrackRemoved === 'function')
+        l.audioTrackRemoved(track)
+    });
   }
 
   public getTrack(trackName: string): FwdAudioTrack {
@@ -220,7 +227,10 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    this.listeners.forEach(l => l.audioContextStarted(this._ctx));
+    this.listeners.forEach(l => {
+      if (typeof l.audioContextStarted === 'function')
+        l.audioContextStarted(this._ctx)
+    });
   }
 
   private assertInit(): void {
