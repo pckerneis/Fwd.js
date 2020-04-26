@@ -50,6 +50,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     // Using default time provider if none is specified
     this._timeProvider = _timeProvider || systemNowInSeconds;
+    DBG.debug('Using time provider:', this._timeProvider);
   }
 
   /** @inheritdoc */
@@ -170,6 +171,6 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
   }
 }
 
-function systemNowInSeconds(): number {
+export function systemNowInSeconds(): number {
   return performance.now() / 1000;
 }

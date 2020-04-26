@@ -22,10 +22,13 @@ const mockPerformance = jest.fn().mockImplementation(() => {
 
 describe('FwdScheduler', () => {
   beforeEach(() => {
+    // This ugly line is needed for mocking 'jsdom' global
+    Object.defineProperty((global as any).performance, 'now', { value: mockPerformanceNow, writable: true });
+
     jest.useFakeTimers();
-
+    mockPerformance.mockClear();
+    mockPerformanceNow.mockClear();
     TIME.now = 0;
-
     (global as any).performance = mockPerformance();
 
     scheduler = new FwdScheduler(0.005, 0.001);
@@ -37,8 +40,9 @@ describe('FwdScheduler', () => {
     expect(defaultScheduler['_scheduler'].lookAhead).toBe(SchedulerImpl.DEFAULT_LOOKAHEAD);
   });
 
-// TODO: this test (and others in this suite) will sometimes fail because of timing accuracy issues... Need to mock time
   it ('triggers scheduled events', async () => {
+    scheduler.timeProvider = () => mockPerformanceNow() / 1000;
+
     const t1 = 0;
     const t2 = 0.01;
     const t3 = 0.02;
@@ -54,7 +58,7 @@ describe('FwdScheduler', () => {
 
     expect(mockAction).toHaveBeenCalledTimes(2);
 
-    await waitSeconds(0.1);
+    await waitSeconds(0.01);
     scheduler.stop();
     expect(mockAction).toHaveBeenCalledTimes(3);
   });
@@ -245,6 +249,6 @@ describe('FwdScheduler', () => {
   }
 
   async function waitSeconds(howMany: number): Promise<void> {
-    await waitMs(howMany * 1000);
+    return await waitMs(howMany * 1000);
   }
 });
