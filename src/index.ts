@@ -1,5 +1,8 @@
 import FwdRunner from './fwd/runner/FwdRunner';
 import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
+import { Logger, LoggerLevel } from "./fwd/utils/dbg";
+
+Logger.runtimeLevel = LoggerLevel.error;
 
 document.addEventListener('DOMContentLoaded', () => {
     const runner: FwdRunner = new FwdWebRunner();
