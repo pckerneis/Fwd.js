@@ -39,6 +39,15 @@ export class ConfigurationPanel {
 
     requestMIDIAccess().then(
       (access: MIDIAccess) => {
+
+        if (access === null) {
+          const midiErrorMessage = 'Your browser doesn\'t support the WebMIDI API.';
+          const paragraphElement = document.createElement('p');
+          paragraphElement.innerText = midiErrorMessage;
+          this.htmlElement.append(paragraphElement);
+          return;
+        }
+
         const buildRow = (type: string, name: string) => {
           const row = document.createElement('div');
 

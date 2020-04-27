@@ -66,7 +66,11 @@ export interface MIDIAccess {
 }
 
 export function requestMIDIAccess(): Promise<MIDIAccess> {
-  return (navigator as any).requestMIDIAccess();
+  return typeof (navigator as any).requestMIDIAccess === 'function' ?
+    (navigator as any).requestMIDIAccess() :
+    new Promise<MIDIAccess>((resolve) => {
+      resolve(null);
+    });
 }
 
 export function midiToFrequency(noteNumber: number): number {
