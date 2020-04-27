@@ -24,9 +24,8 @@
       "exclude": "**/*+(index|.spec|.e2e|.test).ts"
     },
     "include": [
-      "src/**/*",
-      "test/**/*"
+      "src/**/*"
     ],
     "exclude": [ "node_modules" ]
-  }
+}
   
