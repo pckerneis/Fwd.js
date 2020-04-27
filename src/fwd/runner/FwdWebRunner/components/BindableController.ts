@@ -1,4 +1,4 @@
-import webmidi, { InputEventControlchange, InputEventNoteon } from 'webmidi';
+import webmidi, { Input, InputEventControlchange, InputEventNoteon } from 'webmidi';
 import { injectStyle } from '../StyleInjector';
 import { Overlay } from './Overlay';
 
@@ -258,13 +258,13 @@ export class ControlBindingManager {
   //=======================================================================================
 
   private watchIncomingMidi(): void {
-    webmidi.enable((err) => {
+    webmidi.enable((err: Error) => {
 
       if (err) console.error(err);
 
-      webmidi.inputs.forEach((input) => {
-        input.addListener('noteon', 'all', (event) => this.handleNoteOn(event));
-        input.addListener('controlchange', 'all', (event) => this.handleControlChange(event));
+      webmidi.inputs.forEach((input: Input) => {
+        input.addListener('noteon', 'all', (event: InputEventNoteon) => this.handleNoteOn(event));
+        input.addListener('controlchange', 'all', (event: InputEventControlchange) => this.handleControlChange(event));
       });
     });
   }
