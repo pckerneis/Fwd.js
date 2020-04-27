@@ -61,10 +61,6 @@ export class FwdAudioImpl implements FwdAudio {
 
   public initializeModule(fwd: Fwd): void {
     this._fwd = fwd;
-  
-    this._fwd.scheduler.timeProvider = () => {
-      return this._ctx.currentTime;
-    };
 
     this._fwd.performanceListeners.push({
       onPerformanceAboutToStart: () => {
@@ -257,6 +253,8 @@ export class FwdAudioImpl implements FwdAudio {
       if (typeof l.audioContextStarted === 'function')
         l.audioContextStarted(this._ctx)
     });
+
+    this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
   }
 
   private assertInit(): void {
