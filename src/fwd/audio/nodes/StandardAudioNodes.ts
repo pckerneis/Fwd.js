@@ -293,3 +293,101 @@ export async function tearDownNativeNode(nativeNode: AudioNode, when: Time): Pro
     }, when * 1000);
   });
 }
+
+//===============================================================
+
+export class FwdDelayLineNode extends FwdAudioNodeWrapper<DelayNode> {
+  private _delay: DelayNode;
+  private readonly _delayTime: FwdAudioParamWrapper;
+
+  constructor(public fwdAudio: FwdAudio, initialDelayTime: number) {
+    super(fwdAudio, fwdAudio.context.createDelay());
+    this._delayTime = new FwdAudioParamWrapper(fwdAudio, this.nativeNode.delayTime);
+    this.nativeNode.delayTime.value = Math.max(0, initialDelayTime);
+  }
+
+  public get inputNode(): AudioNode { return this._delay; }
+  public get outputNode(): AudioNode { return this._delay; }
+
+  public get delayTime(): FwdAudioParamWrapper {
+    this.assertIsReady('get delayTime');
+    return this._delayTime;
+  }
+
+  protected doTearDown(when: Time): void {
+      tearDownNativeNode(this._delay, when).then(() => {
+      this._delay = null;
+    });
+  }
+}
+
+//===============================================================
+
+export class FwdStereoDelayNode extends FwdAudioNode {
+  private _input: GainNode;
+  private _output: GainNode;
+  private _dryGain: GainNode;
+  private _wetGain: GainNode;
+  private _delayLeft: DelayNode;
+  private _delayRight: DelayNode;
+  private _feedbackLeft: GainNode;
+  private _feedbackRight: GainNode;
+  private _panLeft: StereoPannerNode;
+  private _panRight: StereoPannerNode;
+
+  constructor(public fwdAudio: FwdAudio) {
+    super();
+
+    this._input = fwdAudio.context.createGain();
+    this._input.gain.value = 1;
+
+    this._output = fwdAudio.context.createGain();
+    this._output.gain.value = 1;
+
+    this._dryGain = fwdAudio.context.createGain();
+    this._dryGain.gain.value = 1;
+    this._wetGain = fwdAudio.context.createGain();
+    this._wetGain.gain.value = 0.3;
+
+    this._delayLeft = fwdAudio.context.createDelay();
+    this._delayLeft.delayTime.value = 0.5;
+
+    this._delayRight = fwdAudio.context.createDelay();
+    this._delayRight.delayTime.value = 0.25;
+
+    this._feedbackLeft = fwdAudio.context.createGain();
+    this._feedbackLeft.gain.value = 0.05;
+
+    this._feedbackRight = fwdAudio.context.createGain();
+    this._feedbackRight.gain.value = 0.05;
+
+    this._panLeft = fwdAudio.context.createStereoPanner();
+    this._panLeft.pan.value = -1;
+
+    this._panRight = fwdAudio.context.createStereoPanner();
+    this._panRight.pan.value = 1;
+
+    this._input.connect(this._dryGain).connect(this._output);
+    this._input.connect(this._panLeft).connect(this._delayLeft).connect(this._feedbackLeft).connect(this._delayLeft);
+    this._input.connect(this._panRight).connect(this._delayRight).connect(this._feedbackRight).connect(this._delayRight);
+    this._delayLeft.connect(this._wetGain);
+    this._delayRight.connect(this._wetGain);
+    this._wetGain.connect(this._output);
+  }
+
+  public get inputNode(): AudioNode { return this._input; }
+  public get outputNode(): AudioNode { return this._output; }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._input, when).then(() => this._input = null);
+    tearDownNativeNode(this._output, when).then(() => this._output = null);
+    tearDownNativeNode(this._wetGain, when).then(() => this._wetGain = null);
+    tearDownNativeNode(this._dryGain, when).then(() => this._dryGain = null);
+    tearDownNativeNode(this._panLeft, when).then(() => this._panLeft = null);
+    tearDownNativeNode(this._panRight, when).then(() => this._panRight = null);
+    tearDownNativeNode(this._delayLeft, when).then(() => this._delayLeft = null);
+    tearDownNativeNode(this._delayRight, when).then(() => this._delayRight = null);
+    tearDownNativeNode(this._feedbackLeft, when).then(() => this._feedbackLeft = null);
+    tearDownNativeNode(this._feedbackRight, when).then(() => this._feedbackRight = null);
+  }
+}

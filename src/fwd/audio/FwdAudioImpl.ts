@@ -4,7 +4,15 @@ import { Logger } from "../utils/dbg";
 import { FwdAudio, FwdAudioListener } from "./FwdAudio";
 import parentLogger from './logger.audio';
 import { defaultFwdAudioTrackOptions, FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
-import { FwdGainNode, FwdLFONode, FwdNoiseNode, FwdOscillatorNode, FwdSamplerNode } from "./nodes/StandardAudioNodes";
+import {
+  FwdDelayLineNode,
+  FwdGainNode,
+  FwdLFONode,
+  FwdNoiseNode,
+  FwdOscillatorNode,
+  FwdSamplerNode,
+  FwdStereoDelayNode,
+} from "./nodes/StandardAudioNodes";
 
 const DBG = new Logger('FwdAudioImpl', parentLogger);
 
@@ -216,6 +224,16 @@ export class FwdAudioImpl implements FwdAudio {
   public noise(): FwdNoiseNode {
     this.assertInit();
     return new FwdNoiseNode(this);
+  }
+
+  public delayLine(initialDelayTime: number): FwdDelayLineNode {
+    this.assertInit();
+    return new FwdDelayLineNode(this, initialDelayTime);
+  }
+
+  public stereoDelay(): FwdStereoDelayNode {
+    this.assertInit();
+    return new FwdStereoDelayNode(this);
   }
 
   //=========================================================================

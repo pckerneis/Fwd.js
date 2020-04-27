@@ -1,7 +1,15 @@
 import { Time } from "../core/EventQueue/EventQueue";
 import { Fwd } from "../core/fwd";
 import { FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
-import { FwdGainNode, FwdLFONode, FwdNoiseNode, FwdOscillatorNode, FwdSamplerNode } from "./nodes/StandardAudioNodes";
+import {
+  FwdDelayLineNode,
+  FwdGainNode,
+  FwdLFONode,
+  FwdNoiseNode,
+  FwdOscillatorNode,
+  FwdSamplerNode,
+  FwdStereoDelayNode,
+} from "./nodes/StandardAudioNodes";
 
 export interface FwdAudioListener {
   audioContextStarted(context: AudioContext): void;
@@ -33,4 +41,6 @@ export interface FwdAudio {
   lfo(frequency?: number, type?: OscillatorType): FwdLFONode;
   sampler(pathToFile: string): FwdSamplerNode;
   noise(): FwdNoiseNode;
+  delayLine(initialDelayTime: number): FwdDelayLineNode;
+  stereoDelay(): FwdStereoDelayNode;
 }
