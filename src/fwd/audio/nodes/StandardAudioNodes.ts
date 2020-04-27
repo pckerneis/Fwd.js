@@ -20,8 +20,18 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
 
   public rampTo(value: number, time: number): void {
     const audioNow = this.fwdAudio.now();
-    this._param.cancelAndHoldAtTime(audioNow);
-    this._param.linearRampToValueAtTime(value, audioNow + time);
+
+    // Check if cancelAndHoldAtTime is implemented
+    if (typeof this._param.cancelAndHoldAtTime === 'function') {
+      this._param.cancelAndHoldAtTime(audioNow);
+      this._param.linearRampToValueAtTime(value, audioNow + time);
+    } else {
+      // Falls back to deferring the call to linearRampToValueAtTime
+      fwd.schedule(0, () => {
+        this._param.setValueAtTime(this._param.value, 0);
+        this._param.linearRampToValueAtTime(value, audioNow + time);
+      });
+    }
   }
 
   protected doTearDown(/* when: Time */): void {
@@ -338,41 +348,43 @@ export class FwdStereoDelayNode extends FwdAudioNode {
   constructor(public fwdAudio: FwdAudio) {
     super();
 
-    this._input = fwdAudio.context.createGain();
-    this._input.gain.value = 1;
+    this.deferIfAudioNotReady(() => {
+      this._input = fwdAudio.context.createGain();
+      this._input.gain.value = 1;
 
-    this._output = fwdAudio.context.createGain();
-    this._output.gain.value = 1;
+      this._output = fwdAudio.context.createGain();
+      this._output.gain.value = 1;
 
-    this._dryGain = fwdAudio.context.createGain();
-    this._dryGain.gain.value = 1;
-    this._wetGain = fwdAudio.context.createGain();
-    this._wetGain.gain.value = 0.3;
+      this._dryGain = fwdAudio.context.createGain();
+      this._dryGain.gain.value = 1;
+      this._wetGain = fwdAudio.context.createGain();
+      this._wetGain.gain.value = 0.3;
 
-    this._delayLeft = fwdAudio.context.createDelay();
-    this._delayLeft.delayTime.value = 0.5;
+      this._delayLeft = fwdAudio.context.createDelay();
+      this._delayLeft.delayTime.value = 0.5;
 
-    this._delayRight = fwdAudio.context.createDelay();
-    this._delayRight.delayTime.value = 0.25;
+      this._delayRight = fwdAudio.context.createDelay();
+      this._delayRight.delayTime.value = 0.25;
 
-    this._feedbackLeft = fwdAudio.context.createGain();
-    this._feedbackLeft.gain.value = 0.05;
+      this._feedbackLeft = fwdAudio.context.createGain();
+      this._feedbackLeft.gain.value = 0.05;
 
-    this._feedbackRight = fwdAudio.context.createGain();
-    this._feedbackRight.gain.value = 0.05;
+      this._feedbackRight = fwdAudio.context.createGain();
+      this._feedbackRight.gain.value = 0.05;
 
-    this._panLeft = fwdAudio.context.createStereoPanner();
-    this._panLeft.pan.value = -1;
+      this._panLeft = fwdAudio.context.createStereoPanner();
+      this._panLeft.pan.value = -1;
 
-    this._panRight = fwdAudio.context.createStereoPanner();
-    this._panRight.pan.value = 1;
+      this._panRight = fwdAudio.context.createStereoPanner();
+      this._panRight.pan.value = 1;
 
-    this._input.connect(this._dryGain).connect(this._output);
-    this._input.connect(this._panLeft).connect(this._delayLeft).connect(this._feedbackLeft).connect(this._delayLeft);
-    this._input.connect(this._panRight).connect(this._delayRight).connect(this._feedbackRight).connect(this._delayRight);
-    this._delayLeft.connect(this._wetGain);
-    this._delayRight.connect(this._wetGain);
-    this._wetGain.connect(this._output);
+      this._input.connect(this._dryGain).connect(this._output);
+      this._input.connect(this._panLeft).connect(this._delayLeft).connect(this._feedbackLeft).connect(this._delayLeft);
+      this._input.connect(this._panRight).connect(this._delayRight).connect(this._feedbackRight).connect(this._delayRight);
+      this._delayLeft.connect(this._wetGain);
+      this._delayRight.connect(this._wetGain);
+      this._wetGain.connect(this._output);
+    });
   }
 
   public get inputNode(): AudioNode { return this._input; }

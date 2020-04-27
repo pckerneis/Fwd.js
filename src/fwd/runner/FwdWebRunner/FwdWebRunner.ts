@@ -50,6 +50,10 @@ export default class FwdWebRunner implements FwdRunner {
     this._audio = new FwdAudioImpl();
     this._fwd = new FwdWebImpl(this);
     this._audio.initializeModule(this._fwd);
+
+    // TODO: this kicks off the AudioContext, which can be broken under some circumstances (e.g. Chrome's autoplay policy)
+    this._audio.start();
+
     putFwd(this._fwd);
 
     this._fwd.scheduler.onEnded = () => {
@@ -174,7 +178,12 @@ export default class FwdWebRunner implements FwdRunner {
     const masterGain = this._audio.master.nativeNode.gain;
     const now = this._audio.context.currentTime;
     const value = parseNumber(masterSlider.value) / 100;
-    masterGain.cancelAndHoldAtTime(now);
+
+    // This method may not be implemented...
+    if (typeof masterGain.cancelAndHoldAtTime === 'function') {
+      masterGain.cancelAndHoldAtTime(now);
+    }
+
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
 
