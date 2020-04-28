@@ -59,9 +59,11 @@ export const defaultTextEditorOptions: TextEditorOptions = {
 export class FwdTextEditor {
 
   public readonly maxLength: number;
+  public readonly writeMode: WriteMode;
 
   constructor(private _valueSource: ValueSource<string>, options: TextEditorOptions) {
     this.maxLength = options.maxLength;
+    this.writeMode = options.writeMode;
   }
 
   public get value(): string { return this._valueSource.get(); }
