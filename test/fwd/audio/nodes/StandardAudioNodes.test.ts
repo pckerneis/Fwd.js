@@ -1,11 +1,11 @@
 import { FwdAudioImpl } from "../../../../src/fwd/audio/FwdAudioImpl";
 import { FwdAudioNode } from "../../../../src/fwd/audio/nodes/FwdAudioNode";
 import {
-  FwdAudioNodeWrapper, FwdAudioParamWrapper,
+  FwdAudioNodeWrapper, FwdAudioParamWrapper, FwdDelayLineNode,
   FwdGainNode,
   FwdLFONode, FwdNoiseNode,
   FwdOscillatorNode,
-  FwdSamplerNode, tearDownNativeNode,
+  FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
 } from "../../../../src/fwd/audio/nodes/StandardAudioNodes";
 import { Time } from "../../../../src/fwd/core/EventQueue/EventQueue";
 import * as FwdEntryPoint from "../../../../src/fwd/core/fwd";
@@ -50,6 +50,29 @@ describe('StandardAudioNodes', () => {
 
       const wrapper = new ConcreteParam();
       expect(wrapper['doTearDown']).toThrowError();
+    });
+
+
+    it ('has a fallback if (AudioParam).cancelAndHoldAtTime is not defined', () => {
+      class ConcreteParam extends FwdAudioParamWrapper {
+        constructor() {
+          // @ts-ignore
+          super(mockFwdAudio(), {
+            setValueAtTime: jest.fn(),
+            linearRampToValueAtTime: jest.fn(),
+            // @ts-ignore
+            value: 'foo',
+          });
+        }
+      }
+
+      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+
+      const param = new ConcreteParam();
+
+      param.rampTo(0, 42);
+
+      expect(param['_param'].setValueAtTime).toHaveBeenCalledWith('foo', 0);
     });
   });
 
@@ -242,6 +265,31 @@ describe('StandardAudioNodes', () => {
 
       expect(node).toBeTruthy();
       expect(node.inputNode).toBeNull();
+      expect(node.outputNode).not.toBeNull();
+
+      checkTearDown(node);
+    });
+  });
+
+  describe('FwdDelayLineNode', () => {
+    it('creates a delay line node', () => {
+      const node = new FwdDelayLineNode(mockFwdAudio(), 1);
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
+      expect(node.outputNode).not.toBeNull();
+      expect(node.delayTime).not.toBeNull();
+
+      checkTearDown(node);
+    });
+  });
+
+  describe('FwdStereoDelayNode', () => {
+    it('creates a delay line node', () => {
+      const node = new FwdStereoDelayNode(mockFwdAudio());
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
       expect(node.outputNode).not.toBeNull();
 
       checkTearDown(node);
