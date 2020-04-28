@@ -58,5 +58,6 @@ export const mockAudioContext = jest.fn().mockImplementation(() => {
         getChannelData: jest.fn().mockImplementation(() => []),
       }
     }),
+    createDelay: createAudioNodeFactoryMock('delayTime'),
   }
 });

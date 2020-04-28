@@ -38,6 +38,7 @@ describe('FwdAudioImpl', () => {
 
   it('prepares AudioContext when start is called', () => {
     const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
     expect(fwdAudio.isContextReady).toBeFalsy();
     fwdAudio.start();
     expect(fwdAudio.isContextReady).toBeTruthy();
@@ -148,6 +149,7 @@ describe('FwdAudioImpl', () => {
 
   it('creates various audio nodes', () => {
     const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
     fwdAudio.start();
 
     // Bypass FWD initialization check
@@ -164,10 +166,13 @@ describe('FwdAudioImpl', () => {
     fwdAudio.osc();
     fwdAudio.noise();
     fwdAudio.lfo();
+    fwdAudio.stereoDelay();
+    fwdAudio.delayLine(1);
   });
 
   it('has master gain node', () => {
     const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
     fwdAudio.start();
     expect(fwdAudio.master).toBeTruthy();
   });
@@ -195,6 +200,7 @@ describe('FwdAudioImpl', () => {
 
   it('tears down all tracks on audio context reset', () => {
     const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
     fwdAudio.start();
     const track = fwdAudio.addTrack('');
     fwdAudio.start();
@@ -227,9 +233,16 @@ describe('FwdAudioImpl', () => {
     expect(fwdAudio.tracks.length).toBe(1);
     expect(fwdAudio.tracks[0]).toBe(trackToKeep);
 
-
     const initTrack = fwdAudio.addTrack('trackToKeep');
     expect(initTrack).toBe(trackToKeep);
+
+    const initTimeTracks = fwdAudio['_initTimeTracks'];
+
+    // Second init should'nt affect init time tracks
+    fwdAudio.addTrack('trackNotInit');
+    fwd.performanceListeners.forEach((l) => l.onPerformanceAboutToStart());
+
+    expect(fwdAudio['_initTimeTracks']).toBe(initTimeTracks);
   });
 
   it('notifies listeners when a track is added or removed', () => {
@@ -258,8 +271,71 @@ describe('FwdAudioImpl', () => {
       audioContextStarted: jest.fn(),
     });
 
+    fwdAudio.initializeModule(mockFwd());
     fwdAudio.start();
 
     expect(fwdAudio.listeners[0].audioContextStarted).toHaveBeenCalledTimes(1);
+  });
+
+  it('notifies listeners when a track is soloed or un-soloed', () => {
+    const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
+    fwdAudio.start();
+
+    const track1 = fwdAudio.addTrack('myTrack');
+    const track2 = fwdAudio.addTrack('myTrack2');
+
+    track1.listeners.push({
+      onTrackSolo: jest.fn(),
+      onTrackUnsolo: jest.fn(),
+    });
+
+    track2.listeners.push({
+      onTrackSolo: jest.fn(),
+      onTrackUnsolo: jest.fn(),
+    });
+
+    fwdAudio.soloTrack(track1.trackName);
+
+    expect(track1.listeners[0].onTrackSolo).toHaveBeenCalledTimes(1);
+
+    fwdAudio.soloTrack(track2.trackName);
+    expect(track1.listeners[0].onTrackUnsolo).toHaveBeenCalledTimes(1);
+    expect(track2.listeners[0].onTrackSolo).toHaveBeenCalledTimes(1);
+
+    fwdAudio.unsoloAllTracks();
+    expect(track1.listeners[0].onTrackUnsolo).toHaveBeenCalledTimes(1);
+    expect(track2.listeners[0].onTrackUnsolo).toHaveBeenCalledTimes(1);
+  });
+
+  it('won\'t break if given bad listeners', () => {
+    const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(mockFwd());
+    fwdAudio.start();
+
+    // FwdAudio listener
+    fwdAudio.listeners.push({
+      audioContextStarted: undefined,
+      audioTrackRemoved: null,
+      // @ts-ignore
+      audioTrackAdded: {},
+    });
+
+    // Track listener
+    const track = fwdAudio.addTrack('myTrack');
+
+    track.listeners.push({
+      onTrackSolo: undefined,
+      // @ts-ignore
+      onTrackUnsolo: 'hey',
+    });
+
+    expect(() => fwdAudio.soloTrack(track.trackName)).not.toThrow();
+    expect(() => fwdAudio.addTrack('123')).not.toThrow();
+    expect(() => fwdAudio.soloTrack('123')).not.toThrow();
+    expect(() => fwdAudio.soloTrack(track.trackName)).not.toThrow();
+    expect(() => fwdAudio.unsoloAllTracks()).not.toThrow();
+    expect(() => fwdAudio.removeTrack('123')).not.toThrow();
+    expect(() => fwdAudio.start()).not.toThrow();
   });
 });

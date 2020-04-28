@@ -310,7 +310,7 @@ export class FwdDelayLineNode extends FwdAudioNodeWrapper<DelayNode> {
   private _delay: DelayNode;
   private readonly _delayTime: FwdAudioParamWrapper;
 
-  constructor(public fwdAudio: FwdAudio, initialDelayTime: number) {
+  constructor(fwdAudio: FwdAudio, initialDelayTime: number) {
     super(fwdAudio, fwdAudio.context.createDelay());
     this._delayTime = new FwdAudioParamWrapper(fwdAudio, this.nativeNode.delayTime);
     this.nativeNode.delayTime.value = Math.max(0, initialDelayTime);
