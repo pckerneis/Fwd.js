@@ -1,5 +1,6 @@
 import { FwdAudioImpl } from "../../../../src/fwd/audio/FwdAudioImpl";
 import { FwdAudioTrack } from "../../../../src/fwd/audio/nodes/FwdAudioTrack";
+import { FwdPerformanceListener } from "../../../../src/fwd/core/fwd";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
@@ -217,9 +218,9 @@ describe('FwdAudioTrack', () => {
   });
 
   it ('notifies listeners when an audio property changes', () => {
+    const fwd = mockFwd();
     const fwdAudio = new FwdAudioImpl();
-    fwdAudio.initializeModule(mockFwd());
-    fwdAudio.start();
+    fwdAudio.initializeModule(fwd);
 
     const track = fwdAudio.addTrack('track', {gain: 1, mute: false, pan: 0});
 
@@ -230,23 +231,77 @@ describe('FwdAudioTrack', () => {
       onTrackUnmute: jest.fn(),
       onTrackSolo: jest.fn(),
       onTrackMute: jest.fn(),
+      onTrackAudioReady: jest.fn(),
     };
 
     track.listeners.push(listener);
 
-    track.volume = 0;
+    // This marks this track as a init-time track so that it won't be disposed when calling fwdAudio.start()
+    fwd.performanceListeners.forEach((l: FwdPerformanceListener) => l.onPerformanceAboutToStart());
+
+    fwdAudio.start();
+    expect(listener.onTrackAudioReady).toHaveBeenCalledTimes(1);
     expect(listener.onTrackVolumeChange).toHaveBeenCalledTimes(1);
-    track.gain = 1;
-    expect(listener.onTrackVolumeChange).toHaveBeenCalledTimes(2);
-    track.pan = 0;
     expect(listener.onTrackPanChange).toHaveBeenCalledTimes(1);
+    expect(listener.onTrackUnmute).toHaveBeenCalledTimes(1);
+
+    track.volume = 0;
+    expect(listener.onTrackVolumeChange).toHaveBeenCalledTimes(2);
+    track.gain = 1;
+    expect(listener.onTrackVolumeChange).toHaveBeenCalledTimes(3);
+    track.pan = 0;
+    expect(listener.onTrackPanChange).toHaveBeenCalledTimes(2);
     track.mute();
     expect(listener.onTrackMute).toHaveBeenCalledTimes(1);
     track.unmute();
-    expect(listener.onTrackUnmute).toHaveBeenCalledTimes(1);
+    expect(listener.onTrackUnmute).toHaveBeenCalledTimes(2);
     track.solo();
     expect(listener.onTrackSolo).toHaveBeenCalledTimes(1);
     track.unsolo();
     expect(listener.onTrackUnsolo).toHaveBeenCalledTimes(1);
+  });
+
+
+  it ('can have invalid listeners', () => {
+    const fwd = mockFwd();
+    const fwdAudio = new FwdAudioImpl();
+    fwdAudio.initializeModule(fwd);
+
+    const track = fwdAudio.addTrack('track', {gain: 1, mute: false, pan: 0});
+
+    const listener = {
+      onTrackVolumeChange: 'foo',
+      onTrackPanChange: 'bar',
+      // @ts-ignore
+      onTrackUnsolo: null,
+      onTrackUnmute: {},
+      onTrackSolo: 123,
+      // @ts-ignore
+      onTrackMute: undefined,
+      onTrackAudioReady: /foo/,
+    };
+
+    // @ts-ignore
+    track.listeners.push(listener);
+
+    // This marks this track as a init-time track so that it won't be disposed when calling fwdAudio.start()
+    fwd.performanceListeners.forEach((l: FwdPerformanceListener) => l.onPerformanceAboutToStart());
+
+    expect(() => fwdAudio.start()).not.toThrow();
+    expect(() => track.volume = 0).not.toThrow();
+    expect(() => track.gain = 1).not.toThrow();
+    expect(() => track.pan = 0).not.toThrow();
+    expect(() => track.mute()).not.toThrow();
+    expect(() => track.unmute()).not.toThrow();
+    expect(() => track.solo()).not.toThrow();
+    expect(() => track.unsolo()).not.toThrow();
+  });
+
+  it('has a metering node', () => {
+    const track = new FwdAudioTrack(mockFwdAudio(), 'Track', {
+      mute: true, gain: 0, pan: 0,
+    });
+
+    expect(track.meteringNode).not.toBeNull();
   });
 });

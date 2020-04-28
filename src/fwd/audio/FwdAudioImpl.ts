@@ -250,8 +250,9 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
     this.listeners.forEach(l => {
-      if (typeof l.audioContextStarted === 'function')
+      if (typeof l.audioContextStarted === 'function') {
         l.audioContextStarted(this._ctx)
+      }
     });
 
     this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
