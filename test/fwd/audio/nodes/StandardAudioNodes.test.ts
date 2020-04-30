@@ -151,7 +151,7 @@ describe('StandardAudioNodes', () => {
       const node = new FwdOscillatorNode(mockFwdAudio(), {foo: 'bar'}, 'square');
 
       expect(node).toBeTruthy();
-      expect(node.nativeNode.frequency.value).toBe(0);
+      expect(node.oscillator.frequency.value).toBe(0);
     });
 
     it ('accept frequencies and types', () => {
@@ -162,7 +162,7 @@ describe('StandardAudioNodes', () => {
       node.setFrequency(220);
       node.setType('triangle');
 
-      expect(node.nativeNode.frequency.setValueAtTime).toHaveBeenCalledWith(220, undefined);
+      expect(node.oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(220, undefined);
       expect(node.type).toBe('triangle');
     });
 
@@ -174,11 +174,11 @@ describe('StandardAudioNodes', () => {
 
       // @ts-ignore
       node.setFrequency('foo');
-      expect(node.nativeNode.frequency.setValueAtTime).not.toHaveBeenCalled();
+      expect(node.oscillator.frequency.setValueAtTime).not.toHaveBeenCalled();
 
       // @ts-ignore
       node.setFrequency({foo: 'bar'});
-      expect(node.nativeNode.frequency.setValueAtTime).not.toHaveBeenCalled();
+      expect(node.oscillator.frequency.setValueAtTime).not.toHaveBeenCalled();
     });
 
     it ('can be stopped', () => {
@@ -188,7 +188,7 @@ describe('StandardAudioNodes', () => {
       const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
       node.stop();
 
-      expect(node.nativeNode.stop).toHaveBeenCalled();
+      expect(node.oscillator.stop).toHaveBeenCalled();
     });
   });
 

@@ -16,6 +16,10 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
     return this._param;
   }
 
+  public set value(newValue: number) {
+    this._param.value = newValue;
+  }
+
   public get value(): number { return this._param.value}
 
   public rampTo(value: number, time: number): void {
@@ -90,45 +94,62 @@ export class FwdGainNode extends FwdAudioNodeWrapper<GainNode> {
 
 //=========================================================================
 
-export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
+export class FwdOscillatorNode extends FwdAudioNode {
+  
+  public static MIN_FREQ: number = 0;
+  public static MAX_FREQ: number = 40000;
 
-  private static MIN_FREQ: number = 0;
-  private static MAX_FREQ: number = 40000;
+  public readonly gain: FwdAudioParamWrapper;
+  
+  private _output: GainNode;
+  private _osc: OscillatorNode;
 
   private _type: OscillatorType;
 
-  constructor (fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
-    super(fwdAudio, fwdAudio.context.createOscillator());
+  constructor (public readonly fwdAudio: FwdAudio, freq: number, type: OscillatorType) {
+    super();
+
+    this._output = fwdAudio.context.createGain();
+    this._output.gain.value = 1;
+    
+    this._osc = fwdAudio.context.createOscillator();
+
+    this._osc.connect(this._output);
 
     if (! isNaN(freq)) {
-      this.nativeNode.frequency.value = clamp(freq, FwdOscillatorNode.MIN_FREQ, FwdOscillatorNode.MAX_FREQ);
+      this._osc.frequency.value = clamp(freq, FwdOscillatorNode.MIN_FREQ, FwdOscillatorNode.MAX_FREQ);
     } else {
-      this.nativeNode.frequency.value = 0;
+      this._osc.frequency.value = 0;
     }
 
     this._type = type;
-    this.nativeNode.type = type;
-    this.nativeNode.start();
+    this._osc.type = type;
+    this._osc.start();
+
+    this.gain = new FwdAudioParamWrapper(this.fwdAudio, this._output.gain);
   }
 
   public get inputNode(): AudioNode | AudioParam { return null; }
-  public get outputNode(): AudioNode { return this.nativeNode; }
+  public get outputNode(): AudioNode { return this._output; }
+
+  public get oscillator(): OscillatorNode {
+    return this._osc;
+  }
 
   public get frequency(): FwdAudioParamWrapper {
     this.assertIsReady('get frequency');
-    return new FwdAudioParamWrapper(this.fwdAudio, this.nativeNode.frequency);
+    return new FwdAudioParamWrapper(this.fwdAudio, this._osc.frequency);
   }
 
   public get type(): OscillatorType {
-    this.assertIsReady('get type');
     return this._type;
   }
 
   public setType(type: OscillatorType): void {
+    this.assertIsReady('set type');
     fwd.schedule(fwd.now(), () => {
-      this.assertIsReady('set type');
       this._type = type;
-      this.nativeNode.type = type;
+      this._osc.type = type;
     });
   }
 
@@ -142,19 +163,38 @@ export class FwdOscillatorNode extends FwdAudioNodeWrapper<OscillatorNode> {
     fq = clamp(fq, FwdOscillatorNode.MIN_FREQ, FwdOscillatorNode.MAX_FREQ);
 
     const audioNow = this.fwdAudio.now();
-    this.nativeNode.frequency.setValueAtTime(fq, audioNow);
+    this._osc.frequency.setValueAtTime(fq, audioNow);
   }
 
   public stop(): void {
     this.assertIsReady('stop');
     const audioNow = this.fwdAudio.now();
-    this.nativeNode.stop(audioNow);
+    this._osc.stop(audioNow);
+  }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._osc, when).then(() => {
+      this._osc = null;
+    });
+
+    tearDownNativeNode(this._osc, when).then(() => {
+      this._output = null;
+    });
+  }
+  
+  private assertIsReady(context: string): void {
+    if (this._osc == null || this._output == null) {
+      throw new Error(context + ': this audio node was teared down or not initialized.');
+    }
   }
 }
 
 //===============================================================
 
 export class FwdLFONode extends FwdAudioNode {
+  public static MIN_FREQ: number = 0;
+  public static MAX_FREQ: number = 40000;
+  
   private _output: GainNode;
   private _osc: OscillatorNode;
 
@@ -172,7 +212,13 @@ export class FwdLFONode extends FwdAudioNode {
 
     // Setup osc
     this._osc = fwdAudio.context.createOscillator();
-    this._osc.frequency.value = frequency;
+    
+    if (! isNaN(frequency)) {
+      this._osc.frequency.value = clamp(frequency, FwdLFONode.MIN_FREQ, FwdLFONode.MAX_FREQ);
+    } else {
+      this._osc.frequency.value = 0;
+    }
+    
     this._osc.type = type;
     this._osc.connect(hiddenGain);
 

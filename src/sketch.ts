@@ -77,7 +77,6 @@ export function init(): void {
     if (counter === 4)    kickSequence();
     if (counter === 8)    kickSequence2();
     if (counter === 0)    arp();
-    
 
     const voices = 4;
     const padGain = padSlider.value;
@@ -95,6 +94,7 @@ export function init(): void {
 
   next();
 }
+
 function kickSequence(): void {
   fwd.log('Kick1');
   
@@ -109,7 +109,7 @@ function kickSequence2(): void {
 
   playSequence(kick2Editor, {
     sign: 'x',
-    action: () => kick(kick2Track),
+    action: () => kick(kick2Track, 30),
   });
 }
 
@@ -152,35 +152,33 @@ function playNote(out: FwdAudioNode,
   fwd.schedule(0, () => {
     const baseFreq = mtof(pitch);
     const osc = fwd.audio.osc(baseFreq);
-    const gain = fwd.audio.gain(0.0);
-    osc.connect(gain).connect(out);
+    osc.connect(out);
+    osc.gain.value = 0;
 
-    gain.gain.rampTo(vel, dur / 2);
+    osc.gain.rampTo(vel, dur / 2);
     fwd.wait(dur / 2);
-    gain.gain.rampTo(0, dur / 1.5);
+    osc.gain.rampTo(0, dur / 1.5);
     fwd.wait(dur / 1.5);
 
     fwd.wait(3);
 
     osc.tearDown();
-    gain.tearDown();
   });
 }
 
-export function kick(track: FwdAudioTrack): void {
+export function kick(track: FwdAudioTrack, tuning: number = 50): void {
   fwd.schedule(0, () => {
-    const osc = fwd.audio.osc(1000);
-    const gain = fwd.audio.gain();
-    
-    osc.connect(gain).connect(track);
+    const osc = fwd.audio.osc(tuning * 10);
+    osc.gain.value = 0;
 
-    gain.gain.rampTo(kickSlider.value, 0.001);
-    osc.frequency.rampTo(50, 0.018);
-    fwd.wait(0.02);
-    gain.gain.rampTo(0.0, 0.2);
+    osc.connect(track);
+
+    osc.gain.rampTo(kickSlider.value, 0.001);
+    osc.frequency.rampTo(tuning, 0.021);
+    fwd.wait(0.08);
+    osc.gain.rampTo(0.0, 0.3);
 
     fwd.wait(1);
     osc.tearDown();
-    gain.tearDown();
   });
 }
