@@ -14,7 +14,7 @@ export const mockAudioNode = jest.fn().mockImplementation(() => {
     channelCount: 1,
     channelCountMode: '',
     channelInterpretation: '',
-    context: null,
+    context: null,       // We can't use mockAudioContext here because that would lead to a stack overflow
     numberOfInputs: 1,
     numberOfOutputs: 1,
     start: jest.fn(),   // Only for scheduled nodes...
@@ -59,5 +59,6 @@ export const mockAudioContext = jest.fn().mockImplementation(() => {
       }
     }),
     createDelay: createAudioNodeFactoryMock('delayTime'),
+    createAnalyser: createAudioNodeFactoryMock(),
   }
 });

@@ -17,7 +17,7 @@ export class BindableButton implements BindableController {
 
   private _releaseBlinkDebounced: Function;
 
-  private _active: boolean = true;
+  private _active: boolean = false;
 
   constructor(public readonly controllerName: string) {
     this.htmlElement = this._button = document.createElement('button');
@@ -41,6 +41,10 @@ export class BindableButton implements BindableController {
     this._indicator = document.createElement('span');
     this._indicator.classList.add('indicator');
     this._button.append(this._indicator);
+  }
+
+  public get button(): HTMLButtonElement {
+    return this._button;
   }
 
   public set active(active: boolean) {
@@ -74,7 +78,10 @@ export class BindableButton implements BindableController {
   public triggerKeyAction(sourceBinding: KeyBinding): void {
     if (this._active) {
       this.blink();
-      this.action();
+
+      if (typeof this.action === 'function') {
+        this.action();
+      }
     }
   }
 
@@ -93,7 +100,10 @@ export class BindableButton implements BindableController {
   public handleNoteOn(noteNumber: number, velocity: number, channel: number, deviceId: string): void {
     if (this.active) {
       this.blink();
-      this.action();
+
+      if (typeof this.action === 'function') {
+        this.action();
+      }
     }
   }
 

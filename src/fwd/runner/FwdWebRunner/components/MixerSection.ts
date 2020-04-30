@@ -50,11 +50,10 @@ export class MixerSection {
   }
 
   public removeTrack(track: FwdAudioTrack): void {
-    DBG.info('track removed', track);
-
     const elements = this._trackElements.get(track.trackName);
 
     if (elements == null) {
+      DBG.warn(`The track cannot be removed because it doesn't exist.`, track);
       return;
     }
 
@@ -67,12 +66,14 @@ export class MixerSection {
     }
 
     this._trackElements.delete(track.trackName);
+    DBG.info('Track removed', track);
   }
 
   public clearTracks(): void {
     this._trackElements.forEach(({mixerTrack}) => {
       this.removeTrack(mixerTrack.audioTrack);
     });
+    DBG.info('Tracks cleared');
   }
 }
 
