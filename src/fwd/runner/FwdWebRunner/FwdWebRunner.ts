@@ -38,7 +38,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _actionButtons: BindableButton[];
   private _settingsOverlay: Overlay;
   private _configurationPanel: ConfigurationPanel;
-  private _actions: string[];
+  private _actions: string[] = [];
   private _mixerSection: MixerSection;
 
   constructor() {
