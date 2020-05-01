@@ -2,8 +2,12 @@ import path from "path";
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd } from "../../core/Fwd";
 import { clamp } from "../../core/utils/numbers";
+import { Logger, LoggerLevel } from "../../utils/dbg";
 import { FwdAudio } from "../FwdAudio";
+import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";
+
+const DBG = new Logger('StandardAudioNodes', parentLogger, LoggerLevel.debug);
 
 export class FwdAudioParamWrapper extends FwdAudioNode {
   public outputNode: AudioNode = null;
@@ -124,7 +128,7 @@ export class FwdOscillatorNode extends FwdAudioNode {
 
     this._type = type;
     this._osc.type = type;
-    this._osc.start();
+    this._osc.start(fwdAudio.now());
 
     this.gain = new FwdAudioParamWrapper(this.fwdAudio, this._output.gain);
   }
@@ -222,7 +226,7 @@ export class FwdLFONode extends FwdAudioNode {
     this._osc.type = type;
     this._osc.connect(hiddenGain);
 
-    this._osc.start();
+    this._osc.start(fwdAudio.now());
     constantSource.start();
   }
 
@@ -307,7 +311,7 @@ export class FwdNoiseNode extends FwdAudioNode {
     this._output = fwdAudio.context.createBufferSource();
     this._output.loop = true;
     this._output.buffer = this.generateWhiteNoise();
-    this._output.start(0);
+    this._output.start(fwdAudio.now());
   }
 
   public get inputNode(): AudioNode { return null; }
