@@ -1,3 +1,3 @@
 import { Logger, LoggerLevel } from "./utils/dbg";
 
-export default new Logger('fwd', null, LoggerLevel.all);
+export default new Logger('fwd', null, LoggerLevel.error);

@@ -1,6 +1,6 @@
 import { Time } from '../core/EventQueue/EventQueue';
 import { Fwd, fwd } from '../core/Fwd';
-import { Logger } from "../utils/dbg";
+import { Logger, LoggerLevel } from "../utils/dbg";
 import { FwdAudio, FwdAudioListener } from "./FwdAudio";
 import parentLogger from './logger.audio';
 import { defaultFwdAudioTrackOptions, FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
@@ -14,7 +14,7 @@ import {
   FwdStereoDelayNode,
 } from "./nodes/StandardAudioNodes";
 
-const DBG = new Logger('FwdAudioImpl', parentLogger);
+const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 
 export class FwdAudioImpl implements FwdAudio {
   public readonly listeners: FwdAudioListener[] = [];
@@ -76,9 +76,12 @@ export class FwdAudioImpl implements FwdAudio {
   public start(): void {
     this.resetAudioContext();
     this._startOffset = this._ctx.currentTime;
+    DBG.debug('start at ' + this._startOffset);
+
   }
 
   public now(): Time {
+    DBG.debug('now is ' + (this._fwd.now() + this._startOffset));
     return this._fwd.now() + this._startOffset;
   }
 
