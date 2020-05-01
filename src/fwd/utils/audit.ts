@@ -9,7 +9,7 @@
 export default function audit(action: Function, waitMs: number = 20): (...args: any) => any {
   let timeout: any;
 
-	return () => {
+	return function(): any {
     const context = this;
     const args = arguments;
 
