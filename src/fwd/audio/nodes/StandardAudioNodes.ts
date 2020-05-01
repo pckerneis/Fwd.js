@@ -2,12 +2,12 @@ import path from "path";
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd } from "../../core/Fwd";
 import { clamp } from "../../core/utils/numbers";
-// import { Logger, LoggerLevel } from "../../utils/dbg";
+import { Logger, LoggerLevel } from "../../utils/dbg";
 import { FwdAudio } from "../FwdAudio";
-// import parentLogger from "../logger.audio";
+import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";
 
-// const DBG = new Logger('StandardAudioNodes', parentLogger, LoggerLevel.debug);
+const DBG = new Logger('StandardAudioNodes', parentLogger, LoggerLevel.error);
 
 interface LinearRamp {
   startTime: number,
@@ -68,7 +68,7 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
 
   private cancelAndHoldAtTime(when: Time): number {
     const holdValue = this.getValueAtTime(when);
-    // DBG.debug('holdValue : ' + holdValue);
+    DBG.debug('holdValue : ' + holdValue);
     this._param.setValueAtTime(holdValue, when);
     return holdValue;
   }
@@ -82,15 +82,15 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
   private getValueAtTime(when: Time): number {
     // If no ramp was ever scheduled, just return the current native AudioParam's value.
     if (this._latestRamp == null) {
-      // DBG.debug('no ramp');
+      DBG.debug('no ramp');
       return this._param.value;
     }
 
     if (when < this._latestRamp.startTime) {
-      // DBG.debug('before');
+      DBG.debug('before');
       return this._latestRamp.startValue;
     } else if (when > this._latestRamp.endTime) {
-      // DBG.debug('after');
+      DBG.debug('after');
       return this._latestRamp.endValue;
     } else {
       // Linear interpolation
@@ -98,7 +98,14 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
       const t2 = this._latestRamp.endTime;
       const v1 = this._latestRamp.startValue;
       const v2 = this._latestRamp.endValue;
-      return ((v1 - v2) / (t1 - t2)) * when + ((t1 * v2 - t2 * v1) / (t1 - t2));
+
+      if (t1 === t2) {
+        return v2;
+      }
+
+      const linearInterpolation = ((v1 - v2) / (t1 - t2)) * when + ((t1 * v2 - t2 * v1) / (t1 - t2));
+      DBG.debug('linear interp :' + linearInterpolation);
+      return linearInterpolation;
     }
   }
 }
@@ -171,7 +178,7 @@ export class FwdOscillatorNode extends FwdAudioNode {
     super();
 
     this._output = fwdAudio.context.createGain();
-    this._output.gain.value = 1;
+    this._output.gain.value = 0;
     
     this._osc = fwdAudio.context.createOscillator();
 
