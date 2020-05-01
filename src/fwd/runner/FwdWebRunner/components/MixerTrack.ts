@@ -1,5 +1,6 @@
 import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
 import { parseNumber } from "../../../core/utils/numbers";
+import audit from "../../../utils/audit";
 import { injectStyle } from '../StyleInjector';
 import { AudioMeter } from "./AudioMeter";
 import { TRACK_WIDTH } from "./MixerSection.constants";
@@ -63,13 +64,22 @@ export class MixerTrack {
       this.audioMeter.htmlElement,
     );
 
+
     // Bindings
-    this.gainSlider.oninput = (value: number) => {
+    const auditSetGain = audit((value: number) => {
       this.audioTrack.gain = value;
+    });
+
+    this.gainSlider.oninput = (value: number) => {
+      auditSetGain(value);
     };
 
-    this.panSlider.oninput = (/* event */) => {
+    const auditSetPan = audit(() => {
       this.audioTrack.pan = parseNumber(this.panSlider.value);
+    });
+
+    this.panSlider.oninput = (/* event */) => {
+      auditSetPan();
     };
 
     this.audioTrack.listeners.push({

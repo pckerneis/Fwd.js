@@ -4,7 +4,6 @@ import { Logger } from "../../utils/dbg";
 import { FwdAudio } from "../FwdAudio";
 import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";
-import { FwdAudioParamWrapper } from "./StandardAudioNodes";
 
 const DBG = new Logger('FwdAudioTrack', parentLogger);
 
@@ -250,7 +249,8 @@ export class FwdAudioTrack extends FwdAudioNode {
   }
 
   private setValueSmoothed(audioParam: AudioParam, value: number): void {
-    new FwdAudioParamWrapper(this.fwdAudio, audioParam).rampTo(value, 0.005);
+    audioParam.setValueAtTime(audioParam.value, this.fwdAudio.context.currentTime);
+    audioParam.linearRampToValueAtTime(value, this.fwdAudio.context.currentTime + 0.05);
   }
 
   private assertReady(): void {
