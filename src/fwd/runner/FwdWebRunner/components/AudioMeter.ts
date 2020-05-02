@@ -13,6 +13,8 @@ export class AudioMeter {
 
   private _isMute: boolean = false;
 
+  private _sampleBuffer: Float32Array;
+
   constructor() {
     this.htmlElement = document.createElement('div');
     
@@ -60,20 +62,23 @@ export class AudioMeter {
       return;
     }
 
-    const sampleBuffer = new Float32Array(this._analyser.fftSize);
-    this._analyser.getFloatTimeDomainData(sampleBuffer);
+    if (this._sampleBuffer == null) {
+      this._sampleBuffer = new Float32Array(this._analyser.fftSize);
+    }
+
+    this._analyser.getFloatTimeDomainData(this._sampleBuffer);
 
     let clipping = false;
 
     // Compute average
     let sumOfSquares = 0;
         
-    for (let i = 0; i < sampleBuffer.length; i++) {
-      sumOfSquares += sampleBuffer[i] ** 2;
-      clipping = clipping || sampleBuffer[i] > 1;
+    for (let i = 0; i < this._sampleBuffer.length; i++) {
+      sumOfSquares += this._sampleBuffer[i] ** 2;
+      clipping = clipping || this._sampleBuffer[i] > 1;
     }
 
-    const average = gainToDecibels(sumOfSquares / sampleBuffer.length);
+    const average = gainToDecibels(sumOfSquares / this._sampleBuffer.length);
     this._averageMeter.value = isFinite(average) ? average : this._averageMeter.min;
 
     if (clipping) {
