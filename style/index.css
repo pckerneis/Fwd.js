@@ -6,7 +6,7 @@
 
 body {
   background: rgb(229, 230, 231);
-  font-family: 'Roboto';
+  font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   box-sizing: border-box;
   font-size: 13px;
 }
@@ -125,95 +125,51 @@ button:hover:not([disabled]) {
 /*====================================*/
 
 /* sliders */
-/* http://danielstern.ca/range.css/#/ */
-
 input[type=range].slider {
   -webkit-appearance: none;
-  margin: 4.6px 0;
+  padding: 5px;
   background: none;
+  box-sizing: border-box;
 }
-input[type=range].slider:focus {
-  outline: none;
-}
+
+/* Slider track */
 input[type=range].slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 8.8px;
+  height: 8px;
   cursor: pointer;
   box-shadow: 1px 1px 4px #0000002c inset;
-  background: #00000005;
+  background: #dedede;
   border-radius: 10px;
   border: 0;
 }
-input[type=range].slider::-webkit-slider-thumb {
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
-  background: #00000005;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #ffffff;
+
+input[type=range].slider::-moz-range-track {
+  width: 100%;
+  height: 8px;
   cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -4.8px;
+  box-shadow: 1px 1px 4px #0000002c inset;
+  background: #dedede;
+  border-radius: 10px;
+  border: 0;
 }
+
+input[type=range].slider:focus::-moz-range-track,
 input[type=range].slider:focus::-webkit-slider-runnable-track {
   background: #00000015;
 }
-input[type=range].slider:focus::-webkit-slider-thumb {
-  border: 1px solid #00000080;
-}
-input[type=range].slider::-moz-range-track {
-  width: 100%;
-  height: 8.8px;
-  cursor: pointer;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-  background: rgba(0, 0, 0, 0.07);
-  border-radius: 6.9px;
-  border: 0.2px solid #000101;
-}
-input[type=range].slider::-moz-range-thumb {
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
-  border: 0.5px solid rgba(0, 0, 0, 0.21);
-  height: 18px;
+
+/* Slider thumb */
+input[type=range].slider::-moz-range-thumb,
+input[type=range].slider::-webkit-slider-thumb {
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
+  background: #FFFFFF;
+  height: 16px;
   width: 16px;
-  border-radius: 10px;
-  background: #ffffff;
+  border-radius: 50%;
+  border: none;
   cursor: pointer;
-}
-input[type=range].slider::-ms-track {
-  width: 100%;
-  height: 8.8px;
-  cursor: pointer;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-input[type=range].slider::-ms-fill-lower {
-  background: rgba(0, 0, 0, 0.07);
-  border: 0.2px solid #000101;
-  border-radius: 13.8px;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-}
-input[type=range].slider::-ms-fill-upper {
-  background: rgba(0, 0, 0, 0.07);
-  border: 0.2px solid #000101;
-  border-radius: 13.8px;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-}
-input[type=range].slider::-ms-thumb {
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
-  border: 0.5px solid rgba(0, 0, 0, 0.21);
-  height: 18px;
-  width: 16px;
-  border-radius: 10px;
-  background: #ffffff;
-  cursor: pointer;
-  height: 8.8px;
-}
-input[type=range].slider:focus::-ms-fill-lower {
-  background: rgba(0, 0, 0, 0.07);
-}
-input[type=range].slider:focus::-ms-fill-upper {
-  background: rgba(13, 13, 13, 0.07);
+  -webkit-appearance: none;
+  margin-top: -4.8px;
 }
 
 /* scrollbar */
@@ -225,8 +181,8 @@ input[type=range].slider:focus::-ms-fill-upper {
 }
 
 ::-webkit-scrollbar-button {
-  width: 0px;
-  height: 0px;
+  width: 0;
+  height: 0;
 }
 
 ::-webkit-scrollbar-thumb {

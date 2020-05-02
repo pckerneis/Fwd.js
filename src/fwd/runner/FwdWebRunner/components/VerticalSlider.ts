@@ -18,10 +18,11 @@ export class VerticalSlider {
   constructor() {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('vertical-slider');
+    // We need this for focus
+    this.htmlElement.tabIndex = 0;
 
     this.trackElement = document.createElement('div');
     this.trackElement.classList.add('vertical-slider-track');
-    this.trackElement.tabIndex = 0;
 
     this.preThumbElement = document.createElement('div');
     this.preThumbElement.classList.add('vertical-slider-pre-thumb');
@@ -36,15 +37,17 @@ export class VerticalSlider {
       this.thumbElement);
 
     const focus = () => { this.htmlElement.focus(); };
+
     const moveThumb = (event: MouseEvent) => {
       const bounds = this.trackElement.getBoundingClientRect();
       const relativeMouseY = event.clientY - bounds.top - this.thumbElement.getBoundingClientRect().height / 2;
       const ratio = clamp(relativeMouseY / this.trackElement.clientHeight, 0, 1);
-      setTimeout(focus, 0);
       this.setValue(1.0 - ratio, true);
 
       event.stopPropagation();
       event.preventDefault();
+
+      setTimeout(focus);
     };
 
     this.thumbElement.style.pointerEvents = 'none';
@@ -52,8 +55,10 @@ export class VerticalSlider {
     this.preThumbElement.style.pointerEvents = 'none';
 
     this.htmlElement.addEventListener('mouseup', () => {
-      this._isPressedElement = false;
-      focus();
+      if (this._isPressedElement) {
+        this._isPressedElement = false;
+        focus();
+      }
     });
 
     this.htmlElement.addEventListener('mousedown', (event) => {
@@ -103,6 +108,8 @@ injectStyle('VerticalSlider', `
   flex-direction: column;
   justify-content: stretch;
   align-items: center;
+  padding: 5px;
+  box-sizing: border-box;
 }
 
 .vertical-slider-track {
@@ -118,9 +125,8 @@ injectStyle('VerticalSlider', `
   flex-direction: column;
 }
 
-.vertical-slider-track:focus  {
+.vertical-slider:focus .vertical-slider-track  {
   background: #00000015;
-  outline: 0;
 }
 
 .vertical-slider-thumb {

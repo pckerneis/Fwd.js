@@ -131,7 +131,7 @@ injectStyle('MixerTrack', `
 .mixer-track-pan-slider {
   width: 100%;
   height: 20px;
-  -webkit-appearance: slider-vertical
+  margin: auto;
 }
 
 .mixer-track-volume-slider {
