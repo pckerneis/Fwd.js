@@ -55,6 +55,8 @@ describe('MixerTrack', () => {
   });
 
   it('sets audio track gain when gain slider is moved', () => {
+    jest.useFakeTimers();
+
     const mixerTrack = new MixerTrack(jest.fn().mockImplementation(() => {
       return {
         listeners: [],
@@ -64,10 +66,14 @@ describe('MixerTrack', () => {
     })());
 
     mixerTrack.gainSlider.oninput(3);
+    jest.runOnlyPendingTimers();
+
     expect(mixerTrack.audioTrack.gain).toBe(3);
   });
 
   it('sets audio track gain when gain slider is moved', () => {
+    jest.useFakeTimers();
+
     const mixerTrack = new MixerTrack(jest.fn().mockImplementation(() => {
       return {
         listeners: [],
@@ -78,6 +84,7 @@ describe('MixerTrack', () => {
     mixerTrack.panSlider.value = '12';
 
     mixerTrack.panSlider.oninput({} as Event);
+    jest.runOnlyPendingTimers();
     expect(mixerTrack.audioTrack.pan).toBe(12);
   });
 

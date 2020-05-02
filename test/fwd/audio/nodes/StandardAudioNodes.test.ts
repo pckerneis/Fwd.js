@@ -51,29 +51,6 @@ describe('StandardAudioNodes', () => {
       const wrapper = new ConcreteParam();
       expect(wrapper['doTearDown']).toThrowError();
     });
-
-
-    it ('has a fallback if (AudioParam).cancelAndHoldAtTime is not defined', () => {
-      class ConcreteParam extends FwdAudioParamWrapper {
-        constructor() {
-          // @ts-ignore
-          super(mockFwdAudio(), {
-            setValueAtTime: jest.fn(),
-            linearRampToValueAtTime: jest.fn(),
-            // @ts-ignore
-            value: 'foo',
-          });
-        }
-      }
-
-      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
-
-      const param = new ConcreteParam();
-
-      param.rampTo(0, 42);
-
-      expect(param['_param'].setValueAtTime).toHaveBeenCalledWith('foo', 0);
-    });
   });
 
   describe('FwdAudioNodeWrapper', () => {
@@ -89,27 +66,15 @@ describe('StandardAudioNodes', () => {
       public get outputNode(): AudioNode {
         return undefined;
       }
+
+      protected doTearDown(when: number): void {
+      }
     }
 
     it('throw when calling assertIsReady with null native node', () => {
       const node = new ConcreteNode();
       expect(node.nativeNode).toBeNull();
       expect(() => node['assertIsReady']('')).toThrowError();
-    });
-
-    it('set native node to null when teared down', async () => {
-      (global as any).AudioScheduledSourceNode = mockAudioNode;
-      const node = new ConcreteNode();
-
-      // @ts-ignore
-      node['_nativeNode'] = mockAudioNode();
-      // @ts-ignore
-      node['_fwdAudio'] = mockFwdAudio();
-      expect(node.nativeNode).not.toBeNull();
-
-      node.tearDown();
-      await seconds(0);
-      expect(node.nativeNode).toBeNull();
     });
   });
 
@@ -305,10 +270,6 @@ describe('StandardAudioNodes', () => {
       await seconds(0);
 
       expect(audioNode.disconnect).toHaveBeenCalled();
-    });
-
-    it('doesn\'t do anything if the node is null', async () => {
-      await tearDownNativeNode(null, 0);
     });
   });
 

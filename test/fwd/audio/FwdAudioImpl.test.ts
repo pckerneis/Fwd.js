@@ -148,13 +148,16 @@ describe('FwdAudioImpl', () => {
   });
 
   it('creates various audio nodes', () => {
+    const fwd = mockFwd();
+    (global as any).fwd = fwd;
+
     const fwdAudio = new FwdAudioImpl();
-    fwdAudio.initializeModule(mockFwd());
+    fwdAudio.initializeModule(fwd);
     fwdAudio.start();
 
     // Bypass FWD initialization check
     // @ts-ignore
-    fwdAudio['_fwd'] = jest.fn();
+    fwdAudio['_fwd'] = fwd;
 
     // We need to provide fetch
     (global as any).fetch = jest.fn().mockImplementation(() => {
