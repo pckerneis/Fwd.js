@@ -9,6 +9,8 @@ export class VerticalSlider {
 
   private _value: number;
 
+  private _isPressedElement: boolean;
+
   private readonly trackElement: HTMLElement;
   private readonly preThumbElement: HTMLElement;
   private readonly thumbElement: HTMLElement;
@@ -33,30 +35,46 @@ export class VerticalSlider {
       this.preThumbElement,
       this.thumbElement);
 
-    const dragImage = new Image();
-    dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-    this.htmlElement.draggable = true;
-
-    const focus = () => { this.trackElement.focus(); };
+    const focus = () => { this.htmlElement.focus(); };
     const moveThumb = (event: MouseEvent) => {
-      if (event.screenX === 0 && event.screenY === 0) { return; }
-
-      const ratio = clamp(event.offsetY / this.trackElement.clientHeight, 0, 1);
+      const bounds = this.trackElement.getBoundingClientRect();
+      const relativeMouseY = event.clientY - bounds.top - this.thumbElement.getBoundingClientRect().height / 2;
+      const ratio = clamp(relativeMouseY / this.trackElement.clientHeight, 0, 1);
       setTimeout(focus, 0);
       this.setValue(1.0 - ratio, true);
+
+      event.stopPropagation();
+      event.preventDefault();
     };
 
     this.thumbElement.style.pointerEvents = 'none';
     this.trackElement.style.pointerEvents = 'none';
+    this.preThumbElement.style.pointerEvents = 'none';
 
-    this.htmlElement.onmouseup = focus;
-    this.htmlElement.ondrag = moveThumb;
-    this.htmlElement.onmousedown = moveThumb;
-    this.htmlElement.onmousedown = moveThumb;
-    this.htmlElement.ondragstart = event => {
-      event.dataTransfer.setDragImage(dragImage, 0, 0);
+    this.htmlElement.addEventListener('mouseup', () => {
+      this._isPressedElement = false;
+      focus();
+    });
+
+    this.htmlElement.addEventListener('mousedown', (event) => {
+      this._isPressedElement = true;
       moveThumb(event);
-    }
+
+      const windowMousemoveListener = (moveEvent: MouseEvent) => {
+        if (moveEvent.buttons === 1 && this._isPressedElement) {
+          moveThumb(moveEvent);
+        }
+      };
+
+      const windowMouseupListener = () => {
+        this._isPressedElement = false;
+        document.removeEventListener('mouseup', () => windowMouseupListener());
+        document.removeEventListener('mousemove', (moveEvent) => windowMousemoveListener(moveEvent));
+      };
+
+      document.addEventListener('mouseup', windowMouseupListener);
+      document.addEventListener('mousemove', windowMousemoveListener);
+    }, true);
   }
 
   public get value(): number {
