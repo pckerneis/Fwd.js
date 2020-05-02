@@ -22,6 +22,16 @@ export class TextArea {
     this.editableDiv.spellcheck = false;
     this.htmlElement.append(this.editableDiv);
 
+    // TODO: implement multiline overwrite mode
+    // Block new spaces in overwrite mode
+    this.editableDiv.onkeypress = (event: KeyboardEvent) => {
+      if (this._mode === 'overwrite' &&
+          (event.code === 'Enter' || event.code === 'NumpadEnter')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
     this.editableDiv.oninput = (event: InputEvent) => {
       this._textContent = this.editableDiv.firstChild.textContent;
 
