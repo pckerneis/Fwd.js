@@ -1,6 +1,10 @@
+import { Logger } from "../utils/dbg";
 import { Event, EventRef, Time } from './EventQueue/EventQueue';
+import parentLogger from './logger.core';
 import { Scheduler } from "./Scheduler/Scheduler";
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
+
+const DBG = new Logger('FwdScheduler', parentLogger);
 
 let NOW: Time = 0;
 
@@ -42,9 +46,10 @@ export class FwdScheduler {
    */
   constructor(interval: number = SchedulerImpl.MIN_INTERVAL, lookAhead: number = SchedulerImpl.DEFAULT_LOOKAHEAD) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
-    this._scheduler.keepAlive = true;
     this._scheduler.onEnded = () => {
       this._state = 'stopped';
+      
+      DBG.debug('on ended called');
 
       if (this.onEnded != null) {
         this.onEnded();
@@ -156,6 +161,7 @@ export class FwdScheduler {
     }
 
     NOW = 0;
+    this._scheduler.keepAlive = true;
     this._scheduler.start(0);
     this._state = 'running';
   }
