@@ -18,7 +18,7 @@ export class BasicEvent {
 export class SchedulerImpl<EventType extends Event = BasicEvent> extends Scheduler<EventType> {
 
   public static readonly MIN_INTERVAL: number = 0;
-  public static readonly DEFAULT_LOOKAHEAD: number = 0;
+  public static readonly DEFAULT_LOOKAHEAD: number = 0.050;
 
   /** @inheritdoc */
   public onEnded: Function;
