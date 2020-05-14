@@ -32,27 +32,22 @@ const kick2Editor = fwd.controls.addTextEditor('kick2', {
 });
 const chordEditor = fwd.controls.addTextEditor('chord', { defaultValue: '0, 7, 11, 14, 16, 23, 26' });
 
-const synthTrack = fwd.audio.addTrack('synth', { gain: 0.3 });
-
-let arpDelay: FwdStereoDelayNode;
-
-// TODO: cannot create audio nodes before init
-// const arpDelay = fwd.audio.stereoDelay();
+const synthTrack = fwd.audio.addTrack('synth', { gain: 0.5 });
 const arpTrack = fwd.audio.addTrack('arp', { gain: 0.5 });
-// arpDelay.connect(arpTrack);
+const kick1Track = fwd.audio.addTrack('kick1', { pan: 0.25 });
+const kick2Track = fwd.audio.addTrack('kick2', { pan: -0.25, mute: true });
 
-const kick1Track = fwd.audio.addTrack('kick1', { pan: 0.3 });
-const kick2Track = fwd.audio.addTrack('kick2', { pan: -0.3, mute: true });
+let synthFxChain: FwdAudioNode;
+let arpDelay: FwdStereoDelayNode;
 
 let chord: number[];
 let base = 52;
 
 export function init(): void {
   arpDelay = fwd.audio.stereoDelay();
-  arpDelay.connect(arpTrack);
-
-  synthTrack.gain = 0.8;
-  kick1Track.pan = 0.8;
+  arpDelay.connect(fwd.audio.compressor()).connect(arpTrack);
+  synthFxChain = fwd.audio.compressor();
+  synthFxChain.connect(synthTrack);
 
   fwd.log('Start');
 
@@ -74,17 +69,17 @@ export function init(): void {
 
     chord = chords[counter % chords.length];
 
-    if (counter === 4)    kickSequence();
-    if (counter === 8)    kickSequence2();
+    if (counter === 0)    kickSequence();
+    if (counter === 0)    kickSequence2();
     if (counter === 0)    arp();
 
     const voices = 4;
     const padGain = padSlider.value;
 
     for (let i = 0; i < voices; ++i) {
-      chord.forEach((note) => playNote(synthTrack, base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
-      playNote(synthTrack, chord[0] + base + fwd.random(-detune, detune) - oct(2), dur, 0.2 * padGain);
-      playNote(synthTrack, chord[0] + base + fwd.random(-detune, detune) - oct(1), dur, 0.2 * padGain);
+      chord.forEach((note) => playNote(synthFxChain, base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
+      playNote(synthFxChain, chord[0] + base + fwd.random(-detune, detune) - oct(2), dur, 0.2 * padGain);
+      playNote(synthFxChain, chord[0] + base + fwd.random(-detune, detune) - oct(1), dur, 0.2 * padGain);
     }
 
     fwd.schedule(dur, next);
@@ -166,19 +161,26 @@ function playNote(out: FwdAudioNode,
   });
 }
 
-export function kick(track: FwdAudioTrack, tuning: number = 50): void {
+export function kick(track: FwdAudioTrack, tuning: number = 30): void {
   fwd.schedule(0, () => {
-    const osc = fwd.audio.osc(tuning * 10);
+    const osc = fwd.audio.osc(tuning * 20);
     osc.gain.value = 0;
 
-    osc.connect(track);
+    const disto = fwd.audio.distortion(5);
+    const compressor = fwd.audio.compressor();
+
+    osc.connect(disto).connect(compressor).connect(track);
 
     osc.gain.rampTo(kickSlider.value, 0.001);
-    osc.frequency.rampTo(tuning, 0.021);
-    fwd.wait(0.08);
-    osc.gain.rampTo(0.0, 0.3);
+    osc.frequency.rampTo(tuning * 1.2, 0.005);
+    fwd.wait(0.05);
+    osc.frequency.rampTo(tuning, 0.010);
+
+    osc.gain.rampTo(0.0, 0.2);
 
     fwd.wait(1);
     osc.tearDown();
+    disto.tearDown();
+    compressor.tearDown();
   });
 }

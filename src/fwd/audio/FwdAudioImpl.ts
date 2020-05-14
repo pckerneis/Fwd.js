@@ -5,7 +5,9 @@ import { FwdAudio, FwdAudioListener } from "./FwdAudio";
 import parentLogger from './logger.audio';
 import { defaultFwdAudioTrackOptions, FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
 import {
+  FwdCompressorNode,
   FwdDelayLineNode,
+  FwdDistortionNode,
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
@@ -54,7 +56,7 @@ export class FwdAudioImpl implements FwdAudio {
   public get tracks(): FwdAudioTrack[] {
     return Array.from(this._tracks.values());
   }
-  
+
   public get soloedTrack(): string {
     return this._soloedTrack;
   }
@@ -233,6 +235,16 @@ export class FwdAudioImpl implements FwdAudio {
   public stereoDelay(): FwdStereoDelayNode {
     this.assertInit();
     return new FwdStereoDelayNode(this);
+  }
+
+  public distortion(amount: number): FwdDistortionNode {
+    this.assertInit();
+    return new FwdDistortionNode(this, amount);
+  }
+
+  public compressor(): FwdCompressorNode {
+    this.assertInit();
+    return new FwdCompressorNode(this);
   }
 
   //=========================================================================

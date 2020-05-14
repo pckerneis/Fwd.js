@@ -2,7 +2,9 @@ import { Time } from "../core/EventQueue/EventQueue";
 import { Fwd } from "../core/fwd";
 import { FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
 import {
+  FwdCompressorNode,
   FwdDelayLineNode,
+  FwdDistortionNode,
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
@@ -43,4 +45,6 @@ export interface FwdAudio {
   noise(): FwdNoiseNode;
   delayLine(initialDelayTime: number): FwdDelayLineNode;
   stereoDelay(): FwdStereoDelayNode;
+  distortion(amount: number): FwdDistortionNode;
+  compressor(): FwdCompressorNode;
 }
