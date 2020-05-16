@@ -8,7 +8,7 @@ export class Overlay {
   private readonly _backdrop: HTMLDivElement;
 
   private readonly _shadowElement: HTMLDivElement;
-  
+
   constructor() {
     this._shadowElement = document.createElement('div');
     this._shadowElement.classList.add('overlay-shadow-element', 'hidden');
@@ -36,10 +36,12 @@ export class Overlay {
   }
 
   public hide(): void {
-    this._backdrop.remove();
-    
-    if (this.onclose !== null && typeof this.onclose === 'function')
-      this.onclose();
+    if (this._backdrop.isConnected) {
+      this._backdrop.remove();
+
+      if (this.onclose !== null && typeof this.onclose === 'function')
+        this.onclose();
+    }
   }
 
   public focusOnElement(element: HTMLElement): void {
