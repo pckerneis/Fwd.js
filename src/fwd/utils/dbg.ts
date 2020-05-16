@@ -1,7 +1,7 @@
 export enum LoggerLevel {
   all,
-  info,
   debug,
+  info,
   warn,
   error,
   none,
@@ -10,7 +10,7 @@ export enum LoggerLevel {
 type LogMethod = 'warn' | 'log' | 'error';
 
 export class Logger {
-  
+
   public static runtimeLevel: LoggerLevel = null;
 
   public readonly pathLength: number = 32;
