@@ -3,6 +3,12 @@ const path = require('path');
 module.exports = {
   entry: './src/global-runner.ts',
   devtool: 'source-map',
+  optimization: {
+    minimize: false
+  },
+  devServer: {
+    writeToDisk: true,
+  },
   module: {
     rules: [
       {
@@ -16,8 +22,8 @@ module.exports = {
     extensions: [ '.tsx', '.ts', '.js', '.html' ],
   },
   output: {
-    filename: 'global-bundle.js',
+    filename: 'fwd-runner-global.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/dist/'
-  }
+  },
 };
