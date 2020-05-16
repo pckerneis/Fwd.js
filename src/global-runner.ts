@@ -1,6 +1,7 @@
 import { fwd } from "./fwd/core/Fwd";
 import rootLogger from './fwd/logger.fwd';
 import FwdRunner from './fwd/runner/FwdRunner';
+import { Overlay } from "./fwd/runner/FwdWebRunner/components/Overlay";
 import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
 import { Logger, LoggerLevel } from "./fwd/utils/dbg";
 
@@ -8,13 +9,14 @@ import { Logger, LoggerLevel } from "./fwd/utils/dbg";
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.debug);
 
 let sketchModule: any;
+let audioReady: boolean;
 
 // TODO: action buttons are broken for now
 
 function loadSketchModule(str: string, execute: boolean = true): void {
   sketchModule = Function(str);
 
-  if (execute) {
+  if (execute && audioReady) {
     sketchModule();
   }
 }
@@ -60,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
       }
     } catch (e) {
-      DBG.error('Unhandled message received from server.');
+      DBG.error(e);
     }
   };
 
@@ -68,12 +70,42 @@ document.addEventListener('DOMContentLoaded', () => {
     ws.send(handshakeMessage);
   };
 
-  // Wait for gesture to start audio
-  const firstGestureListener = () => {
+  // Add audio gesture overlay
+  const overlay = new Overlay();
+  const message = document.createElement('span');
+  message.innerText = 'Click anywhere or press a key to start.';
+  overlay.container.style.padding = '12px';
+  overlay.container.style.minHeight = '55px';
+  overlay.container.style.height = '55px';
+  overlay.container.style.padding = '12px';
+  overlay.container.style.display = 'flex';
+  overlay.container.style.alignItems = 'center';
+  overlay.container.append(message);
+  overlay.container.onclick = () =>  overlay.hide();
+
+  overlay.show();
+
+  overlay.onclose = () => {
+    if (audioReady) {
+      return;
+    }
+
     DBG.info('Starting audio context.');
-    document.removeEventListener("mousedown", firstGestureListener);
+    runner.startAudioContext();
+
+    audioReady = true;
+
+    if (sketchModule !== null) {
+      sketchModule();
+    }
+
+    document.removeEventListener('keydown', closeListener);
   };
 
-  document.addEventListener("mousedown", firstGestureListener);
+  const closeListener = () => {
+    overlay.hide();
+  };
+
+  document.body.addEventListener('keydown', closeListener);
 });
 
