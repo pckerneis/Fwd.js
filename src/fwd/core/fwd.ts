@@ -21,7 +21,7 @@ export interface Fwd {
   /**
    * Returns the current time position for the scheduler. It's only useful when called inside the `FwdScheduler`'s
    * execution stack as otherwise it will always return `0`.
-   * 
+   *
    * @returns The current position of the scheduler's head in seconds.
    */
   now: () => Time;
@@ -100,6 +100,11 @@ export interface Fwd {
    * An array of listeners to be notified when the performance state changes.
    */
   performanceListeners: Partial<FwdPerformanceListener>[];
+
+  /**
+   * A 'bag' to persist things on...
+   */
+  globals: any;
 }
 
 /**

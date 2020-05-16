@@ -8,6 +8,8 @@ import FwdWebRunner from './FwdWebRunner';
 
 export default class FwdWebImpl implements Fwd {
 
+  public readonly globals: any = {};
+
   public readonly performanceListeners: FwdPerformanceListener[] = [];
 
   private readonly _scheduler: FwdScheduler;
@@ -32,7 +34,7 @@ export default class FwdWebImpl implements Fwd {
   public get controls(): FwdControls {
     return this._runner.controls;
   }
-  
+
   public now(): Time {
     return this._scheduler.now();
   }
@@ -60,11 +62,11 @@ export default class FwdWebImpl implements Fwd {
     if (a == null && b == null) {
       return Math.random();
     }
-  
+
     if (b == null) {
       return a * Math.random();
     }
-  
+
     return a + ((b - a) * Math.random());
   }
 }
