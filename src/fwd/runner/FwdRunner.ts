@@ -20,4 +20,9 @@ export default interface FwdRunner {
    * The ESModule corresponding to the executed Fwd sketch
    */
   sketchModule: any;
+
+  /**
+   * Creates and start the audio context
+   */
+  startAudioContext(): void;
 }

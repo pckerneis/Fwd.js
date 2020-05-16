@@ -52,7 +52,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._audio.initializeModule(this._fwd);
 
     // TODO: this kicks off the AudioContext, which can be broken under some circumstances (e.g. Chrome's autoplay policy)
-    this._audio.start();
+    // this._audio.start();
 
     putFwd(this._fwd);
 
@@ -68,7 +68,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.prepareMixerSection();
     this.prepareMasterSlider();
   }
-  
+
   public get audio(): FwdAudio { return this._audio; }
   public get controls(): FwdControls { return this._controls; }
   public get logger(): FwdLogger { return this._logger; }
@@ -78,8 +78,12 @@ export default class FwdWebRunner implements FwdRunner {
     this._actions = actions;
   }
 
+  public startAudioContext(): void {
+    this._audio.start();
+  }
+
   //==================================================================
-  
+
   private prepareLogger(): FwdLogger {
     const webConsole: FwdWebConsole = new FwdWebConsole();
     document.getElementById(containerId).append(webConsole.htmlElement);
@@ -87,7 +91,7 @@ export default class FwdWebRunner implements FwdRunner {
     return {
       log: (time: Time, ...messages: any[]) => {
         webConsole.print(time, messages);
-        
+
         if (time === null) {
           console.log(...messages);
         } else {
@@ -95,10 +99,10 @@ export default class FwdWebRunner implements FwdRunner {
           console.log(timeStr, ...messages);
         }
       },
-      
+
       err: (time: Time, ...messages: any[]) => {
         webConsole.print(time, messages);
-        
+
         if (time === null) {
           console.error(...messages);
         } else {
@@ -168,7 +172,7 @@ export default class FwdWebRunner implements FwdRunner {
   private initializeMainControls(): void {
     const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
     const stopButton = document.getElementById(stopButtonId) as HTMLButtonElement;
-  
+
     startButton.onclick = () => this.start();
     stopButton.onclick = () => this.stop();
   }
@@ -207,7 +211,7 @@ export default class FwdWebRunner implements FwdRunner {
     container.innerHTML = '';
 
     this._actionButtons = [];
-    
+
     actions.forEach((action) => {
       const button = new BindableButton(action);
       button.active = false;
