@@ -105,6 +105,10 @@ export interface Fwd {
    * A 'bag' to persist things on...
    */
   globals: any;
+
+  onInit?: Function;
+  onStart?: Function;
+  onStop?: Function;
 }
 
 /**

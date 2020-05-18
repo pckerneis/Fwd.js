@@ -1,6 +1,8 @@
 import { Time } from '../../../core/EventQueue/EventQueue';
+import { Fwd } from "../../../core/fwd";
 import { formatTime } from '../../../core/utils/time';
 import { injectStyle } from '../StyleInjector';
+import { IconButton } from "./IconButton";
 
 export class FwdWebConsole {
   public readonly htmlElement: HTMLDivElement;
@@ -8,14 +10,16 @@ export class FwdWebConsole {
   private _code: HTMLElement;
   private _viewport: HTMLElement;
   private _autoScrollCheckbox: HTMLInputElement;
+  private _replInput: HTMLElement;
 
-  constructor() {
+  constructor(private readonly _fwd: Fwd) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('web-console');
 
     this.htmlElement.append(
-      this.buildConsole(),
       this.buildMenuBar(),
+      this.buildConsole(),
+      this.buildEvaluateSection(),
     );
   }
 
@@ -37,7 +41,7 @@ export class FwdWebConsole {
 
     if (this.autoScroll) {
       this._viewport.scrollTop = this._viewport.scrollHeight;
-    }    
+    }
   }
 
   private buildConsole(): HTMLPreElement {
@@ -47,20 +51,18 @@ export class FwdWebConsole {
 
     this._code = document.createElement('code');
     this._code.id = 'console-code';
-    this._code.classList.add('nohighlight');  // That's for highlight.js
 
     pre.append(this._code);
+
     return pre;
   }
 
   private buildMenuBar(): HTMLDivElement {
     const div = document.createElement('div');
-    div.classList.add('menubar');
-    
-    const clearButton = document.createElement('button');
-    clearButton.id = 'clear-console'; // TODO: find better way to style
-    clearButton.innerText = 'Clear';
-    clearButton.onclick = () => { this.clear(); };
+    div.classList.add('web-console-menubar');
+
+    const clearButton = new IconButton('bin');
+    clearButton.htmlElement.onclick = () => { this.clear(); };
 
     const autoScrollLabel = document.createElement('label');
     autoScrollLabel.innerText = 'Auto-scroll';
@@ -71,24 +73,57 @@ export class FwdWebConsole {
     this._autoScrollCheckbox = autoScrollCheckbox;
 
     autoScrollLabel.prepend(autoScrollCheckbox);
-    div.append(clearButton, autoScrollLabel);
+    div.append(clearButton.htmlElement, autoScrollLabel);
     return div;
+  }
+
+  private buildEvaluateSection(): HTMLElement {
+    const replRow = document.createElement('div');
+    replRow.classList.add('web-console-repl-row');
+
+    this._replInput = document.createElement('div');
+    this._replInput.classList.add('web-console-repl-input');
+    this._replInput.contentEditable = 'true';
+    this._replInput.spellcheck = false;
+
+    const rightChevron = document.createElement('object');
+    rightChevron.type = 'image/svg+xml';
+    rightChevron.data = `img/right-chevron.svg`;
+    rightChevron.classList.add('web-console-repl-chevron');
+
+    replRow.append(rightChevron, this._replInput);
+
+    this._replInput.addEventListener('keypress', (keyEvent: KeyboardEvent) => {
+      if (keyEvent.key === 'Enter') {
+        keyEvent.preventDefault();
+        this.print(null, '> ' + this._replInput.innerText);
+
+        try {
+          Function(this._replInput.innerText)();
+        } catch(e) {
+          this._fwd.err(e);
+        }
+
+        this._replInput.innerText = '';
+      }
+    });
+
+    return replRow;
   }
 }
 
 injectStyle('WebConsole', `
 .web-console {
   flex-grow: 1;
-  color: rgb(0, 0, 0);
-  background: rgba(0, 0, 0, 0.02);
-  box-shadow: inset 1px 1px 8px 0px rgba(0, 0, 0, 0.075);
-  overflow: auto;
+  background: rgb(247, 248, 249);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 70px;
 }
 
 .web-console pre {
+  background: rgba(0, 0, 0, 0.02);
   flex-grow: 1;
   overflow: auto;
   margin: 0;
@@ -97,16 +132,33 @@ injectStyle('WebConsole', `
 .web-console code {
   flex-grow: 1;
   display: flex;
-  padding: 3px 10px;
+  padding-left: 20px;
 }
 
-.web-console .menubar {
-  background: rgba(0, 0, 0, 0.02);
+.web-console .web-console-menubar {
+  border-bottom: #00000010 1px solid;
+  height: 27px;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+.web-console-repl-input {
+  flex-grow: 1;
+  font-family: monospace;
+  outline: none;
+  margin: auto;
+}
+
+.web-console-repl-row {
   border-top: #00000010 1px solid;
+  height: 20px;
+  display: flex;
+  background: rgba(0, 0, 0, 0.02);
 }
 
-.web-console .menubar button {
-  padding: 2px 4px;
-  margin: 4px 8px;
+.web-console-repl-chevron {
+  height: 100%;
+  padding: 5px;
+  opacity: 0.5;
 }
 `);

@@ -15,13 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const m = require('./sketch');
+  // const m = require('./sketch');
   runner.sketchModule = require('./sketch');
-
-  runner.actions = Object.keys(m)
-    .filter((e) => typeof m[e] === 'function'
-      && e !== 'init'
-      && m[e].length === 0);
+  //
+  // runner.actions = Object.keys(m)
+  //   .filter((e) => typeof m[e] === 'function'
+  //     && e !== 'init'
+  //     && m[e].length === 0);
 });
 
 function hardLoadModule(): any {

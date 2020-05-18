@@ -7,11 +7,6 @@ export default interface FwdRunner {
   entryPoint: Function;
 
   /**
-   * A list of strings that corresponds to callable sections of a Fwd sketch
-   */
-  actions: string[];
-
-  /**
    * A simple logger
    */
   logger: FwdLogger;
@@ -25,4 +20,6 @@ export default interface FwdRunner {
    * Creates and start the audio context
    */
   startAudioContext(): void;
+
+  buildEditor(): void;
 }

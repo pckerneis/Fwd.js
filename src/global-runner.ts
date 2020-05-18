@@ -8,18 +8,11 @@ import { Logger, LoggerLevel } from "./fwd/utils/dbg";
 // Logger.runtimeLevel = LoggerLevel.error;
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.debug);
 
+let executedOnce: boolean;
 let sketchModule: any;
 let audioReady: boolean;
 
 // TODO: action buttons are broken for now
-
-function loadSketchModule(str: string, execute: boolean = true): void {
-  sketchModule = Function(str);
-
-  if (execute && audioReady) {
-    sketchModule();
-  }
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   const runner: FwdRunner = new FwdWebRunner();
@@ -31,10 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sketchModule();
 
-    if (typeof (window as any).init === 'function') {
-      (window as any).init();
+    if (typeof fwd.onStart === 'function') {
+      fwd.onStart();
     } else {
-      runner.logger.err(null, `It seems like your sketch doesn't export a 'init' function.`);
+      runner.logger.err(null, `Nothing to start.`);
     }
   };
 
@@ -63,6 +56,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       DBG.error(e);
+    }
+
+    function loadSketchModule(str: string): void {
+      sketchModule = Function(str);
+
+      if (! executedOnce && audioReady) {
+        sketchModule();
+        executedOnce = true;
+
+        if (typeof fwd.onInit === 'function') {
+          fwd.onInit();
+        }
+      }
     }
   };
 
@@ -95,8 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     audioReady = true;
 
-    if (sketchModule !== null) {
+    if (sketchModule !== null && !executedOnce) {
       sketchModule();
+      executedOnce = true;
+
+      if (typeof fwd.onInit === 'function') {
+        fwd.onInit();
+      }
     }
 
     document.removeEventListener('keydown', closeListener);

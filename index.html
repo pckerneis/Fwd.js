@@ -5,28 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project name</title>
   <link rel="stylesheet" type="text/css" href="style/index.css">
+  <script src="lib/fwd-runner-global.js"></script>
 </head>
-<script src="dist/bundle.js"></script>
 <body>
-  <div class="full-page">
-    <div id="container" class="flex-column">
-      <div class="top-row">
-        <div id="project-name">
-          <span class="project-name">Project name</span>
-        </div>
-        <div id="settings-button">
-          <img src="img/icon-settings.png" alt="Settings"/>
-        </div>
-      </div>
-      <div class="buttons">
-        <button id="start-button">Start</button>
-        <button id="stop-button" disabled>Stop</button>
-        <div class="time-code-container">
-          <span id="time-code"></span>
-        </div>
-      </div>
-      <div id="actions"></div>
-    </div>
+  <div id="fwd-runner-header">
+    <span id="fwd-project-name" contenteditable="true">Project name</span>
+    <div id="fwd-runner-toolbar"></div>
+    <div id="fwd-runner-menu-container"></div>
   </div>
+  <div id="fwd-runner-container"></div>
+  <div id="fwd-runner-terminal-drawer"></div>
+  <div id="fwd-runner-footer"></div>
 </body>
 </html>

@@ -2,7 +2,6 @@ import { FwdAudio } from "../../audio/FwdAudio";
 import { FwdAudioImpl } from "../../audio/FwdAudioImpl";
 import { FwdAudioTrack } from "../../audio/nodes/FwdAudioTrack";
 import { FwdControls } from '../../control/FwdControl';
-import { FwdHTMLControls } from '../../control/FwdHtmlControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
@@ -10,92 +9,74 @@ import { parseNumber } from '../../core/utils/numbers';
 import { formatTime } from '../../core/utils/time';
 import audit from '../../utils/audit';
 import FwdRunner from '../FwdRunner';
-import { BindableButton } from './components/BindableButton';
 import { ControlBindingManager } from './components/BindableController';
-import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { FwdWebConsole } from './components/Console';
+import { IconButton } from "./components/IconButton";
 import { MasterSlider } from './components/MasterSlider';
-import { MixerSection } from './components/MixerSection';
-import { Overlay } from './components/Overlay';
 import FwdWebImpl from "./FwdWebImpl";
+import { injectStyle } from "./StyleInjector";
 
-const containerId = 'container';
-const startButtonId = 'start-button';
-const stopButtonId = 'stop-button';
 const masterSliderId = 'master-slider';
-const timeCodeId = 'time-code';
-const actionContainerId = 'actions';
-const settingsButtonId = 'settings-button';
+const toolbarId = 'fwd-runner-toolbar';
+const footerId = 'fwd-runner-footer';
+const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
 export default class FwdWebRunner implements FwdRunner {
   public sketchModule: any;
   public entryPoint: Function;
 
   private readonly _fwd: Fwd;
-  private readonly _logger: FwdLogger;
   private readonly _audio: FwdAudio;
-  private readonly _controls: FwdControls;
-  private _actionButtons: BindableButton[];
-  private _settingsOverlay: Overlay;
-  private _configurationPanel: ConfigurationPanel;
-  private _actions: string[] = [];
-  private _mixerSection: MixerSection;
+
+  private _logger: FwdLogger;
+  private _oneLineLogger: HTMLSpanElement;
+  private _toolbar: HTMLElement;
+  private _buildButton: IconButton;
+  private _playButton: IconButton;
 
   constructor() {
-    this._controls = new FwdHTMLControls();
-    document.getElementById(containerId).append(this._controls.htmlElement);
-
-    this._logger = this.prepareLogger();
-
     this._audio = new FwdAudioImpl();
     this._fwd = new FwdWebImpl(this);
     this._audio.initializeModule(this._fwd);
 
-    // TODO: this kicks off the AudioContext, which can be broken under some circumstances (e.g. Chrome's autoplay policy)
-    // this._audio.start();
-
     putFwd(this._fwd);
 
-    this._fwd.scheduler.onEnded = () => {
-      (document.getElementById(startButtonId) as HTMLButtonElement).disabled = false;
-      (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = true;
-      this._actionButtons.forEach(button => button.active = false);
-    };
-
-    this.initializeMainControls();
-    this.initializeTimeCode();
-    this.prepareSettingsMenu();
-    this.prepareMixerSection();
-    this.prepareMasterSlider();
+    this.buildEditor();
   }
 
   public get audio(): FwdAudio { return this._audio; }
-  public get controls(): FwdControls { return this._controls; }
+  public get controls(): FwdControls { return null; }
   public get logger(): FwdLogger { return this._logger; }
-
-  public set actions(actions: string[]) {
-    this.resetActionButtons(actions);
-    this._actions = actions;
-  }
 
   public startAudioContext(): void {
     this._audio.start();
   }
 
+  public buildEditor(): void {
+    this._oneLineLogger = document.createElement('span');
+    this._oneLineLogger.classList.add('fwd-runner-one-line-logger');
+    this._oneLineLogger.style.display = 'none';
+
+    this.prepareHeader();
+    this.prepareFooter();
+  }
+
   //==================================================================
 
-  private prepareLogger(): FwdLogger {
-    const webConsole: FwdWebConsole = new FwdWebConsole();
-    document.getElementById(containerId).append(webConsole.htmlElement);
+  private prepareConsole(): FwdLogger {
+    const webConsole: FwdWebConsole = new FwdWebConsole(this._fwd);
+    document.getElementById(terminalDrawerId).append(webConsole.htmlElement);
 
     return {
       log: (time: Time, ...messages: any[]) => {
         webConsole.print(time, messages);
 
         if (time === null) {
+          this._oneLineLogger.innerText = messages[messages.length - 1];
           console.log(...messages);
         } else {
           const timeStr = formatTime(time);
+          this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
           console.log(timeStr, ...messages);
         }
       },
@@ -104,9 +85,11 @@ export default class FwdWebRunner implements FwdRunner {
         webConsole.print(time, messages);
 
         if (time === null) {
+          this._oneLineLogger.innerText = messages[messages.length - 1];
           console.error(...messages);
         } else {
           const timeStr = formatTime(time);
+          this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
           console.error(timeStr, ...messages);
         }
       },
@@ -114,14 +97,12 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private start(): void {
-    (document.getElementById(startButtonId) as HTMLButtonElement).disabled = true;
-    (document.getElementById(stopButtonId) as HTMLButtonElement).disabled = false;
+    this._playButton.iconName = 'stop';
+    this._playButton.htmlElement.onclick = () => this.stop();
 
     this._fwd.scheduler.clearEvents();
-    this._controls.reset();
 
     ControlBindingManager.getInstance().clearCurrentControllers();
-    this.resetActionButtons(this._actions);
 
     this._fwd.performanceListeners.forEach((l) => {
       if (typeof l.onPerformanceAboutToStart === 'function') {
@@ -134,9 +115,6 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.scheduler.start();
 
     this.applyMasterValue();
-    this.initializeTimeCode();
-
-    this._actionButtons.forEach(button => button.active = true);
   }
 
   private stop(): void {
@@ -151,30 +129,59 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  private prepareMasterSlider(): void {
+  private prepareFooter(): void {
+    this._logger = this.prepareConsole();
+
+    const footer = document.getElementById(footerId);
+    const terminalDrawer = document.getElementById(terminalDrawerId);
+
+    const terminalButton = new IconButton('terminal');
+    footer.append(terminalButton.htmlElement);
+    footer.append(this._oneLineLogger);
+
+    terminalButton.htmlElement.onclick = () => {
+      if (terminalDrawer.style.display === 'none') {
+        terminalDrawer.style.display = 'flex';
+        this._oneLineLogger.style.display = 'none';
+      } else {
+        terminalDrawer.style.display = 'none';
+        this._oneLineLogger.style.display = 'flex';
+      }
+    };
+
     const masterSlider = new MasterSlider();
     masterSlider.slider.oninput = audit(() => this.applyMasterValue());
-    document.getElementById(containerId).append(masterSlider.htmlElement);
+    footer.append(masterSlider.htmlElement);
 
     this._audio.listeners.push({
       audioContextStarted: (/*ctx: AudioContext*/) => {
         masterSlider.meter.audioSource = this._audio.master.nativeNode;
       },
       audioTrackAdded: (track: FwdAudioTrack) => {
-        this._mixerSection.addTrack(track);
+        // this._mixerSection.addTrack(track);
       },
       audioTrackRemoved: (track: FwdAudioTrack) => {
-        this._mixerSection.removeTrack(track);
+        // this._mixerSection.removeTrack(track);
       },
     });
   }
 
-  private initializeMainControls(): void {
-    const startButton = document.getElementById(startButtonId) as HTMLButtonElement;
-    const stopButton = document.getElementById(stopButtonId) as HTMLButtonElement;
+  private prepareHeader(): void {
+    this._toolbar = document.getElementById(toolbarId);
 
-    startButton.onclick = () => this.start();
-    stopButton.onclick = () => this.stop();
+    this._buildButton = new IconButton('tools');
+    this._playButton = new IconButton('play-button');
+    this._toolbar.append(
+      this._buildButton.htmlElement,
+      this._playButton.htmlElement,
+    );
+
+    this._playButton.htmlElement.onclick = () => this.start();
+
+    this._fwd.scheduler.onEnded = () => {
+      this._playButton.iconName = 'play-button';
+      this._playButton.htmlElement.onclick = () => this.start();
+    };
   }
 
   private applyMasterValue(): void {
@@ -190,55 +197,11 @@ export default class FwdWebRunner implements FwdRunner {
 
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
-
-  private initializeTimeCode(): void {
-    const timeCodeElem = document.getElementById(timeCodeId);
-
-    const update = () => {
-      const t = this._fwd.scheduler.rtNow();
-      timeCodeElem.innerText = formatTime(t);
-
-      if (this._fwd.scheduler.state !== 'stopped') {
-        requestAnimationFrame(update);
-      }
-    };
-
-    requestAnimationFrame(update);
-  }
-
-  private resetActionButtons(actions: string[]): void {
-    const container = document.getElementById(actionContainerId);
-    container.innerHTML = '';
-
-    this._actionButtons = [];
-
-    actions.forEach((action) => {
-      const button = new BindableButton(action);
-      button.active = false;
-      button.action = () => {
-        const when = this._fwd.scheduler.rtNow();
-        this._fwd.schedule(when, this.sketchModule[action]);
-      };
-
-      container.append(button.htmlElement);
-      this._actionButtons.push(button);
-
-      ControlBindingManager.getInstance().registerController(button);
-    });
-  }
-
-  private prepareSettingsMenu(): void {
-    this._settingsOverlay = new Overlay();
-    this._configurationPanel = new ConfigurationPanel();
-    this._settingsOverlay.container.append(this._configurationPanel.htmlElement);
-
-    document.getElementById(settingsButtonId).addEventListener('click', () => {
-      this._settingsOverlay.show();
-    });
-  }
-
-  private prepareMixerSection(): void {
-    this._mixerSection = new MixerSection();
-    document.getElementById(containerId).append(this._mixerSection.htmlElement);
-  }
 }
+
+injectStyle('FwdWebRunner', `
+.fwd-runner-one-line-logger {
+  font-family: monospace;
+  margin: auto 0 auto 6px;
+}
+`);

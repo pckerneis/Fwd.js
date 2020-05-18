@@ -29,34 +29,34 @@ export class MasterSlider {
     meterContainer.classList.add('master-meter');
     meterContainer.append(this.meter.htmlElement);
 
-    this.htmlElement.append(label, input, meterContainer);    
+    this.htmlElement.append(label, input, meterContainer);
   }
 }
 
 injectStyle('MasterSlider', `
 .master-section {
+  display: flex;
   margin-left: auto;
-  margin-bottom: 4px;
-  margin-top: 4px;
-  padding: 4px 0;
-}
-
-#master-slider {
-  width: 100px;
-  margin: 0 12px;
 }
 
 .master-meter {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  margin: auto 4px;
 }
 
 .master-meter meter {
-  width: 50px;
+  width: 30px;
 }
 
 .master-label {
   justify-content: center;
+  align-self: center;
+  margin-right: 4px;
+}
+
+.master-slider {
+  width: 70px;
 }
 `);
