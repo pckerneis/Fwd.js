@@ -1,5 +1,6 @@
 import { FwdAudio } from "../audio/FwdAudio";
 import { FwdControls } from '../control/FwdControl';
+import { Editor } from "../editor/api/Editor";
 import { EventRef, Time } from './EventQueue/EventQueue';
 import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';
@@ -82,6 +83,11 @@ export interface Fwd {
    * The Fwd logger module. See {@link FwdLogger}.
    */
   logger?: FwdLogger;
+
+  /**
+   * The Fwd logger module. See {@link FwdLogger}.
+   */
+  editor?: Editor;
 
   /**
    * Generates a pseudo-random number between the specified bounds. The generated number will be between the lower

@@ -77,6 +77,9 @@ export default class FwdWebRunner implements FwdRunner {
   public buildEditor(): void {
     this.prepareHeader();
     this.prepareFooter();
+
+    document.getElementById('fwd-runner-container')
+      .append(this._fwd.editor.root);
   }
 
   //==================================================================
@@ -119,7 +122,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private start(): void {
-    if (! this._sketchWasInitialized) {
+    if (! this._sketchWasInitialized || typeof this._sketchModule !== 'function') {
       throw new Error('The sketch was not initialized');
     }
 
@@ -142,7 +145,9 @@ export default class FwdWebRunner implements FwdRunner {
     });
 
     this._running = true;
+
     this._audio.start();
+    this._sketchModule();
     fwd.onStart();
     this._fwd.scheduler.start();
 
@@ -228,7 +233,7 @@ export default class FwdWebRunner implements FwdRunner {
       this._playButton.htmlElement,
     );
 
-    this._playButton.htmlElement.onclick = () => this.init();
+    this._buildButton.htmlElement.onclick = () => this.init();
     this._playButton.htmlElement.onclick = () => this.start();
   }
 
