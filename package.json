@@ -4,10 +4,7 @@
   "main": "./js/index.js",
   "license": "MIT",
   "scripts": {
-    "webpack": "webpack --config webpack.config.js --display-error-details",
     "webpack-global": "webpack --config webpack-global.config.js --display-error-details",
-    "dev": "webpack-dev-server --open",
-    "dev-hot": "webpack-dev-server --open --hot",
     "doc": "typedoc",
     "test": "jest --coverage"
   },
