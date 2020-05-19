@@ -8,28 +8,8 @@ import { Logger, LoggerLevel } from "./fwd/utils/dbg";
 // Logger.runtimeLevel = LoggerLevel.error;
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.debug);
 
-let executedOnce: boolean;
-let sketchModule: any;
-let audioReady: boolean;
-
-// TODO: action buttons are broken for now
-
 document.addEventListener('DOMContentLoaded', () => {
   const runner: FwdRunner = new FwdWebRunner();
-
-  runner.entryPoint = () => {
-    if (sketchModule == null) {
-      runner.logger.err(null, `The sketch file is not ready or could not be found.`);
-    }
-
-    sketchModule();
-
-    if (typeof fwd.onStart === 'function') {
-      fwd.onStart();
-    } else {
-      runner.logger.err(null, `Nothing to start.`);
-    }
-  };
 
   (window as any).fwd = fwd;
 
@@ -44,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (type === 'sketch') {
         DBG.debug('Sketch received.');
-        loadSketchModule(textContent);
+        runner.setSketch(Function(textContent), true)
+
       } else if (type === 'cssInject') {
         DBG.debug('Stylesheet received.');
         Array.from(document.querySelectorAll('link'))
@@ -56,19 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       DBG.error(e);
-    }
-
-    function loadSketchModule(str: string): void {
-      sketchModule = Function(str);
-
-      if (! executedOnce && audioReady) {
-        sketchModule();
-        executedOnce = true;
-
-        if (typeof fwd.onInit === 'function') {
-          fwd.onInit();
-        }
-      }
     }
   };
 
@@ -91,32 +59,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   overlay.show();
 
-  overlay.onclose = () => {
-    if (audioReady) {
-      return;
-    }
-
-    DBG.info('Starting audio context.');
-    runner.startAudioContext();
-
-    audioReady = true;
-
-    if (sketchModule !== null && !executedOnce) {
-      sketchModule();
-      executedOnce = true;
-
-      if (typeof fwd.onInit === 'function') {
-        fwd.onInit();
-      }
-    }
-
-    document.removeEventListener('keydown', closeListener);
-  };
-
   const closeListener = () => {
     overlay.hide();
   };
 
+  overlay.onclose = () => {
+    DBG.info('Starting audio context.');
+    runner.startAudioContext();
+    document.removeEventListener('keydown', closeListener);
+  };
+
   document.body.addEventListener('keydown', closeListener);
 });
-

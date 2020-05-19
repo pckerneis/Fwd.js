@@ -3,7 +3,7 @@ import { FwdAudioImpl } from "../../audio/FwdAudioImpl";
 import { FwdAudioTrack } from "../../audio/nodes/FwdAudioTrack";
 import { FwdControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
-import { Fwd, putFwd } from '../../core/Fwd';
+import { fwd, Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
 import { parseNumber } from '../../core/utils/numbers';
 import { formatTime } from '../../core/utils/time';
@@ -22,21 +22,36 @@ const footerId = 'fwd-runner-footer';
 const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
 export default class FwdWebRunner implements FwdRunner {
-  public sketchModule: any;
-  public entryPoint: Function;
-
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
+  private readonly _terminalDrawer: HTMLElement;
   private _logger: FwdLogger;
-  private _oneLineLogger: HTMLSpanElement;
+  private _oneLineLogger: HTMLLabelElement;
   private _toolbar: HTMLElement;
   private _buildButton: IconButton;
   private _playButton: IconButton;
 
+  private _audioReady: boolean;
+  private _sketchModule: Function;
+  private _sketchWasInitialized: boolean;
+
+  private _running: boolean;
+
   constructor() {
+    this._terminalDrawer = document.getElementById(terminalDrawerId);
+    this._terminalDrawer.style.display = 'none';
+
     this._audio = new FwdAudioImpl();
+
     this._fwd = new FwdWebImpl(this);
+
+    this._fwd.scheduler.onEnded = () => {
+      this._playButton.iconName = 'play-button';
+      this._playButton.htmlElement.onclick = () => this.start();
+      this._running = false;
+    };
+
     this._audio.initializeModule(this._fwd);
 
     putFwd(this._fwd);
@@ -48,15 +63,18 @@ export default class FwdWebRunner implements FwdRunner {
   public get controls(): FwdControls { return null; }
   public get logger(): FwdLogger { return this._logger; }
 
+  public setSketch(newSketch: Function, initialize: boolean): void {
+    this._sketchModule = newSketch;
+    this.initializeSketchIfReady();
+  }
+
   public startAudioContext(): void {
     this._audio.start();
+    this._audioReady = true;
+    this.initializeSketchIfReady();
   }
 
   public buildEditor(): void {
-    this._oneLineLogger = document.createElement('span');
-    this._oneLineLogger.classList.add('fwd-runner-one-line-logger');
-    this._oneLineLogger.style.display = 'none';
-
     this.prepareHeader();
     this.prepareFooter();
   }
@@ -69,6 +87,8 @@ export default class FwdWebRunner implements FwdRunner {
 
     return {
       log: (time: Time, ...messages: any[]) => {
+        time = this._running ? this._fwd.now() : null;
+
         webConsole.print(time, messages);
 
         if (time === null) {
@@ -82,6 +102,8 @@ export default class FwdWebRunner implements FwdRunner {
       },
 
       err: (time: Time, ...messages: any[]) => {
+        time = this._running ? this._fwd.now() : null;
+
         webConsole.print(time, messages);
 
         if (time === null) {
@@ -97,6 +119,15 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private start(): void {
+    if (! this._sketchWasInitialized) {
+      throw new Error('The sketch was not initialized');
+    }
+
+    if (typeof fwd.onStart !== 'function') {
+      this.logger.err(null, `Nothing to start.`);
+      return;
+    }
+
     this._playButton.iconName = 'stop';
     this._playButton.htmlElement.onclick = () => this.stop();
 
@@ -110,11 +141,26 @@ export default class FwdWebRunner implements FwdRunner {
       }
     });
 
+    this._running = true;
     this._audio.start();
-    this.entryPoint();
+    fwd.onStart();
     this._fwd.scheduler.start();
 
     this.applyMasterValue();
+  }
+
+  private init(): void {
+    if (typeof this._sketchModule !== 'function') {
+      throw new Error('The sketch could not be executed');
+    }
+
+    this._sketchModule();
+
+    if (typeof this._fwd.onInit === 'function') {
+      this._fwd.onInit();
+    }
+
+    this._sketchWasInitialized = true;
   }
 
   private stop(): void {
@@ -129,25 +175,31 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  private prepareFooter(): void {
-    this._logger = this.prepareConsole();
+  private toggleTerminalDrawer(): void {
+    if (this._terminalDrawer.style.display === 'none') {
+      this._terminalDrawer.style.display = 'flex';
+      this._oneLineLogger.style.display = 'none';
+    } else {
+      this._terminalDrawer.style.display = 'none';
+      this._oneLineLogger.style.display = 'block';
+    }
+  }
 
-    const footer = document.getElementById(footerId);
-    const terminalDrawer = document.getElementById(terminalDrawerId);
+  private prepareFooter(): void {
+    this._oneLineLogger = document.createElement('label');
+    this._oneLineLogger.classList.add('fwd-runner-one-line-logger');
+    this._oneLineLogger.style.cursor = 'default';
 
     const terminalButton = new IconButton('terminal');
+    terminalButton.htmlElement.id = 'terminal-drawer-toggle';
+    this._oneLineLogger.htmlFor = terminalButton.htmlElement.id;
+    terminalButton.htmlElement.onclick = () => this.toggleTerminalDrawer();
+
+    const footer = document.getElementById(footerId);
     footer.append(terminalButton.htmlElement);
     footer.append(this._oneLineLogger);
 
-    terminalButton.htmlElement.onclick = () => {
-      if (terminalDrawer.style.display === 'none') {
-        terminalDrawer.style.display = 'flex';
-        this._oneLineLogger.style.display = 'none';
-      } else {
-        terminalDrawer.style.display = 'none';
-        this._oneLineLogger.style.display = 'flex';
-      }
-    };
+    this._logger = this.prepareConsole();
 
     const masterSlider = new MasterSlider();
     masterSlider.slider.oninput = audit(() => this.applyMasterValue());
@@ -176,12 +228,8 @@ export default class FwdWebRunner implements FwdRunner {
       this._playButton.htmlElement,
     );
 
+    this._playButton.htmlElement.onclick = () => this.init();
     this._playButton.htmlElement.onclick = () => this.start();
-
-    this._fwd.scheduler.onEnded = () => {
-      this._playButton.iconName = 'play-button';
-      this._playButton.htmlElement.onclick = () => this.start();
-    };
   }
 
   private applyMasterValue(): void {
@@ -197,11 +245,22 @@ export default class FwdWebRunner implements FwdRunner {
 
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
+
+  private initializeSketchIfReady(): void {
+    if (! this._sketchWasInitialized
+        && this._sketchModule !== null
+        && this._audioReady) {
+      this.init();
+    }
+  }
 }
 
 injectStyle('FwdWebRunner', `
 .fwd-runner-one-line-logger {
   font-family: monospace;
   margin: auto 0 auto 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 `);
