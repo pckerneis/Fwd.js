@@ -48,7 +48,7 @@ export class FwdScheduler {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
     this._scheduler.onEnded = () => {
       this._state = 'stopped';
-      
+
       DBG.debug('on ended called');
 
       if (this.onEnded != null) {
@@ -174,6 +174,11 @@ export class FwdScheduler {
    * will flip the state to `stopped`.
    */
   public stop(): void {
+    if (this._state === 'stopping') {
+      // Stop has already been called but there are still events to process...
+      return;
+    }
+
     if (this._state !== 'running') {
       throw new Error('stop should be called after start.');
     }
