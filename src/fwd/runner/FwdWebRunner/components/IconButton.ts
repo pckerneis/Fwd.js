@@ -2,33 +2,51 @@ import { injectStyle } from "../StyleInjector";
 
 export class IconButton {
   public readonly htmlElement: HTMLButtonElement;
+  private _objectElement: HTMLObjectElement;
 
-  private readonly _objectElement: HTMLObjectElement;
-
-  constructor(iconName: string) {
+  constructor(iconName: string, size: number = 24) {
     const button = document.createElement('button');
     button.classList.add('fwd-icon-button');
-    this._objectElement = document.createElement('object');
-    this._objectElement.type = 'image/svg+xml';
 
-    button.append(this._objectElement);
     this.htmlElement = button;
 
     this.iconName = iconName;
+    this.size = size;
+  }
+
+  public set size(newSize: number) {
+    this.htmlElement.style.width = newSize + 'px';
+    this.htmlElement.style.height = newSize + 'px';
   }
 
   public set iconName(iconName: string) {
-    this._objectElement.data = `img/${iconName}.svg`;
+    const newObject = this.createSvgObject();
+    newObject.data = `img/${iconName}.svg`;
+
+    if (this._objectElement != null) {
+      this.htmlElement.replaceChild(newObject, this._objectElement);
+    } else {
+      this.htmlElement.append(newObject);
+    }
+
+    this._objectElement = newObject;
+  }
+
+  private createSvgObject(): HTMLObjectElement {
+    const object = document.createElement('object');
+    object.type = 'image/svg+xml';
+    return object;
   }
 }
 
 injectStyle('IconButton', `
 .fwd-icon-button {
-  height: 100%;
-  padding: 6px;
+  padding: 5px;
   opacity: 0.6;
   background: transparent;
   border: none;
+  margin: auto 0;
+  overflow: hidden;
 }
 
 .fwd-icon-button:hover {
