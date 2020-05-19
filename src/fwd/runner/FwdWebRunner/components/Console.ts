@@ -1,8 +1,13 @@
 import { Time } from '../../../core/EventQueue/EventQueue';
 import { Fwd } from "../../../core/fwd";
+import { clamp } from "../../../core/utils/numbers";
 import { formatTime } from '../../../core/utils/time';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from "./IconButton";
+
+const defaultHeight = 120;
+const minHeight = 50;
+const maxHeight = 400;
 
 export class FwdWebConsole {
   public readonly htmlElement: HTMLDivElement;
@@ -74,6 +79,9 @@ export class FwdWebConsole {
 
     autoScrollLabel.prepend(autoScrollCheckbox);
     div.append(clearButton.htmlElement, autoScrollLabel);
+
+    div.onmousedown = (event) => this.startDrag(event);
+
     return div;
   }
 
@@ -110,6 +118,25 @@ export class FwdWebConsole {
 
     return replRow;
   }
+
+  private startDrag(event: MouseEvent): void {
+    let mouseYAtPosDown = event.clientY;
+    let heightAtMouseDown = this.htmlElement.getBoundingClientRect().height;
+
+    const mouseDragHandler = (evt: MouseEvent) => {
+      const diff = mouseYAtPosDown - evt.clientY;
+      const newHeight = clamp(heightAtMouseDown + diff, minHeight, maxHeight);
+      this.htmlElement.style.height = newHeight + 'px';
+    };
+
+    const mouseUpHandler = () => {
+      document.removeEventListener('mousemove', mouseDragHandler);
+      document.removeEventListener('mouseup', mouseUpHandler);
+    };
+
+    document.addEventListener('mousemove', mouseDragHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+  }
 }
 
 injectStyle('WebConsole', `
@@ -119,7 +146,7 @@ injectStyle('WebConsole', `
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 70px;
+  height: ${defaultHeight}px;
 }
 
 .web-console pre {
@@ -140,6 +167,12 @@ injectStyle('WebConsole', `
   height: 27px;
   cursor: ns-resize;
   user-select: none;
+  font-size: 11px;
+}
+
+.web-console .web-console-menubar label {
+  display: inline-flex;
+  align-items: center;
 }
 
 .web-console-repl-input {
