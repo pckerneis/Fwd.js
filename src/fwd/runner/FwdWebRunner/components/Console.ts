@@ -67,10 +67,12 @@ export class FwdWebConsole {
     div.classList.add('web-console-menubar');
 
     const clearButton = new IconButton('bin');
-    clearButton.htmlElement.onclick = () => { this.clear(); };
+    clearButton.htmlElement.onclick = () => this.clear();
+    clearButton.htmlElement.onmousedown = (event) => event.stopPropagation();
 
     const autoScrollLabel = document.createElement('label');
     autoScrollLabel.innerText = 'Auto-scroll';
+    autoScrollLabel.onmousedown = (event) => event.stopPropagation();
 
     const autoScrollCheckbox = document.createElement('input');
     autoScrollCheckbox.type = 'checkbox';
