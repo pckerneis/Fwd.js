@@ -109,6 +109,10 @@ export class FwdAudioImpl implements FwdAudio {
   //=========================================================================
 
   private resetAudioContext(): void {
+    if (this._ctx) {
+      return;
+    }
+
     this._ctx = new AudioContext();
 
     this._contextReady = true;
