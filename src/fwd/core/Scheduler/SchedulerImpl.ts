@@ -30,7 +30,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
   private _running: boolean = false;
 
-  private _timeout: NodeJS.Timeout = null;
+  private _timeout: number = null;
 
   private _startTime: Time = 0;
 
@@ -157,7 +157,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
 
     if (this._eventQueue.events.length > 0 || this.keepAlive) {
       const waitTime = Math.max(0, this.interval - elapsed);
-      this._timeout = setTimeout(() => this.run(), waitTime);
+      this._timeout = window.setTimeout(() => this.run(), waitTime);
       DBG.info('Timeout set with computed interval ' + waitTime);
     } else {
       this._running = false;
