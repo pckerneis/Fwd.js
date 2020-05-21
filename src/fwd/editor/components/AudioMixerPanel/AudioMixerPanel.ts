@@ -1,23 +1,30 @@
-import { FwdAudioTrack } from "../../../audio/nodes/FwdAudioTrack";
+import { TRACK_SECTION_HEIGHT, TRACK_WIDTH } from "../../../runner/FwdWebRunner/components/MixerSection.constants";
+import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/dbg";
-import parentLogger from '../logger.web';
-import { injectStyle } from "../StyleInjector";
-import { TRACK_SECTION_HEIGHT, TRACK_WIDTH } from "./MixerSection.constants";
-import { MixerTrack } from "./MixerTrack";
+import parentLogger from "../logger.components";
+import { AudioMixerTrack, AudioMixerTrackGraph } from "./AudioMixerTrack";
+import { FwdSoloGroup } from "./FwdSoloGroup";
 
-type TrackElementsMap = Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>;
+type TrackElementsMap = Map<string, {mixerTrack: AudioMixerTrack, label: HTMLDivElement}>;
 
-const DBG = new Logger('MixerSection', parentLogger);
+const DBG = new Logger('AudioMixerPanel', parentLogger);
 
-export class MixerSection {
+export class AudioMixerPanel {
   public readonly htmlElement: HTMLDivElement;
 
   private readonly _tracksElement: HTMLDivElement;
   private readonly _labelsElement: HTMLDivElement;
 
-  private readonly _trackElements: TrackElementsMap = new Map<string, {mixerTrack: MixerTrack, label: HTMLDivElement}>();
+  private readonly _trackElements: TrackElementsMap = new Map<string, {
+    mixerTrack: AudioMixerTrack,
+    label: HTMLDivElement,
+  }>();
 
-  constructor() {
+  private soloGroup: FwdSoloGroup<AudioMixerTrackGraph>;
+
+  constructor(public readonly audioContext: AudioContext) {
+    DBG.debug('Create AudioMixerPanel');
+
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('mixer-section');
 
@@ -28,32 +35,35 @@ export class MixerSection {
     this._labelsElement.classList.add('mixer-section-labels');
 
     this.htmlElement.append(this._tracksElement, this._labelsElement);
+
+    this.soloGroup = new FwdSoloGroup<AudioMixerTrackGraph>();
   }
 
-  public get mixerTracks(): MixerTrack[] {
+  public get mixerTracks(): AudioMixerTrack[] {
     return Array.from(this._trackElements.values()).map(value => value.mixerTrack);
   }
 
-  public addTrack(track: FwdAudioTrack): void {
-    const mixerTrack = new MixerTrack(track);
+  public addTrack(trackName: string): void {
+    const mixerTrack = new AudioMixerTrack(this.audioContext, trackName);
+    this.soloGroup.add(mixerTrack.trackGraph);
     this._tracksElement.append(mixerTrack.htmlElement);
 
     const label = document.createElement('div');
-    label.title = track.trackName;
+    label.title = trackName;
     const span = document.createElement('span');
-    span.textContent = track.trackName;
+    span.textContent = trackName;
     label.classList.add('mixer-section-label');
     label.append(span);
     this._labelsElement.append(label);
 
-    this._trackElements.set(track.trackName, { label, mixerTrack });
+    this._trackElements.set(trackName, { label, mixerTrack });
   }
 
-  public removeTrack(track: FwdAudioTrack): void {
-    const elements = this._trackElements.get(track.trackName);
+  public removeTrack(trackName: string): void {
+    const elements = this._trackElements.get(trackName);
 
     if (elements == null) {
-      DBG.warn(`The track cannot be removed because it doesn't exist.`, track);
+      DBG.warn(`The track cannot be removed because it doesn't exist.`, trackName);
       return;
     }
 
@@ -65,13 +75,13 @@ export class MixerSection {
       elements.label.remove();
     }
 
-    this._trackElements.delete(track.trackName);
-    DBG.info('Track removed', track);
+    this._trackElements.delete(trackName);
+    DBG.info('Track removed', trackName);
   }
 
   public clearTracks(): void {
     this._trackElements.forEach(({mixerTrack}) => {
-      this.removeTrack(mixerTrack.audioTrack);
+      this.removeTrack(mixerTrack.trackName);
     });
     DBG.info('Tracks cleared');
   }

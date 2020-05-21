@@ -1,6 +1,5 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { FwdAudioImpl } from "../../audio/FwdAudioImpl";
-import { FwdAudioTrack } from "../../audio/nodes/FwdAudioTrack";
 import { FwdControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd, Fwd, putFwd } from '../../core/Fwd';
@@ -21,7 +20,7 @@ const toolbarId = 'fwd-runner-toolbar';
 const footerId = 'fwd-runner-footer';
 const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
-export default class FwdWebRunner implements FwdRunner {
+class AbstractWebRunner implements FwdRunner {
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
@@ -214,12 +213,6 @@ export default class FwdWebRunner implements FwdRunner {
       audioContextStarted: (/*ctx: AudioContext*/) => {
         masterSlider.meter.audioSource = this._audio.master.nativeNode;
       },
-      audioTrackAdded: (track: FwdAudioTrack) => {
-        // this._mixerSection.addTrack(track);
-      },
-      audioTrackRemoved: (track: FwdAudioTrack) => {
-        // this._mixerSection.removeTrack(track);
-      },
     });
   }
 
@@ -269,3 +262,8 @@ injectStyle('FwdWebRunner', `
   text-overflow: ellipsis;
 }
 `);
+
+
+export default class FwdWebRunner extends AbstractWebRunner {
+
+}

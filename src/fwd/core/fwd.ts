@@ -85,7 +85,7 @@ export interface Fwd {
   logger?: FwdLogger;
 
   /**
-   * The Fwd logger module. See {@link FwdLogger}.
+   * The Editor module. See {@link Editor}.
    */
   editor?: Editor;
 

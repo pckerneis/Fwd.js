@@ -21,14 +21,14 @@ export interface FwdAudioTrackOptions {
   gain: number,
   pan: number,
   mute: boolean,
-  // solo: boolean,
+  solo: boolean,
 }
 
 export const defaultFwdAudioTrackOptions: FwdAudioTrackOptions = {
   gain: 1,
   pan: 0,
   mute: false,
-  // solo: false,
+  solo: false,
 };
 
 export class FwdAudioTrack extends FwdAudioNode {
@@ -43,6 +43,7 @@ export class FwdAudioTrack extends FwdAudioNode {
   private _postGainNode: GainNode;
 
   private _mute: boolean;
+  private _solo: boolean;
   private _pan: number;
   private _gain: number;
 
@@ -50,16 +51,9 @@ export class FwdAudioTrack extends FwdAudioNode {
     super();
 
     this._mute = options.mute;
+    this._solo = options.solo;
     this._gain = options.gain;
     this._pan = options.pan;
-
-    if (this.fwdAudio.isContextReady) {
-      this.prepareAudio();
-    }
-
-    this.fwdAudio.listeners.push({
-      audioContextStarted: () => this.prepareAudio(),
-    });
   }
 
   public get inputNode(): AudioNode { return this._muteForSoloGainNode; }
@@ -127,16 +121,54 @@ export class FwdAudioTrack extends FwdAudioNode {
     return this._mute;
   }
 
+  public prepareAudio(): void {
+    if (this._audioReady) {
+      this.doTearDown(0);
+    }
+
+    this._muteForSoloGainNode = this.fwdAudio.context.createGain();
+    this._muteGainNode = this.fwdAudio.context.createGain();
+    this._panNode = this.fwdAudio.context.createStereoPanner();
+    this._postGainNode = this.fwdAudio.context.createGain();
+
+    this._muteForSoloGainNode.gain.value = 1;
+    this._muteGainNode.gain.value = 1;
+    this._postGainNode.gain.value = 1;
+
+    this._muteForSoloGainNode
+      .connect(this._panNode)
+      .connect(this._postGainNode)
+      .connect(this._muteGainNode)
+      .connect(this.fwdAudio.master.nativeNode);
+
+    this._audioReady = true;
+
+    if (this._mute) {
+      this.mute();
+    } else {
+      this.unmute();
+    }
+
+    this.gain = this._gain;
+    this.pan = this._pan;
+
+    this.listeners.forEach((l) => {
+      if (typeof l.onTrackAudioReady === 'function') {
+        l.onTrackAudioReady();
+      }
+    });
+  }
+
   public solo(): void {
     this.assertReady();
-    this.fwdAudio.soloTrack(this.trackName);
+    //this.fwdAudio.soloTrack(this.trackName);
   }
 
   public unsolo(): void {
     this.assertReady();
     // this.fwdAudio.unsoloTrack(this.trackName)
     // TODO: replace with previous line when multi-soloing is implemented
-    this.fwdAudio.unsoloAllTracks();
+    //this.fwdAudio.unsoloAllTracks();
   }
 
   public mute(): void {
@@ -208,44 +240,6 @@ export class FwdAudioTrack extends FwdAudioNode {
     this._muteGainNode.disconnect();
     this._panNode.disconnect();
     this._postGainNode.disconnect();
-  }
-
-  private prepareAudio(): void {
-    if (this._audioReady) {
-      this.doTearDown(0);
-    }
-
-    this._muteForSoloGainNode = this.fwdAudio.context.createGain();
-    this._muteGainNode = this.fwdAudio.context.createGain();
-    this._panNode = this.fwdAudio.context.createStereoPanner();
-    this._postGainNode = this.fwdAudio.context.createGain();
-
-    this._muteForSoloGainNode.gain.value = 1;
-    this._muteGainNode.gain.value = 1;
-    this._postGainNode.gain.value = 1;
-
-    this._muteForSoloGainNode
-      .connect(this._panNode)
-      .connect(this._postGainNode)
-      .connect(this._muteGainNode)
-      .connect(this.fwdAudio.master.nativeNode);
-
-    this._audioReady = true;
-
-    if (this._mute) {
-      this.mute();
-    } else {
-      this.unmute();
-    }
-
-    this.gain = this._gain;
-    this.pan = this._pan;
-
-    this.listeners.forEach((l) => {
-      if (typeof l.onTrackAudioReady === 'function') {
-        l.onTrackAudioReady();
-      }
-    });
   }
 
   private setValueSmoothed(audioParam: AudioParam, value: number): void {

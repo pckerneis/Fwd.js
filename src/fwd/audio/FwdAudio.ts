@@ -1,6 +1,5 @@
 import { Time } from "../core/EventQueue/EventQueue";
 import { Fwd } from "../core/fwd";
-import { FwdAudioTrack, FwdAudioTrackOptions } from "./nodes/FwdAudioTrack";
 import {
   FwdCompressorNode,
   FwdDelayLineNode,
@@ -15,8 +14,6 @@ import {
 
 export interface FwdAudioListener {
   audioContextStarted(context: AudioContext): void;
-  audioTrackAdded(track: FwdAudioTrack): void;
-  audioTrackRemoved(track: FwdAudioTrack): void;
 }
 
 export interface FwdAudio {
@@ -24,19 +21,10 @@ export interface FwdAudio {
   readonly isContextReady: boolean;
   context: AudioContext;
   readonly master: FwdGainNode;
-  readonly tracks: FwdAudioTrack[];
-  readonly soloedTrack: string;
 
   initializeModule(fwd: Fwd): void;
   start(): void;
   now(): Time;
-
-  addTrack(trackName: string, options?: Partial<FwdAudioTrackOptions>): FwdAudioTrack;
-  removeTrack(trackName: string): void;
-  getTrack(trackName: string): FwdAudioTrack;
-
-  soloTrack(trackName: string): void;
-  unsoloAllTracks(): void;
 
   gain(value?: number ): FwdGainNode;
   osc(frequency?: number, type?: OscillatorType): FwdOscillatorNode;
