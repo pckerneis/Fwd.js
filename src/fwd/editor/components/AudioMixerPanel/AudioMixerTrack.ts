@@ -66,6 +66,7 @@ export class AudioMixerTrack {
     );
 
     this.audioMeter = new AudioMeter();
+    this.audioMeter.audioSource = this.trackGraph.gainNode;
 
     this.htmlElement.append(
       this.panSlider,
@@ -104,7 +105,6 @@ export class AudioMixerTrack {
 
   public onSoloChange(isSoloed: boolean): void {
     this.soloButton.setToggled(isSoloed, false);
-    console.log(`track ${this.trackName} soloed: ${isSoloed}`);
   }
 
   private onTrackMute(): void {
