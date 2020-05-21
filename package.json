@@ -2,7 +2,8 @@
   "name": "sketch",
   "version": "0.0.1",
   "main": "./js/index.js",
-  "license": "MIT",
+  "license": "GPL-3.0",
+  "types": "dist/api/index.d.ts",
   "scripts": {
     "webpack-global": "webpack --config webpack-global.config.js --display-error-details",
     "doc": "typedoc",

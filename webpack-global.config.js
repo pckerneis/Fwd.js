@@ -23,7 +23,7 @@ module.exports = {
     extensions: [ '.tsx', '.ts', '.js', '.html' ],
   },
   output: {
-    filename: 'fwd-runner-global.js',
+    filename: 'fwd-runner.js',
     path: path.resolve(__dirname, '../fwd-cli/template/lib'),
   },
 };
