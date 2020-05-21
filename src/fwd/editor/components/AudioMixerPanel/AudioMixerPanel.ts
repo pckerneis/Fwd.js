@@ -1,4 +1,3 @@
-import { TRACK_SECTION_HEIGHT, TRACK_WIDTH } from "../../../runner/FwdWebRunner/components/MixerSection.constants";
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/dbg";
 import parentLogger from "../logger.components";
@@ -15,7 +14,6 @@ export class AudioMixerPanel {
   public readonly htmlElement: HTMLDivElement;
 
   private readonly _tracksElement: HTMLDivElement;
-  private readonly _labelsElement: HTMLDivElement;
 
   private readonly _trackElements: TrackElementsMap = new Map<string, {
     mixerTrack: AudioMixerTrack,
@@ -32,11 +30,7 @@ export class AudioMixerPanel {
 
     this._tracksElement = document.createElement('div');
     this._tracksElement.classList.add('mixer-section-tracks');
-
-    this._labelsElement = document.createElement('div');
-    this._labelsElement.classList.add('mixer-section-labels');
-
-    this.htmlElement.append(this._tracksElement, this._labelsElement);
+    this.htmlElement.append(this._tracksElement);
 
     this.soloGroup = new FwdSoloGroup<AudioMixerTrackGraph>();
 
@@ -56,12 +50,11 @@ export class AudioMixerPanel {
     const existingTrack = this.getTrack(trackName);
 
     if (existingTrack != null) {
-      return existingTrack;
+      return null;
     }
 
     const mixerTrack = new AudioMixerTrack(this.audioContext, trackName);
     this.soloGroup.add(mixerTrack.trackGraph);
-    this._tracksElement.append(mixerTrack.htmlElement);
 
     const label = document.createElement('div');
     label.title = trackName;
@@ -69,13 +62,22 @@ export class AudioMixerPanel {
     span.textContent = trackName;
     label.classList.add('mixer-section-label');
     label.append(span);
-    this._labelsElement.append(label);
+
+    const mixerSlot = document.createElement('div');
+    mixerSlot.classList.add('mixer-section-slot');
+    mixerSlot.append(mixerTrack.htmlElement, label);
+
+    this._tracksElement.append(mixerSlot);
 
     this._trackElements.set(trackName, { label, mixerTrack });
 
     mixerTrack.trackGraph.outputNode.connect(this.outputNode);
 
     return mixerTrack;
+  }
+
+  public getOrAddTrack(trackName: string): AudioMixerTrack {
+    return this.getTrack(trackName) || this.addTrack(trackName);
   }
 
   public removeTrack(trackName: string): void {
@@ -106,24 +108,19 @@ export class AudioMixerPanel {
   }
 }
 
-injectStyle('MixerSection', `
+injectStyle('AudioMixerPanel', `
 .mixer-section {
   display: flex;
   flex-direction: column;
   box-shadow: 1px 1px 4px #0000002c inset;
+  background: #8080800a;
 }
 
 .mixer-section-tracks {
   display: flex;
   flex-direction: row;
-  min-height: ${TRACK_SECTION_HEIGHT}px;
+  min-height: 80px;
   flex-grow: 1;
-  justify-content: stretch;
-}
-
-.mixer-section-labels {
-  display: flex;
-  height: 20px;
   justify-content: stretch;
 }
 
@@ -136,7 +133,7 @@ injectStyle('MixerSection', `
   padding: 0;
   overflow: hidden;
   font-size: 11px;
-  width: ${TRACK_WIDTH}px;
+  width: 100%;
   user-select: none;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -144,5 +141,11 @@ injectStyle('MixerSection', `
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.mixer-section-slot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 `);

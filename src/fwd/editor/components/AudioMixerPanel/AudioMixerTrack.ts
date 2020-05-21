@@ -1,6 +1,5 @@
 import { clamp, parseNumber } from "../../../core/utils/numbers";
 import { AudioMeter } from "../../../runner/FwdWebRunner/components/AudioMeter";
-import { TRACK_WIDTH } from "../../../runner/FwdWebRunner/components/MixerSection.constants";
 import { ToggleButton } from "../../../runner/FwdWebRunner/components/ToggleButton";
 import { VerticalSlider } from "../../../runner/FwdWebRunner/components/VerticalSlider";
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
@@ -118,6 +117,8 @@ export class AudioMixerTrack {
   }
 }
 
+const TRACK_WIDTH = 60;
+
 injectStyle('MixerTrack', `
 .mixer-track {
   width: ${TRACK_WIDTH}px;
@@ -126,40 +127,45 @@ injectStyle('MixerTrack', `
   padding: 3px;
   border: 1px solid #00000010;
   box-sizing: border-box;
+  flex-grow: 1;
 }
 
 .mixer-track-pan-slider {
   width: 100%;
-  height: 20px;
+  max-height: 20px;
   margin: auto;
 }
 
 .mixer-track-volume-slider {
   width: 100%;
   flex-grow: 1;
-  min-height: 50px;
 }
 
 .mixer-track-solo-button,
 .mixer-track-mute-button {
   width: 20px;
-  height: 20px;
+  max-height: 20px;
   margin: 3px auto;
 }
 
 .mixer-track-solo-button.toggled {
- background: #6ab3ff;
- color: black;
+  background: #6ab3ff;
+  color: black;
 }
 
 .mixer-track-mute-button.toggled {
- background: #ff8d8d;
- color: black;
+  background: #ff8d8d;
+  color: black;
 }
 
 .mixer-track-buttons {
   display: flex;
   margin-top: 5px;
+}
+
+.mixer-track meter {
+  width: 80%;
+  margin: auto;
 }
 `);
 

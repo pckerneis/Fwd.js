@@ -132,12 +132,11 @@ injectStyle('VerticalSlider', `
 .vertical-slider-thumb {
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
   background: #00000005;
-  height: 16px;
-  width: 16px;
+  height: 10px;
+  width: 10px;
   border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
-  margin-left: -3px;
   flex-shrink: 0;
 }
 `);

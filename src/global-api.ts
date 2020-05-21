@@ -1,4 +1,5 @@
 import { AudioMixerPanel } from "./fwd/editor/components/AudioMixerPanel/AudioMixerPanel";
+import { FlexPanel } from "./fwd/editor/components/FlexPanel/FlexPanel";
 
 export default function declareAPI(namespace: string): void {
   if (window[namespace]) {
@@ -7,6 +8,7 @@ export default function declareAPI(namespace: string): void {
 
   window[namespace] = {
     AudioMixerPanel: AudioMixerPanel,
+    FlexPanel: FlexPanel,
   };
 }
 

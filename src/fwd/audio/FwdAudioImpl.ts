@@ -39,8 +39,8 @@ export class FwdAudioImpl implements FwdAudio {
 
   public get context(): AudioContext { return this._ctx; }
 
-  public get master(): FwdGainNode {
-    return this._masterGain;
+  public get master(): GainNode {
+    return this._masterGain.nativeNode;
   }
 
   public initializeModule(fwd: Fwd): void {

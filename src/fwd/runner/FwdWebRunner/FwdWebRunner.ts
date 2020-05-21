@@ -78,7 +78,7 @@ class AbstractWebRunner implements FwdRunner {
     this.prepareFooter();
 
     document.getElementById('fwd-runner-container')
-      .append(this._fwd.editor.root);
+      .append(this._fwd.editor.root.htmlElement);
   }
 
   //==================================================================
@@ -160,11 +160,13 @@ class AbstractWebRunner implements FwdRunner {
 
     this._sketchModule();
 
-    if (typeof this._fwd.onInit === 'function') {
-      this._fwd.onInit();
-    }
+    if (! this._sketchWasInitialized) {
+      if (typeof this._fwd.onInit === 'function') {
+        this._fwd.onInit();
+      }
 
-    this._sketchWasInitialized = true;
+      this._sketchWasInitialized = true;
+    }
   }
 
   private stop(): void {
@@ -211,7 +213,7 @@ class AbstractWebRunner implements FwdRunner {
 
     this._audio.listeners.push({
       audioContextStarted: (/*ctx: AudioContext*/) => {
-        masterSlider.meter.audioSource = this._audio.master.nativeNode;
+        masterSlider.meter.audioSource = this._audio.master;
       },
     });
   }
@@ -232,7 +234,7 @@ class AbstractWebRunner implements FwdRunner {
 
   private applyMasterValue(): void {
     const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
-    const masterGain = this._audio.master.nativeNode.gain;
+    const masterGain = this._audio.master.gain;
     const now = this._audio.context.currentTime;
     const value = parseNumber(masterSlider.value) / 100;
 

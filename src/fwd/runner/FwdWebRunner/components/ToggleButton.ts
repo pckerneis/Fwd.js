@@ -81,12 +81,12 @@ injectStyle('ToggleButton', `
   border-radius: 2px; 
   align-items: center;
   cursor: pointer;
-  color: grey;
   user-select: none;
+  opacity: 0.7;
 }
 
 .toggle-button.toggled {
   border-color: #000000AA;
-  color: black;
+  opacity: 1;
 }
 `);

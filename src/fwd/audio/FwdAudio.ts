@@ -20,7 +20,7 @@ export interface FwdAudio {
   listeners: Partial<FwdAudioListener>[];
   readonly isContextReady: boolean;
   context: AudioContext;
-  readonly master: FwdGainNode;
+  readonly master: GainNode;
 
   initializeModule(fwd: Fwd): void;
   start(): void;

@@ -74,7 +74,7 @@ input[type=range].slider:focus {
 }
 input[type=range].slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 8.8px;
+  height: 8px;
   cursor: pointer;
   box-shadow: 1px 1px 4px #0000002c inset;
   background: #00000005;
@@ -83,14 +83,12 @@ input[type=range].slider::-webkit-slider-runnable-track {
 }
 input[type=range].slider::-webkit-slider-thumb {
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
-  background: #00000005;
-  height: 16px;
-  width: 16px;
+  height: 8px;
+  width: 8px;
   border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -4.8px;
 }
 input[type=range].slider:focus::-webkit-slider-runnable-track {
   background: #00000015;
