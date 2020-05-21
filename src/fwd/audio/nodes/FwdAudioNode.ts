@@ -6,10 +6,20 @@ export abstract class FwdAudioNode {
   public abstract readonly fwdAudio: FwdAudio;
 
   protected tearedDownCalled: boolean = false;
-  
+
   public get wasTornDown(): boolean { return this.tearedDownCalled; }
 
-  public connect(destination: FwdAudioNode, output?: number, input?: number): FwdAudioNode {
+  public connect(destination: FwdAudioNode | AudioNode | AudioParam, output?: number, input?: number): FwdAudioNode {
+    if (destination instanceof AudioNode) {
+      this.outputNode.connect(destination, output, input);
+      return;
+    }
+
+    if (destination instanceof AudioParam) {
+      this.outputNode.connect(destination, output);
+      return;
+    }
+
     if (this.outputNode == null || destination.inputNode == null) {
       throw new Error('Error while trying to connect the audio node');
     }
