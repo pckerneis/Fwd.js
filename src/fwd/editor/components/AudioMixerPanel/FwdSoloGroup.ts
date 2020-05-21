@@ -7,6 +7,10 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
     return item instanceof AbstractSoloGroupItem;
   }
 
+  public areAllTracksUnsoloed(): boolean {
+    return this._soloed.length === 0;
+  }
+
   public add(item: T): void {
     if (! FwdSoloGroup.isSoloGroupItem(item) || this._items.includes(item)) {
       return;
@@ -15,12 +19,11 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
     this._items.push(item);
     item.soloGroup = this;
 
-    if (this._soloed.length > 0) {
-      item.soloGainNode.gain.value = 0;
+    if (! this.areAllTracksUnsoloed()) {
+      this.mute(item, true);
     }
 
     item.onSoloChange(false);
-    console.log('add');
   }
 
   public remove(item: T): void {
@@ -43,16 +46,14 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
       return;
     }
 
-    console.log('solo ' + (itemToSolo as any).audioMixerTrack.trackName);
-
     // If we need to unsolo items
     if (unsoloOthers) {
-      this._soloed.filter(item => item !== itemToSolo).forEach(item => {
+      this._items.filter(item => item !== itemToSolo).forEach(item => {
         if (this.isSoloed(item)) {
-          console.log('solo -> unsolo ' + (item as any).audioMixerTrack.trackName);
           item.onSoloChange(false);
-          item.soloGainNode.gain.value = 0;
         }
+
+        this.mute(item, true);
       });
 
       this._soloed = [];
@@ -62,7 +63,7 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
     if (! this.isSoloed(itemToSolo)) {
       this._soloed.push(itemToSolo);
       itemToSolo.onSoloChange(true);
-      itemToSolo.soloGainNode.gain.value = 1;
+      this.mute(itemToSolo, false);
     }
   }
 
@@ -77,11 +78,11 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
 
     if (this._soloed.length === 0) {
       this._items.forEach(item => {
-        item.soloGainNode.gain.value = 1;
+        this.mute(item, false);
       });
     } else {
       this._items.forEach(item => {
-        item.soloGainNode.gain.value = this.isSoloed(item) ? 1 : 0;
+        this.mute(item, ! this.isSoloed(item));
       });
     }
   }
@@ -98,6 +99,13 @@ export class FwdSoloGroup<T extends AbstractSoloGroupItem> {
 
   public isSoloed(item: T): boolean {
     return this._soloed.includes(item);
+  }
+
+  private mute(item: T, shouldBeMute: boolean): void {
+    const node = item.soloGainNode;
+    const now = node.context.currentTime;
+    node.gain.setValueAtTime(node.gain.value, now);
+    node.gain.linearRampToValueAtTime(shouldBeMute ? 0 : 1, now + 0.005);
   }
 }
 
