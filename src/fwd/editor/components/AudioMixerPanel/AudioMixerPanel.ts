@@ -10,6 +10,8 @@ type TrackElementsMap = Map<string, {mixerTrack: AudioMixerTrack, label: HTMLDiv
 const DBG = new Logger('AudioMixerPanel', parentLogger);
 
 export class AudioMixerPanel {
+  public readonly outputNode: GainNode;
+
   public readonly htmlElement: HTMLDivElement;
 
   private readonly _tracksElement: HTMLDivElement;
@@ -37,13 +39,26 @@ export class AudioMixerPanel {
     this.htmlElement.append(this._tracksElement, this._labelsElement);
 
     this.soloGroup = new FwdSoloGroup<AudioMixerTrackGraph>();
+
+    this.outputNode = audioContext.createGain();
   }
 
   public get mixerTracks(): AudioMixerTrack[] {
     return Array.from(this._trackElements.values()).map(value => value.mixerTrack);
   }
 
-  public addTrack(trackName: string): void {
+  public getTrack(trackName: string): AudioMixerTrack {
+    const elements = this._trackElements.get(trackName);
+    return elements == null ? null : elements.mixerTrack;
+  }
+
+  public addTrack(trackName: string): AudioMixerTrack {
+    const existingTrack = this.getTrack(trackName);
+
+    if (existingTrack != null) {
+      return existingTrack;
+    }
+
     const mixerTrack = new AudioMixerTrack(this.audioContext, trackName);
     this.soloGroup.add(mixerTrack.trackGraph);
     this._tracksElement.append(mixerTrack.htmlElement);
@@ -57,6 +72,10 @@ export class AudioMixerPanel {
     this._labelsElement.append(label);
 
     this._trackElements.set(trackName, { label, mixerTrack });
+
+    mixerTrack.trackGraph.outputNode.connect(this.outputNode);
+
+    return mixerTrack;
   }
 
   public removeTrack(trackName: string): void {
