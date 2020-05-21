@@ -1,10 +1,10 @@
-import { Logger } from "../../utils/dbg";
+import { Logger, LoggerLevel } from "../../utils/dbg";
 import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
 import parentLogger from '../logger.core';
 import { Scheduler } from './Scheduler';
 
-const DBG = new Logger('SchedulerImpl', parentLogger);
+const DBG = new Logger('SchedulerImpl', parentLogger, LoggerLevel.warn);
 
 export class BasicEvent {
   constructor(private _action: Function) {
