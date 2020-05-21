@@ -5,12 +5,13 @@ import { VerticalSlider } from "../../../runner/FwdWebRunner/components/Vertical
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 import audit from "../../../utils/audit";
 import { Logger } from "../../../utils/dbg";
+import { EditorElement } from "../../api/Editor";
 import parentLogger from "../logger.components";
 import { AbstractSoloGroupItem } from "./FwdSoloGroup";
 
-const DBG = new Logger('AudioMixerTrack', parentLogger);
+const DBG = new Logger('AudioTrackElement', parentLogger);
 
-export class AudioMixerTrack {
+export class AudioTrackElement implements EditorElement {
   public readonly htmlElement: HTMLDivElement;
   public readonly trackGraph: AudioMixerTrackGraph;
 
@@ -24,7 +25,7 @@ export class AudioMixerTrack {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('mixer-track');
 
-    this.panSlider = AudioMixerTrack.createRangeInput(0, -1, 1, 0.001);
+    this.panSlider = AudioTrackElement.createRangeInput(0, -1, 1, 0.001);
     this.panSlider.classList.add('slider', 'mixer-track-pan-slider');
 
     this.gainSlider = new VerticalSlider();
@@ -119,7 +120,7 @@ export class AudioMixerTrack {
 
 const TRACK_WIDTH = 60;
 
-injectStyle('MixerTrack', `
+injectStyle('AudioTrackElement', `
 .mixer-track {
   width: ${TRACK_WIDTH}px;
   display: flex;
@@ -176,7 +177,7 @@ export class AudioMixerTrackGraph extends AbstractSoloGroupItem {
   public readonly gainNode: GainNode;
   public readonly stereoPannerNode: StereoPannerNode;
 
-  constructor(public readonly audioContext: AudioContext, private readonly audioMixerTrack: AudioMixerTrack) {
+  constructor(public readonly audioContext: AudioContext, private readonly audioMixerTrack: AudioTrackElement) {
     super(audioContext);
 
     this.inputNode = audioContext.createGain();

@@ -1,4 +1,4 @@
-import { AudioMixerPanel } from "./fwd/editor/components/AudioMixerPanel/AudioMixerPanel";
+import { AudioMixerElement } from "./fwd/editor/components/AudioMixerPanel/AudioMixerElement";
 import { FlexPanel } from "./fwd/editor/components/FlexPanel/FlexPanel";
 import { NoteSequencerElement } from "./fwd/editor/components/NoteSequencer/NoteSequencer";
 
@@ -8,7 +8,7 @@ export default function declareAPI(namespace: string): void {
   }
 
   window[namespace] = {
-    AudioMixerPanel,
+    AudioMixerPanel: AudioMixerElement,
     FlexPanel,
     NoteSequencerElement,
   };

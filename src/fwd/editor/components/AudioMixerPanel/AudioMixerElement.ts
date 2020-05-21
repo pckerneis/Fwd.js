@@ -1,14 +1,15 @@
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/dbg";
+import { EditorElement } from "../../api/Editor";
 import parentLogger from "../logger.components";
-import { AudioMixerTrack, AudioMixerTrackGraph } from "./AudioMixerTrack";
+import { AudioTrackElement, AudioMixerTrackGraph } from "./AudioTrackElement";
 import { FwdSoloGroup } from "./FwdSoloGroup";
 
-type TrackElementsMap = Map<string, {mixerTrack: AudioMixerTrack, label: HTMLDivElement}>;
+type TrackElementsMap = Map<string, {mixerTrack: AudioTrackElement, label: HTMLDivElement}>;
 
-const DBG = new Logger('AudioMixerPanel', parentLogger);
+const DBG = new Logger('AudioMixerElement', parentLogger);
 
-export class AudioMixerPanel {
+export class AudioMixerElement implements EditorElement {
   public readonly outputNode: GainNode;
 
   public readonly htmlElement: HTMLDivElement;
@@ -16,7 +17,7 @@ export class AudioMixerPanel {
   private readonly _tracksElement: HTMLDivElement;
 
   private readonly _trackElements: TrackElementsMap = new Map<string, {
-    mixerTrack: AudioMixerTrack,
+    mixerTrack: AudioTrackElement,
     label: HTMLDivElement,
   }>();
 
@@ -37,23 +38,23 @@ export class AudioMixerPanel {
     this.outputNode = audioContext.createGain();
   }
 
-  public get mixerTracks(): AudioMixerTrack[] {
+  public get mixerTracks(): AudioTrackElement[] {
     return Array.from(this._trackElements.values()).map(value => value.mixerTrack);
   }
 
-  public getTrack(trackName: string): AudioMixerTrack {
+  public getTrack(trackName: string): AudioTrackElement {
     const elements = this._trackElements.get(trackName);
     return elements == null ? null : elements.mixerTrack;
   }
 
-  public addTrack(trackName: string): AudioMixerTrack {
+  public addTrack(trackName: string): AudioTrackElement {
     const existingTrack = this.getTrack(trackName);
 
     if (existingTrack != null) {
       return null;
     }
 
-    const mixerTrack = new AudioMixerTrack(this.audioContext, trackName);
+    const mixerTrack = new AudioTrackElement(this.audioContext, trackName);
     this.soloGroup.add(mixerTrack.trackGraph);
 
     const label = document.createElement('div');
@@ -76,7 +77,7 @@ export class AudioMixerPanel {
     return mixerTrack;
   }
 
-  public getOrAddTrack(trackName: string): AudioMixerTrack {
+  public getOrAddTrack(trackName: string): AudioTrackElement {
     return this.getTrack(trackName) || this.addTrack(trackName);
   }
 
@@ -108,7 +109,7 @@ export class AudioMixerPanel {
   }
 }
 
-injectStyle('AudioMixerPanel', `
+injectStyle('AudioMixerElement', `
 .mixer-section {
   display: flex;
   flex-direction: column;
