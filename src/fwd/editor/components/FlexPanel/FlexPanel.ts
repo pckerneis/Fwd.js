@@ -107,6 +107,8 @@ export class FlexPanel extends ContainerPanel {
       return element;
     }
 
+    element.htmlElement.style.overflow = 'hidden';
+
     if (flexItemOptions) {
       if (flexItemOptions.height != null)
         element.htmlElement.style.height = flexItemOptions.height + 'px';
@@ -150,23 +152,47 @@ export class FlexPanel extends ContainerPanel {
   }
 
   private startDrag(event: MouseEvent, separator: SeparatorElement): void {
-    const vertical = this.isVerticalAlignment();
-    let mouseDownPos = vertical ? event.clientY : event.clientX;
+    // Dragging while having something selected in the dom leads to weird behaviours
+    getSelection().removeAllRanges();
 
+    const vertical = this.isVerticalAlignment();
+    const mouseDownPos = vertical ? event.clientY : event.clientX;
     const { flexItemOptions, element } = this._elementStack[separator.index];
+
     const sizeAtMouseDown = vertical ?
       element.htmlElement.getBoundingClientRect().height
       : element.htmlElement.getBoundingClientRect().width;
 
+    const containerPosAtMouseDown = vertical ?
+      this.htmlElement.getBoundingClientRect().top
+      : this.htmlElement.getBoundingClientRect().left;
+
     const mouseDragHandler = (evt: MouseEvent) => {
-      const diff = mouseDownPos - (vertical ? evt.clientY : evt.clientX);
-      const newSize = clamp(sizeAtMouseDown - diff,
+      // In case we've lost the mouse up event (out of browser window)
+      if (evt.buttons === 0) {
+        document.removeEventListener('mousemove', mouseDragHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+        return;
+      }
+
+      const containerPos = vertical ?
+        this.htmlElement.getBoundingClientRect().top
+        : this.htmlElement.getBoundingClientRect().left;
+
+      const containerOffset = Math.min(0, containerPos - containerPosAtMouseDown);
+
+      const diff = mouseDownPos - (vertical ? evt.clientY : evt.clientX) + containerOffset;
+      let newSize = clamp(sizeAtMouseDown - diff,
         vertical ? flexItemOptions.minHeight : flexItemOptions.minWidth,
         vertical ? flexItemOptions.maxHeight : flexItemOptions.maxWidth);
 
       if (vertical) {
         element.htmlElement.style.height = newSize + 'px';
+        newSize = Math.max(element.htmlElement.getBoundingClientRect().height, newSize);
+        element.htmlElement.style.height = newSize + 'px';
       } else {
+        element.htmlElement.style.width = newSize + 'px';
+        newSize = Math.max(element.htmlElement.getBoundingClientRect().width, newSize);
         element.htmlElement.style.width = newSize + 'px';
       }
     };
