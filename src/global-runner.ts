@@ -4,9 +4,12 @@ import FwdRunner from './fwd/runner/FwdRunner';
 import { Overlay } from "./fwd/runner/FwdWebRunner/components/Overlay";
 import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
 import { Logger, LoggerLevel } from "./fwd/utils/dbg";
+import declareAPI from "./global-api";
 
 // Logger.runtimeLevel = LoggerLevel.error;
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.debug);
+
+declareAPI('Fwd');
 
 document.addEventListener('DOMContentLoaded', () => {
   const runner: FwdRunner = new FwdWebRunner();
@@ -21,11 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const {type, textContent} = JSON.parse(msg.data);
+      DBG.debug(type);
 
       if (type === 'sketch') {
         DBG.debug('Sketch received.');
         runner.setSketch(Function(textContent), true)
-
       } else if (type === 'cssInject') {
         DBG.debug('Stylesheet received.');
         Array.from(document.querySelectorAll('link'))
@@ -34,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
             link.href = link.href;
             DBG.debug('Refresh style sheet', link.href);
           });
+      } else if (type === 'refresh') {
+        DBG.debug('Refreshing...');
+        location.reload();
       }
     } catch (e) {
       DBG.error(e);
