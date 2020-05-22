@@ -7,7 +7,7 @@ abstract class EditorContainer implements EditorElement {
 
   public elements: Map<string, EditorElement>;
 
-  constructor() {
+  protected constructor() {
     this.elements = new Map<string, EditorElement>();
   }
 
@@ -51,18 +51,21 @@ export class ContainerPanel extends EditorContainer {
 }
 
 interface FlexItemOptions {
+  fixedSize: boolean;
   minHeight?: number,
   maxHeight?: number,
   height?: number,
   minWidth?: number,
   maxWidth?: number,
   width?: number,
+  flexGrow?: number,
+  flexShrink?: number,
 }
 
 class SeparatorElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
-  private separatorSize: number = 8;
+  private separatorSize: number = 6;
 
   constructor(public readonly direction: FlexDirection, public readonly index: number) {
     const separator = document.createElement('div');
@@ -90,6 +93,7 @@ export interface FlexItem {
 export class FlexPanel extends ContainerPanel {
   public readonly htmlElement: HTMLDivElement;
   private _elementStack: FlexItem[] = [];
+  private _separators: SeparatorElement[] = [];
 
   constructor(private _direction: FlexDirection = 'row') {
     super();
@@ -107,9 +111,25 @@ export class FlexPanel extends ContainerPanel {
       return element;
     }
 
+    // Default values
     element.htmlElement.style.overflow = 'hidden';
 
+    let isElementResizable: boolean = true;
+
     if (flexItemOptions) {
+      if (flexItemOptions.fixedSize != null) {
+        isElementResizable = ! flexItemOptions.fixedSize;
+      }
+
+      if (isElementResizable) {
+        // Default values
+        element.htmlElement.style.flexShrink = '0';
+        element.htmlElement.style.flexGrow = '1';
+      } else {
+        element.htmlElement.style.flexShrink = '0';
+        element.htmlElement.style.flexGrow = '0';
+      }
+
       if (flexItemOptions.height != null)
         element.htmlElement.style.height = flexItemOptions.height + 'px';
       if (flexItemOptions.width != null)
@@ -122,14 +142,16 @@ export class FlexPanel extends ContainerPanel {
         element.htmlElement.style.maxHeight = flexItemOptions.maxHeight + 'px';
       if (flexItemOptions.maxWidth != null)
         element.htmlElement.style.maxWidth = flexItemOptions.maxWidth + 'px';
+      if (flexItemOptions.flexGrow != null)
+        element.htmlElement.style.flexGrow = flexItemOptions.flexGrow.toString();
+      if (flexItemOptions.flexShrink != null)
+        element.htmlElement.style.flexShrink = flexItemOptions.flexShrink.toString();
     }
 
     this._elementStack.push({
       element,
       flexItemOptions,
     });
-
-    this.addSeparator();
 
     return element;
   }
@@ -140,11 +162,20 @@ export class FlexPanel extends ContainerPanel {
     return this.get(key) || this.addFlexItem(key, elementFactory(), flexItemOptions);
   }
 
-  public addSeparator(): void {
+  public addSeparator(draggable?: boolean): void {
+    const index = this._elementStack.length - 1;
+
+    if (this.getSeparatorWithIndex(index) != null) {
+      throw new Error(`There\'s already a separator with the index ${index}.`);
+    }
+
     const separator = this.createSeparatorElement(this._elementStack.length - 1);
     this.htmlElement.append(separator.htmlElement);
+    this._separators.push(separator);
 
-    separator.htmlElement.onmousedown = (event) => this.startDrag(event, separator);
+    if (draggable) {
+      separator.htmlElement.onmousedown = (event) => this.startDrag(event, separator);
+    }
   }
 
   private createSeparatorElement(index: number): SeparatorElement {
@@ -162,6 +193,8 @@ export class FlexPanel extends ContainerPanel {
     const sizeAtMouseDown = vertical ?
       element.htmlElement.getBoundingClientRect().height
       : element.htmlElement.getBoundingClientRect().width;
+
+    console.log('sizeAtMouseDown', sizeAtMouseDown);
 
     const containerPosAtMouseDown = vertical ?
       this.htmlElement.getBoundingClientRect().top
@@ -195,6 +228,8 @@ export class FlexPanel extends ContainerPanel {
         newSize = Math.max(element.htmlElement.getBoundingClientRect().width, newSize);
         element.htmlElement.style.width = newSize + 'px';
       }
+
+      console.log('newSize', newSize);
     };
 
     const mouseUpHandler = () => {
@@ -209,11 +244,18 @@ export class FlexPanel extends ContainerPanel {
   private isVerticalAlignment(): boolean {
     return this._direction === 'column';
   }
+
+  private getSeparatorWithIndex(index: number): SeparatorElement {
+    const results = this._separators.filter(sep => sep.index === index);
+    return results[0];
+  }
 }
 
 injectStyle('FlexPanel', `
 .fwd-flex-panel-separator {
   background: #0000000a;
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 
 .fwd-flex-panel-separator:hover {
