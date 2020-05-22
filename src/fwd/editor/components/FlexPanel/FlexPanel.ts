@@ -1,5 +1,6 @@
 import { clamp } from "../../../core/utils/numbers";
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
+import audit from "../../../utils/audit";
 import { EditorElement } from "../../api/Editor";
 
 abstract class EditorContainer implements EditorElement {
@@ -153,7 +154,9 @@ export class FlexPanel extends ContainerPanel {
     const index = this._elementStack.length - 1;
 
     if (this.getSeparatorWithIndex(index) != null) {
-      throw new Error(`There\'s already a separator with the index ${index}.`);
+      // TODO: find a nice way to 'soft' re-add separators
+      // throw new Error(`There\'s already a separator with the index ${index}.`);
+      return;
     }
 
     const separator = this.createSeparatorElement(this._elementStack.length - 1, draggable);
@@ -181,13 +184,11 @@ export class FlexPanel extends ContainerPanel {
       element.htmlElement.getBoundingClientRect().height
       : element.htmlElement.getBoundingClientRect().width;
 
-    console.log('sizeAtMouseDown', sizeAtMouseDown);
-
     const containerPosAtMouseDown = vertical ?
       this.htmlElement.getBoundingClientRect().top
       : this.htmlElement.getBoundingClientRect().left;
 
-    const mouseDragHandler = (evt: MouseEvent) => {
+    const mouseDragHandler = audit((evt: MouseEvent) => {
       // In case we've lost the mouse up event (out of browser window)
       if (evt.buttons === 0) {
         document.removeEventListener('mousemove', mouseDragHandler);
@@ -215,9 +216,7 @@ export class FlexPanel extends ContainerPanel {
         newSize = Math.max(element.htmlElement.getBoundingClientRect().width, newSize);
         element.htmlElement.style.width = newSize + 'px';
       }
-
-      console.log('newSize', newSize);
-    };
+    });
 
     const mouseUpHandler = () => {
       document.removeEventListener('mousemove', mouseDragHandler);
