@@ -51,7 +51,6 @@ export class ContainerPanel extends EditorContainer {
 }
 
 interface FlexItemOptions {
-  fixedSize: boolean;
   minHeight?: number,
   maxHeight?: number,
   height?: number,
@@ -67,16 +66,19 @@ class SeparatorElement implements EditorElement {
 
   private separatorSize: number = 6;
 
-  constructor(public readonly direction: FlexDirection, public readonly index: number) {
+  constructor(public readonly direction: FlexDirection, public readonly index: number, draggable: boolean) {
     const separator = document.createElement('div');
     separator.classList.add('fwd-flex-panel-separator');
 
     if (this.direction === 'row') {
       separator.style.width = this.separatorSize + 'px';
-      separator.style.cursor = 'ew-resize';
     } else {
       separator.style.height = this.separatorSize + 'px';
-      separator.style.cursor = 'ns-resize';
+    }
+
+    if (draggable) {
+      separator.classList.add('draggable');
+      separator.style.cursor = this.direction === 'row' ? 'ew-resize' : separator.style.cursor = 'ns-resize';
     }
 
     this.htmlElement = separator;
@@ -114,22 +116,7 @@ export class FlexPanel extends ContainerPanel {
     // Default values
     element.htmlElement.style.overflow = 'hidden';
 
-    let isElementResizable: boolean = true;
-
     if (flexItemOptions) {
-      if (flexItemOptions.fixedSize != null) {
-        isElementResizable = ! flexItemOptions.fixedSize;
-      }
-
-      if (isElementResizable) {
-        // Default values
-        element.htmlElement.style.flexShrink = '0';
-        element.htmlElement.style.flexGrow = '1';
-      } else {
-        element.htmlElement.style.flexShrink = '0';
-        element.htmlElement.style.flexGrow = '0';
-      }
-
       if (flexItemOptions.height != null)
         element.htmlElement.style.height = flexItemOptions.height + 'px';
       if (flexItemOptions.width != null)
@@ -169,7 +156,7 @@ export class FlexPanel extends ContainerPanel {
       throw new Error(`There\'s already a separator with the index ${index}.`);
     }
 
-    const separator = this.createSeparatorElement(this._elementStack.length - 1);
+    const separator = this.createSeparatorElement(this._elementStack.length - 1, draggable);
     this.htmlElement.append(separator.htmlElement);
     this._separators.push(separator);
 
@@ -178,8 +165,8 @@ export class FlexPanel extends ContainerPanel {
     }
   }
 
-  private createSeparatorElement(index: number): SeparatorElement {
-    return new SeparatorElement(this._direction, index);
+  private createSeparatorElement(index: number, draggable: boolean): SeparatorElement {
+    return new SeparatorElement(this._direction, index, draggable);
   }
 
   private startDrag(event: MouseEvent, separator: SeparatorElement): void {
@@ -258,7 +245,7 @@ injectStyle('FlexPanel', `
   flex-grow: 0;
 }
 
-.fwd-flex-panel-separator:hover {
+.fwd-flex-panel-separator.draggable:hover {
   background: #00000010;
 }
 `);
