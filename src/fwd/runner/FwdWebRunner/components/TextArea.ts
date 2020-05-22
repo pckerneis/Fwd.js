@@ -56,7 +56,7 @@ export class TextArea {
 
     this.addCaret(0);
   }
-  
+
   private static getSelectionRange(): {start: number, end: number} {
     const selection = getSelection();
     return {
@@ -132,7 +132,7 @@ export class TextArea {
       this.addCaret(0);
     }
   }
-  
+
   private constrainLength(text: string): string {
     if (! isNaN(this._maxLength) && this._maxLength >= 0) {
       return text.substring(0, this._maxLength) || '';
@@ -187,6 +187,11 @@ injectStyle('TextArea', `
 .text-area {
   padding: 0;
   box-sizing: border-box;
+  background-color: #00000003;
+  box-shadow: 1px 1px 4px 0 inset #0000001f;
+  border: 1px solid #00000050;
+  margin: 4px 6px;
+  font-family: monospace;
 }
 
 .text-area-editable {
