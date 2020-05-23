@@ -3,7 +3,7 @@ import rootLogger from './fwd/logger.fwd';
 import FwdRunner from './fwd/runner/FwdRunner';
 import { Overlay } from "./fwd/runner/FwdWebRunner/components/Overlay";
 import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
-import { Logger, LoggerLevel } from "./fwd/utils/dbg";
+import { Logger, LoggerLevel } from "./fwd/utils/Logger";
 import declareAPI from "./global-api";
 
 // Logger.runtimeLevel = LoggerLevel.error;
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (type === 'sketch') {
         DBG.debug('Sketch received.');
-        runner.setSketch(Function(textContent), true)
+        runner.setSketch(Function(textContent))
       } else if (type === 'cssInject') {
         DBG.debug('Stylesheet received.');
         Array.from(document.querySelectorAll('link'))

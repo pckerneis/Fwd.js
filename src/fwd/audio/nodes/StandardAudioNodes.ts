@@ -1,8 +1,8 @@
 import path from "path";
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd } from "../../core/Fwd";
-import { clamp } from "../../core/utils/numbers";
-import { Logger, LoggerLevel } from "../../utils/dbg";
+import { Logger, LoggerLevel } from "../../utils/Logger";
+import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";
 import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";

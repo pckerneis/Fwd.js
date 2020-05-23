@@ -1,8 +1,8 @@
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
-import { Logger } from "../../../utils/dbg";
-import { EditorElement } from "../../api/Editor";
+import { Logger } from "../../../utils/Logger";
+import { EditorElement } from "../../Editor";
 import parentLogger from "../logger.components";
-import { AudioTrackElement, AudioMixerTrackGraph } from "./AudioTrackElement";
+import { AudioMixerTrackGraph, AudioTrackElement } from "./AudioTrackElement";
 import { FwdSoloGroup } from "./FwdSoloGroup";
 
 type TrackElementsMap = Map<string, {mixerTrack: AudioTrackElement, label: HTMLDivElement}>;

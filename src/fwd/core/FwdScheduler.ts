@@ -1,7 +1,7 @@
-import { Logger, LoggerLevel } from "../utils/dbg";
+import { Logger, LoggerLevel } from '../utils/Logger';
 import { Event, EventRef, Time } from './EventQueue/EventQueue';
 import parentLogger from './logger.core';
-import { Scheduler } from "./Scheduler/Scheduler";
+import { Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
 const DBG = new Logger('FwdScheduler', parentLogger, LoggerLevel.warn);

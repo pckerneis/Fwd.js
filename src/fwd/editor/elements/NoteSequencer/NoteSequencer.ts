@@ -1,5 +1,5 @@
 import { NoteSequencer } from "note-sequencer";
-import { EditorElement } from "../../api/Editor";
+import { EditorElement } from "../../Editor";
 
 customElements.define('note-sequencer', NoteSequencer);
 

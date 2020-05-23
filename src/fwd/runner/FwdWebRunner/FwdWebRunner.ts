@@ -4,9 +4,9 @@ import { FwdControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd, Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
-import { parseNumber } from '../../core/utils/numbers';
-import { formatTime } from '../../core/utils/time';
-import audit from '../../utils/audit';
+import { parseNumber } from '../../utils/numbers';
+import { formatTime } from '../../utils/time';
+import audit from '../../utils/time-filters/audit';
 import FwdRunner from '../FwdRunner';
 import { ControlBindingManager } from './components/BindableController';
 import { FwdWebConsole } from './components/Console';
@@ -36,6 +36,8 @@ class AbstractWebRunner implements FwdRunner {
   private _sketchWasInitialized: boolean;
 
   private _running: boolean;
+  private _autoBuildInput: HTMLInputElement;
+  private _autoBuilds: boolean;
 
   constructor() {
     this._terminalDrawer = document.getElementById(terminalDrawerId);
@@ -62,9 +64,14 @@ class AbstractWebRunner implements FwdRunner {
   public get controls(): FwdControls { return null; }
   public get logger(): FwdLogger { return this._logger; }
 
-  public setSketch(newSketch: Function, initialize: boolean): void {
+  public setSketch(newSketch: Function): void {
     this._sketchModule = newSketch;
-    this.initializeSketchIfReady();
+
+    if(this._sketchWasInitialized && this._autoBuilds) {
+      this.build();
+    } else {
+      this.initializeSketchIfReady();
+    }
   }
 
   public startAudioContext(): void {
@@ -153,7 +160,7 @@ class AbstractWebRunner implements FwdRunner {
     this.applyMasterValue();
   }
 
-  private init(): void {
+  private build(): void {
     if (typeof this._sketchModule !== 'function') {
       throw new Error('The sketch could not be executed');
     }
@@ -221,14 +228,24 @@ class AbstractWebRunner implements FwdRunner {
   private prepareHeader(): void {
     this._toolbar = document.getElementById(toolbarId);
 
+    this._autoBuildInput = document.createElement('input');
+    this._autoBuildInput.type = 'checkbox';
+
+    const autoBuildLabel = document.createElement('label');
+    autoBuildLabel.classList.add('fwd-runner-auto-build-label');
+    autoBuildLabel.innerText = 'Auto-build';
+    autoBuildLabel.append(this._autoBuildInput);
+
     this._buildButton = new IconButton('tools');
     this._playButton = new IconButton('play-button');
     this._toolbar.append(
+      autoBuildLabel,
       this._buildButton.htmlElement,
       this._playButton.htmlElement,
     );
 
-    this._buildButton.htmlElement.onclick = () => this.init();
+    this._autoBuildInput.oninput = () => this.handleAutoBuildInputChange();
+    this._buildButton.htmlElement.onclick = () => this.build();
     this._playButton.htmlElement.onclick = () => this.start();
   }
 
@@ -237,12 +254,6 @@ class AbstractWebRunner implements FwdRunner {
     const masterGain = this._audio.master.gain;
     const now = this._audio.context.currentTime;
     const value = parseNumber(masterSlider.value) / 100;
-
-    // This method may not be implemented...
-    if (typeof masterGain.cancelAndHoldAtTime === 'function') {
-      masterGain.cancelAndHoldAtTime(now);
-    }
-
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
 
@@ -250,8 +261,12 @@ class AbstractWebRunner implements FwdRunner {
     if (! this._sketchWasInitialized
         && this._sketchModule !== null
         && this._audioReady) {
-      this.init();
+      this.build();
     }
+  }
+
+  private handleAutoBuildInputChange(/*event: Event*/): void {
+    this._autoBuilds = this._autoBuildInput.checked;
   }
 }
 
@@ -262,6 +277,12 @@ injectStyle('FwdWebRunner', `
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.fwd-runner-auto-build-label {
+  font-size: 11px;
+  display: flex;
+    align-items: center;
 }
 `);
 

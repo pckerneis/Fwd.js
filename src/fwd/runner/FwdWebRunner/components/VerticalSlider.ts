@@ -1,4 +1,4 @@
-import { clamp } from "../../../core/utils/numbers";
+import { clamp } from "../../../utils/numbers";
 import { injectStyle } from "../StyleInjector";
 
 export class VerticalSlider {
@@ -116,9 +116,9 @@ injectStyle('VerticalSlider', `
   width: 10px;
   cursor: pointer;
   box-shadow: 1px 1px 4px #0000002c inset;
-  background: #00000005;
+  background: #00000018;
   border: 0;
-  border-radius: 3px;
+  border-radius: 0;
   flex-grow: 1;
 
   display: flex;
@@ -126,7 +126,7 @@ injectStyle('VerticalSlider', `
 }
 
 .vertical-slider:focus .vertical-slider-track  {
-  background: #00000015;
+  background: #00000025;
 }
 
 .vertical-slider-thumb {

@@ -1,7 +1,7 @@
-import { clamp } from "../../../core/utils/numbers";
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
-import audit from "../../../utils/audit";
-import { EditorElement } from "../../api/Editor";
+import { clamp } from "../../../utils/numbers";
+import audit from "../../../utils/time-filters/audit";
+import { EditorElement } from "../../Editor";
 
 abstract class EditorContainer implements EditorElement {
   public abstract htmlElement: HTMLDivElement;
@@ -118,22 +118,14 @@ export class FlexPanel extends ContainerPanel {
     element.htmlElement.style.overflow = 'hidden';
 
     if (flexItemOptions) {
-      if (flexItemOptions.height != null)
-        element.htmlElement.style.height = flexItemOptions.height + 'px';
-      if (flexItemOptions.width != null)
-        element.htmlElement.style.width = flexItemOptions.width + 'px';
-      if (flexItemOptions.minHeight != null)
-        element.htmlElement.style.minHeight = flexItemOptions.minHeight + 'px';
-      if (flexItemOptions.minWidth != null)
-        element.htmlElement.style.minWidth = flexItemOptions.minWidth + 'px';
-      if (flexItemOptions.maxHeight != null)
-        element.htmlElement.style.maxHeight = flexItemOptions.maxHeight + 'px';
-      if (flexItemOptions.maxWidth != null)
-        element.htmlElement.style.maxWidth = flexItemOptions.maxWidth + 'px';
-      if (flexItemOptions.flexGrow != null)
-        element.htmlElement.style.flexGrow = flexItemOptions.flexGrow.toString();
-      if (flexItemOptions.flexShrink != null)
-        element.htmlElement.style.flexShrink = flexItemOptions.flexShrink.toString();
+      const affectIfNotNull = (property: string, suffix: string = '') => {
+        if (flexItemOptions[property] != null && property in element.htmlElement.style) {
+          element.htmlElement.style[property] = flexItemOptions[property] + suffix;
+        }
+      };
+
+      ['height', 'width', 'minHeight', 'maxHeight', 'minWidth', 'maxWidth'].forEach(key => affectIfNotNull(key, 'px'));
+      ['flexGrow', 'flexShrink'].forEach(key => affectIfNotNull(key));
     }
 
     this._elementStack.push({
@@ -150,9 +142,7 @@ export class FlexPanel extends ContainerPanel {
     return this.get(key) || this.addFlexItem(key, elementFactory(), flexItemOptions);
   }
 
-  public addSeparator(draggable?: boolean): void {
-    const index = this._elementStack.length - 1;
-
+  public addSeparator(index: number, draggable?: boolean): void {
     if (this.getSeparatorWithIndex(index) != null) {
       // TODO: find a nice way to 'soft' re-add separators
       // throw new Error(`There\'s already a separator with the index ${index}.`);

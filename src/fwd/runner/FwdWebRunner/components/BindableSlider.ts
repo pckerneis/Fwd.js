@@ -1,7 +1,7 @@
 import { SliderOptions } from '../../../control/FwdControl';
-import { map } from '../../../core/utils/numbers';
-import audit from '../../../utils/audit';
-import debounce from '../../../utils/debounce';
+import { map } from '../../../utils/numbers';
+import audit from '../../../utils/time-filters/audit';
+import debounce from '../../../utils/time-filters/debounce';
 import { injectStyle } from '../StyleInjector';
 import { BindableController, ControlBinding, ControlBindingManager, ControllerKind, KeyBinding } from './BindableController'
 
@@ -26,7 +26,7 @@ export class BindableSlider implements BindableController {
 
     this._input = BindableSlider.prepareInput(options, true);
     this._textInput = BindableSlider.prepareInput(options, false);
-    
+
     this._input.oninput = audit(() => {
       this._textInput.value = this._input.value;
     });

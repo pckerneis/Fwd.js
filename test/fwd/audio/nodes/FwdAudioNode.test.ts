@@ -1,6 +1,6 @@
 import { FwdAudio } from "../../../../src/fwd/audio/FwdAudio";
 import { FwdAudioNode } from "../../../../src/fwd/audio/nodes/FwdAudioNode";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
 import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";

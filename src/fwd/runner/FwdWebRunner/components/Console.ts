@@ -1,7 +1,7 @@
 import { Time } from '../../../core/EventQueue/EventQueue';
 import { Fwd } from "../../../core/fwd";
-import { clamp } from "../../../core/utils/numbers";
-import { formatTime } from '../../../core/utils/time';
+import { clamp } from "../../../utils/numbers";
+import { formatTime } from '../../../utils/time';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from "./IconButton";
 

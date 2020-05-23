@@ -1,4 +1,4 @@
-import { Time } from '../EventQueue/EventQueue';
+import { Time } from '../core/EventQueue/EventQueue';
 
 /**
  * Format a time value in seconds as `hh:mm:ss:mls`

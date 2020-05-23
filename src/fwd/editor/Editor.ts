@@ -1,4 +1,4 @@
-import { ContainerPanel } from "../components/FlexPanel/FlexPanel";
+import { ContainerPanel } from "./elements/FlexPanel/FlexPanel";
 
 export interface EditorElement {
   htmlElement?: HTMLElement;

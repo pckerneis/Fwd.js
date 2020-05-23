@@ -13,5 +13,5 @@ export default interface FwdRunner {
 
   buildEditor(): void;
 
-  setSketch(newSketch: Function, initialize: boolean): void;
+  setSketch(newSketch: Function): void;
 }

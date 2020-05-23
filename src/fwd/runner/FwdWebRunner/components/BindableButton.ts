@@ -1,4 +1,4 @@
-import debounce from '../../../utils/debounce';
+import debounce from '../../../utils/time-filters/debounce';
 import { injectStyle } from '../StyleInjector';
 import { BindableController, ControlBinding, ControlBindingManager, ControllerKind, KeyBinding } from './BindableController';
 
@@ -11,7 +11,7 @@ export class BindableButton implements BindableController {
 
   public controllerId: number;
 
-  private _button: HTMLButtonElement;
+  private readonly _button: HTMLButtonElement;
 
   private readonly _indicator: HTMLSpanElement;
 
@@ -29,7 +29,7 @@ export class BindableButton implements BindableController {
         this.action();
       }
     };
-    
+
     this._button.oncontextmenu = (evt: MouseEvent) => {
       ControlBindingManager.getInstance().setControlBeingEdited(this);
       evt.preventDefault();
@@ -68,7 +68,7 @@ export class BindableButton implements BindableController {
 
   public get disabled(): boolean { return this._button.disabled; }
   public set disabled(disabled: boolean) { this._button.disabled = disabled; }
-  
+
   // ====================================================================
 
   public acceptsBinding(binding: ControlBinding): boolean {
@@ -112,7 +112,7 @@ export class BindableButton implements BindableController {
   }
 
   // ====================================================================
-  
+
   private blink(): void {
     const releaseTime = 300;
     const cssClass = 'blinking';

@@ -1,8 +1,9 @@
-import { gainToDecibels } from '../../../core/utils/decibels';
-import debounce from '../../../utils/debounce';
-import { injectStyle } from '../StyleInjector';
+import { injectStyle } from '../../../runner/FwdWebRunner/StyleInjector';
+import { gainToDecibels } from '../../../utils/decibels';
+import debounce from '../../../utils/time-filters/debounce';
+import { EditorElement } from "../../Editor";
 
-export class AudioMeter {
+export class AudioMeterElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
   private readonly _averageMeter: HTMLMeterElement;
@@ -17,7 +18,7 @@ export class AudioMeter {
 
   constructor() {
     this.htmlElement = document.createElement('div');
-    
+
     const createMeter = () => {
       const meter = document.createElement('meter');
       meter.min = -100;
@@ -27,7 +28,7 @@ export class AudioMeter {
     };
 
     this._averageMeter = createMeter();
-    
+
     this.htmlElement.append(this._averageMeter);
     this.update();
   }
@@ -72,7 +73,7 @@ export class AudioMeter {
 
     // Compute average
     let sumOfSquares = 0;
-        
+
     for (let i = 0; i < this._sampleBuffer.length; i++) {
       sumOfSquares += this._sampleBuffer[i] ** 2;
       clipping = clipping || this._sampleBuffer[i] > 1;

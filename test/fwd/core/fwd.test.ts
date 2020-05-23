@@ -1,5 +1,5 @@
 import { fwd, putFwd } from "../../../src/fwd/core/fwd";
-import { Logger, LoggerLevel } from "../../../src/fwd/utils/dbg";
+import { Logger, LoggerLevel } from "../../../src/fwd/utils/Logger";
 
 Logger.runtimeLevel = LoggerLevel.none;
 

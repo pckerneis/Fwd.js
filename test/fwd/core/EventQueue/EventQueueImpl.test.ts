@@ -1,7 +1,7 @@
 import { Event, Time } from '../../../../src/fwd/core/EventQueue/EventQueue';
 import { EventQueueImpl } from '../../../../src/fwd/core/EventQueue/EventQueueImpl';
 import { BasicEvent } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 
 class DummyEvent extends Event {
   public trigger(t: Time): void {

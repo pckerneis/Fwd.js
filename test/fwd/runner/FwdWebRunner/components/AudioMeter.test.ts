@@ -1,8 +1,8 @@
-import { AudioMeter } from "../../../../../src/fwd/runner/FwdWebRunner/components/AudioMeter";
+import { AudioMeterElement } from "../../../../../src/fwd/editor/elements/AudioMeter/AudioMeter";
 
 describe('AudioMeter', () => {
   it('can be created', () => {
-    const audioMeter = new AudioMeter();
+    const audioMeter = new AudioMeterElement();
     expect(audioMeter).toBeTruthy();
   });
 });

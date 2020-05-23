@@ -1,9 +1,9 @@
+import { AudioMeterElement } from "../../../editor/elements/AudioMeter/AudioMeter";
 import { injectStyle } from '../StyleInjector';
-import { AudioMeter } from './AudioMeter';
 
 export class MasterSlider {
   public readonly htmlElement: HTMLDivElement;
-  public readonly meter: AudioMeter;
+  public readonly meter: AudioMeterElement;
   public readonly slider: HTMLInputElement;
 
   constructor() {
@@ -24,7 +24,7 @@ export class MasterSlider {
     label.classList.add('flex-column', 'master-label');
     label.htmlFor = 'master-slider';
 
-    this.meter = new AudioMeter();
+    this.meter = new AudioMeterElement();
     const meterContainer = document.createElement('div');
     meterContainer.classList.add('master-meter');
     meterContainer.append(this.meter.htmlElement);

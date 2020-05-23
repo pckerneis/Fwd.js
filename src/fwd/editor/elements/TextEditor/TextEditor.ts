@@ -1,5 +1,5 @@
 import { TextArea } from "../../../runner/FwdWebRunner/components/TextArea";
-import { EditorElement } from "../../api/Editor";
+import { EditorElement } from "../../Editor";
 
 export type WriteMode = 'insert' | 'overwrite';
 

@@ -1,6 +1,6 @@
 import { FwdAudio } from "../audio/FwdAudio";
 import { FwdControls } from '../control/FwdControl';
-import { Editor } from "../editor/api/Editor";
+import { Editor } from "../editor/Editor";
 import { EventRef, Time } from './EventQueue/EventQueue';
 import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';

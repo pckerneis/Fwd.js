@@ -1,11 +1,11 @@
-import { clamp, parseNumber } from "../../../core/utils/numbers";
-import { AudioMeter } from "../../../runner/FwdWebRunner/components/AudioMeter";
 import { ToggleButton } from "../../../runner/FwdWebRunner/components/ToggleButton";
 import { VerticalSlider } from "../../../runner/FwdWebRunner/components/VerticalSlider";
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
-import audit from "../../../utils/audit";
-import { Logger } from "../../../utils/dbg";
-import { EditorElement } from "../../api/Editor";
+import { Logger } from "../../../utils/Logger";
+import { clamp, parseNumber } from "../../../utils/numbers";
+import audit from "../../../utils/time-filters/audit";
+import { EditorElement } from "../../Editor";
+import { AudioMeterElement } from "../AudioMeter/AudioMeter";
 import parentLogger from "../logger.components";
 import { AbstractSoloGroupItem } from "./FwdSoloGroup";
 
@@ -19,7 +19,7 @@ export class AudioTrackElement implements EditorElement {
   public readonly panSlider: HTMLInputElement;
   public readonly muteButton: ToggleButton;
   public readonly soloButton: ToggleButton;
-  public readonly audioMeter: AudioMeter;
+  public readonly audioMeter: AudioMeterElement;
 
   constructor(audioContext: AudioContext, public readonly trackName: string) {
     this.htmlElement = document.createElement('div');
@@ -65,7 +65,7 @@ export class AudioTrackElement implements EditorElement {
       this.muteButton.htmlElement,
     );
 
-    this.audioMeter = new AudioMeter();
+    this.audioMeter = new AudioMeterElement();
     this.audioMeter.audioSource = this.trackGraph.gainNode;
 
     this.htmlElement.append(

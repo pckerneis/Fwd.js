@@ -9,7 +9,7 @@ import {
 } from "../../../../src/fwd/audio/nodes/StandardAudioNodes";
 import { Time } from "../../../../src/fwd/core/EventQueue/EventQueue";
 import * as FwdEntryPoint from "../../../../src/fwd/core/fwd";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/dbg";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
 import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";

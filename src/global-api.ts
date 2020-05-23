@@ -1,7 +1,7 @@
-import { AudioMixerElement } from "./fwd/editor/components/AudioMixerPanel/AudioMixerElement";
-import { FlexPanel } from "./fwd/editor/components/FlexPanel/FlexPanel";
-import { NoteSequencerElement } from "./fwd/editor/components/NoteSequencer/NoteSequencer";
-import { TextEditorElement } from "./fwd/editor/components/TextEditor/TextEditor";
+import { AudioMixerElement } from "./fwd/editor/elements/AudioMixerPanel/AudioMixerElement";
+import { FlexPanel } from "./fwd/editor/elements/FlexPanel/FlexPanel";
+import { NoteSequencerElement } from "./fwd/editor/elements/NoteSequencer/NoteSequencer";
+import { TextEditorElement } from "./fwd/editor/elements/TextEditor/TextEditor";
 
 export default function declareAPI(namespace: string): void {
   if (window[namespace]) {

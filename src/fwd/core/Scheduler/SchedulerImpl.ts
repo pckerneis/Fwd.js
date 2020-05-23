@@ -1,4 +1,4 @@
-import { Logger, LoggerLevel } from "../../utils/dbg";
+import { Logger, LoggerLevel } from "../../utils/Logger";
 import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
 import parentLogger from '../logger.core';
