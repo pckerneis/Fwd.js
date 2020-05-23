@@ -1,8 +1,8 @@
-import { injectStyle } from "../StyleInjector";
+import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 
 type WriteMode = 'insert' | 'overwrite';
 
-export class TextArea {
+export class TextAreaElement {
   public readonly htmlElement: HTMLDivElement;
 
   private readonly editableDiv: HTMLDivElement;
@@ -26,7 +26,7 @@ export class TextArea {
     // Block new spaces in overwrite mode
     this.editableDiv.onkeypress = (event: KeyboardEvent) => {
       if (this._mode === 'overwrite' &&
-          (event.code === 'Enter' || event.code === 'NumpadEnter')) {
+        (event.code === 'Enter' || event.code === 'NumpadEnter')) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -95,7 +95,7 @@ export class TextArea {
   }
 
   private performOverwrite(newChar: string): void {
-    const selectionRange = TextArea.getSelectionRange();
+    const selectionRange = TextAreaElement.getSelectionRange();
     const preSelection = this._textContent.substring(0, selectionRange.start);
     const postCaret = this._textContent.substring(selectionRange.end + 1);
 
@@ -108,7 +108,7 @@ export class TextArea {
   }
 
   private performInsert(newChar: string): void {
-    const selectionRange = TextArea.getSelectionRange();
+    const selectionRange = TextAreaElement.getSelectionRange();
     const preSelection = this._textContent.substring(0, selectionRange.start);
     const postSelection = this._textContent.substring(selectionRange.end);
 
@@ -120,7 +120,7 @@ export class TextArea {
   }
 
   private setContentWithMaxLengthKeepingSelection(newContent: string): void {
-    const selectionRange = TextArea.getSelectionRange();
+    const selectionRange = TextAreaElement.getSelectionRange();
     this.setTextUnconstrained(this.constrainLength(newContent));
 
     if (this._textContent.length > 0) {
@@ -177,7 +177,7 @@ export class TextArea {
   }
 
   private putCaretAtEndOfSelection(): void {
-    const selectionRange = TextArea.getSelectionRange();
+    const selectionRange = TextAreaElement.getSelectionRange();
     const caretPosition = Math.max(selectionRange.start + 1, selectionRange.end);
     this.addCaret(caretPosition);
   }

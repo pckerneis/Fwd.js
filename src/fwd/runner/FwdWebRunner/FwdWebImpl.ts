@@ -1,5 +1,4 @@
 import { FwdAudio } from "../../audio/FwdAudio";
-import { FwdControls } from '../../control/FwdControl';
 import { EventRef, Time } from '../../core/EventQueue/EventQueue';
 import { Fwd, FwdPerformanceListener } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
@@ -34,10 +33,6 @@ export default class FwdWebImpl implements Fwd {
 
   public get audio(): FwdAudio {
     return this._runner.audio;
-  }
-
-  public get controls(): FwdControls {
-    return this._runner.controls;
   }
 
   public get editor(): Editor {

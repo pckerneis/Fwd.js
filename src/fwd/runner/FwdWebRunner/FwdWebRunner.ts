@@ -1,6 +1,5 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { FwdAudioImpl } from "../../audio/FwdAudioImpl";
-import { FwdControls } from '../../control/FwdControl';
 import { Time } from "../../core/EventQueue/EventQueue";
 import { fwd, Fwd, putFwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
@@ -61,7 +60,7 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   public get audio(): FwdAudio { return this._audio; }
-  public get controls(): FwdControls { return null; }
+
   public get logger(): FwdLogger { return this._logger; }
 
   public setSketch(newSketch: Function): void {

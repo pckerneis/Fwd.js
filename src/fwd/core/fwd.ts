@@ -1,5 +1,4 @@
 import { FwdAudio } from "../audio/FwdAudio";
-import { FwdControls } from '../control/FwdControl';
 import { Editor } from "../editor/Editor";
 import { EventRef, Time } from './EventQueue/EventQueue';
 import { FwdLogger } from './FwdLogger';
@@ -73,11 +72,6 @@ export interface Fwd {
    * The Fwd audio module. See {@link FwdAudio}.
    */
   audio?: FwdAudio;
-
-  /**
-   * The Fwd controls module. See {@link FwdControls}.
-   */
-  controls?: FwdControls;
 
   /**
    * The Fwd logger module. See {@link FwdLogger}.
