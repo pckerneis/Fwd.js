@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (type === 'sketch') {
         DBG.debug('Sketch received.');
-        runner.setSketch(Function(textContent))
+        runner.setSketchCode(textContent);
       } else if (type === 'cssInject') {
         DBG.debug('Stylesheet received.');
         Array.from(document.querySelectorAll('link'))

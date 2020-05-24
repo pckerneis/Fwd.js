@@ -1,6 +1,6 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { EventRef, Time } from '../../core/EventQueue/EventQueue';
-import { Fwd, FwdPerformanceListener } from '../../core/Fwd';
+import { Fwd } from '../../core/Fwd';
 import { FwdLogger } from '../../core/FwdLogger';
 import { FwdScheduler } from '../../core/FwdScheduler';
 import { Editor } from "../../editor/Editor";
@@ -9,8 +9,6 @@ import FwdWebRunner from './FwdWebRunner';
 export default class FwdWebImpl implements Fwd {
 
   public readonly globals: any = {};
-
-  public readonly performanceListeners: FwdPerformanceListener[] = [];
 
   private readonly _scheduler: FwdScheduler;
 

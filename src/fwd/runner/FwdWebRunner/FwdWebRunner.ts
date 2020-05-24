@@ -31,12 +31,13 @@ class AbstractWebRunner implements FwdRunner {
   private _playButton: IconButton;
 
   private _audioReady: boolean;
-  private _sketchModule: Function;
+  private _sketchCode: string;
   private _sketchWasInitialized: boolean;
 
   private _running: boolean;
   private _autoBuildInput: HTMLInputElement;
   private _autoBuilds: boolean;
+  private _masterSlider: MasterSlider;
 
   constructor() {
     this._terminalDrawer = document.getElementById(terminalDrawerId);
@@ -63,8 +64,8 @@ class AbstractWebRunner implements FwdRunner {
 
   public get logger(): FwdLogger { return this._logger; }
 
-  public setSketch(newSketch: Function): void {
-    this._sketchModule = newSketch;
+  public setSketchCode(newSketch: string): void {
+    this._sketchCode = newSketch;
 
     if(this._sketchWasInitialized && this._autoBuilds) {
       this.build();
@@ -77,6 +78,7 @@ class AbstractWebRunner implements FwdRunner {
     this._audio.start();
     this._audioReady = true;
     this.initializeSketchIfReady();
+    this._masterSlider.meter.audioSource = this._audio.master;
   }
 
   public buildEditor(): void {
@@ -127,8 +129,8 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   private start(): void {
-    if (! this._sketchWasInitialized || typeof this._sketchModule !== 'function') {
-      throw new Error('The sketch was not initialized');
+    if (! this._sketchWasInitialized) {
+     throw new Error('The sketch was not initialized');
     }
 
     if (typeof fwd.onStart !== 'function') {
@@ -143,16 +145,9 @@ class AbstractWebRunner implements FwdRunner {
 
     ControlBindingManager.getInstance().clearCurrentControllers();
 
-    this._fwd.performanceListeners.forEach((l) => {
-      if (typeof l.onPerformanceAboutToStart === 'function') {
-        l.onPerformanceAboutToStart()
-      }
-    });
-
     this._running = true;
 
     this._audio.start();
-    this._sketchModule();
     fwd.onStart();
     this._fwd.scheduler.start();
 
@@ -160,11 +155,11 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   private build(): void {
-    if (typeof this._sketchModule !== 'function') {
+    if (this._sketchCode == null) {
       throw new Error('The sketch could not be executed');
     }
 
-    this._sketchModule();
+    compileCode(this._sketchCode)(window);
 
     if (! this._sketchWasInitialized) {
       if (typeof this._fwd.onInit === 'function') {
@@ -178,12 +173,6 @@ class AbstractWebRunner implements FwdRunner {
   private stop(): void {
     if (this._fwd != null) {
       this._fwd.scheduler.stop();
-
-      this._fwd.performanceListeners.forEach((l) => {
-        if (typeof l.onPerformanceEnd === 'function') {
-          l.onPerformanceEnd();
-        }
-      });
     }
   }
 
@@ -213,15 +202,9 @@ class AbstractWebRunner implements FwdRunner {
 
     this._logger = this.prepareConsole();
 
-    const masterSlider = new MasterSlider();
-    masterSlider.slider.oninput = audit(() => this.applyMasterValue());
-    footer.append(masterSlider.htmlElement);
-
-    this._audio.listeners.push({
-      audioContextStarted: (/*ctx: AudioContext*/) => {
-        masterSlider.meter.audioSource = this._audio.master;
-      },
-    });
+    this._masterSlider = new MasterSlider();
+    this._masterSlider.slider.oninput = audit(() => this.applyMasterValue());
+    footer.append(this._masterSlider.htmlElement);
   }
 
   private prepareHeader(): void {
@@ -258,7 +241,6 @@ class AbstractWebRunner implements FwdRunner {
 
   private initializeSketchIfReady(): void {
     if (! this._sketchWasInitialized
-        && this._sketchModule !== null
         && this._audioReady) {
       this.build();
     }
@@ -287,5 +269,28 @@ injectStyle('FwdWebRunner', `
 
 
 export default class FwdWebRunner extends AbstractWebRunner {
+}
 
+const sandboxProxies = new WeakMap();
+
+function compileCode(src: string): Function {
+  src = 'with (sandbox) {' + src + '}';
+  const code = new Function('sandbox', src);
+
+  return function (sandbox: any): any {
+    if (! sandboxProxies.has(sandbox)) {
+      const sandboxProxy = new Proxy(sandbox, {
+        has(): boolean { return true; },
+
+        get(target: string, key: symbol): any {
+          if (key === Symbol.unscopables) return undefined;
+          return target[key];
+        },
+      });
+
+      sandboxProxies.set(sandbox, sandboxProxy);
+    }
+
+    return code(sandboxProxies.get(sandbox));
+  }
 }
