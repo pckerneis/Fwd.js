@@ -1,21 +1,12 @@
 import { Logger, LoggerLevel } from "../../utils/Logger";
-import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
+import { EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
 import { EventQueueImpl } from '../EventQueue/EventQueueImpl';
 import parentLogger from '../logger.core';
-import { Scheduler } from './Scheduler';
+import { Action, Scheduler } from './Scheduler';
 
 const DBG = new Logger('SchedulerImpl', parentLogger, LoggerLevel.warn);
 
-export class BasicEvent {
-  constructor(private _action: Function) {
-  }
-
-  public trigger(now: Time): void {
-    this._action(now);
-  }
-}
-
-export class SchedulerImpl<EventType extends Event = BasicEvent> extends Scheduler<EventType> {
+export class SchedulerImpl<EventType extends Action> implements Scheduler<EventType> {
 
   public static readonly MIN_INTERVAL: number = 0;
   public static readonly DEFAULT_LOOKAHEAD: number = 0.050;
@@ -40,8 +31,6 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
       private _eventQueue: EventQueue<EventType> = new EventQueueImpl<EventType>(),
       private _timeProvider: () => number = null,
   ) {
-    super();
-
     DBG.info('Build SchedulerImpl', this);
 
     // Constrain values by using public setters
@@ -132,8 +121,11 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     this._eventQueue.remove(eventRef);
   }
 
-  /** @inheritDoc */
-  protected run(): void {
+  /**
+   * Process the next scheduled events until the next event's time position is superior to the current time position plus
+   * the specified {@link lookAhead}.
+   */
+  private run(): void {
     if (! this._running) {
       return;
     }
@@ -149,7 +141,7 @@ export class SchedulerImpl<EventType extends Event = BasicEvent> extends Schedul
     let next = this._eventQueue.next(when);
 
     while (next != null) {
-      next.event.trigger(next.time);
+      next.event.trigger();
       next = this._eventQueue.next(when);
     }
 

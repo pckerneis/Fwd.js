@@ -1,10 +1,10 @@
 import { Logger } from "../../utils/Logger";
 import parentLogger from "../logger.core";
-import { Event, EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
+import { EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
 
 const DBG = new Logger('EventQueueImpl', parentLogger);
 
-export class EventQueueImpl<EventType extends Event> extends EventQueue<Event> {
+export class EventQueueImpl<EventType> extends EventQueue<EventType> {
   private latestRefIdx: number = 0;
 
   private _events: ScheduledEvent<EventType>[] = [];

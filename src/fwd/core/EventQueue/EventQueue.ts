@@ -1,18 +1,6 @@
 export type Time = number;
 
 /**
- * Encapsulates an action in a `trigger` method.
- */
-export abstract class Event {
-    /**
-     * The action for this event.
-     *
-     * @param time The time location at which the event is fired.
-     */
-    public abstract trigger(time: Time): void;
-}
-
-/**
  * A unique identifier for scheduled events.
  */
 export type EventRef = any;
@@ -21,7 +9,7 @@ export type EventRef = any;
  * Holds together an event, the time location at which it is scheduled and the scheduler's reference for this scheduled
  * event.
  */
-export interface ScheduledEvent<EventType extends Event> {
+export interface ScheduledEvent<EventType> {
     ref: EventRef,
     time: Time,
     event: EventType
@@ -32,7 +20,7 @@ export interface ScheduledEvent<EventType extends Event> {
  * time but instead is meant to be used by repeatedly calling `next` to obtain all the events that should be fired at a
  * specified time location.
  */
-export abstract class EventQueue<EventType extends Event> {
+export abstract class EventQueue<EventType> {
 
     /**
      * The current list of scheduled events.

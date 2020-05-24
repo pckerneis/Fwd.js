@@ -1,25 +1,23 @@
 import { Logger, LoggerLevel } from '../utils/Logger';
-import { Event, EventRef, Time } from './EventQueue/EventQueue';
+import { EventRef, Time } from './EventQueue/EventQueue';
 import parentLogger from './logger.core';
-import { Scheduler } from './Scheduler/Scheduler';
+import { Action, Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
 const DBG = new Logger('FwdScheduler', parentLogger, LoggerLevel.warn);
 
 let NOW: Time = 0;
 
-class FwdEvent extends Event {
+class FwdEvent implements Action {
   constructor(
     public readonly time: Time,
     public readonly action: Function,
     public readonly cancelable: boolean,
-  ) {
-    super();
-  }
+  ) {}
 
-  public trigger(now: Time): void {
+  public trigger(): void {
     const previous = NOW;
-    NOW = now;
+    NOW = this.time;
     this.action();
     NOW = previous;
   }

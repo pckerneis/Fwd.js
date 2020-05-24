@@ -1,52 +1,62 @@
-import { Event, EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
+import { EventQueue, EventRef, Time } from '../EventQueue/EventQueue';
+
+/**
+ * Encapsulates an action in a `trigger` method.
+ */
+export interface Action {
+    /**
+     * Triggers the action for this event.
+     */
+    trigger(): void;
+}
 
 /**
  * Real-time scheduler. It maintains a list of events that can be added with {@link schedule}. Once the scheduler is
  * started, `run` gets repeatedly called, iterating over the next elements to find the events that should be fired.
  *
- * The Scheduler class is parametrized with an event type which extends {@link Event}. At the minimum, an Event should
+ * The Scheduler class is parametrized with an ActionType which extends {@link Action}. At the minimum, an Action should
  * have a `trigger` method which is called by the scheduler when the event should be fired.
  */
-export abstract class Scheduler<EventType extends Event> {
+export interface Scheduler<ActionType extends Action> {
 
     /**
      * A method that will be called if {@link keepAlive} is set to `true` and there's no events to process at the end of a
      * run.
      */
-    public onEnded: Function;
+    onEnded: Function;
 
     /**
      * When set to `true`, the scheduler won't stop running if there are no more events scheduled. This comes handy when you
      * don't know in advance what events you'll process.
      */
-    public  keepAlive: boolean;
+    keepAlive: boolean;
 
     /**
      * The {@link EventQueue} this scheduler is using.
      */
-    public readonly eventQueue: EventQueue<EventType>;
+    readonly eventQueue: EventQueue<ActionType>;
 
     /**
      * Is this scheduler currently running ?
      */
-    public abstract readonly running: boolean;
+    readonly running: boolean;
 
     /**
      * The delay between the end of a run and the next one, in seconds.
      */
-    public abstract readonly interval: number;
+    readonly interval: number;
 
     /**
      * The time range in which events will be considered as ready to be fired, in seconds.
      */
-    public abstract readonly lookAhead: number;
+    readonly lookAhead: number;
 
     /**
      * Set the scheduler's time keeper.
      *
      * @param timeProvider a function that returns the current time in seconds.
      */
-    public abstract set timeProvider(timeProvider: () => number);
+    timeProvider: () => number;
 
     /**
      * Returns the current time position for the scheduler in seconds. It's only useful when called inside the
@@ -54,7 +64,7 @@ export abstract class Scheduler<EventType extends Event> {
      *
      * @returns The current position of the scheduler's head in seconds.
      */
-    public abstract now(): Time;
+    now(): Time;
 
     /**
      * Start processing the event queue from a specified time position. If the scheduler is already started then this method
@@ -62,18 +72,18 @@ export abstract class Scheduler<EventType extends Event> {
      *
      * @param position A time position to start at, in seconds.
      */
-    public abstract start(position: Time): void;
+    start(position: Time): void;
 
     /**
      * Stop processing events. The scheduler will stop calling {@link run}. If the scheduler is already stopped then this
      * method won't do anything.
      */
-    public abstract stop(): void;
+    stop(): void;
 
     /**
      * Clear the {@link EventQueue}.
      */
-    public abstract clearQueue(): void;
+    clearQueue(): void;
 
     /**
      * Schedule an event at a specified time location.
@@ -83,7 +93,7 @@ export abstract class Scheduler<EventType extends Event> {
      *
      * @returns an EventRef that can used later on to cancel the event. See {@link cancel}.
      */
-    public abstract schedule(time: Time, event: EventType): EventRef;
+    schedule(time: Time, event: ActionType): EventRef;
 
     /**
      * Cancel an action previously scheduled. If the action already was executed, this won't do anything.
@@ -91,11 +101,5 @@ export abstract class Scheduler<EventType extends Event> {
      *
      * @param eventRef A reference to the scheduled action obtained from a call to {@link schedule}.
      */
-    public abstract cancel(eventRef: EventRef): void;
-
-    /**
-     * Process the next scheduled events until the next event's time position is superior to the current time position plus
-     * the specified {@link lookAhead}.
-     */
-    protected abstract run(): void;
+    cancel(eventRef: EventRef): void;
 }
