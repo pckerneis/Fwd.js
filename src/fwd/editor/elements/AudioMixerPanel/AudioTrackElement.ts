@@ -3,7 +3,7 @@ import { VerticalSlider } from "../../../runner/FwdWebRunner/components/Vertical
 import { injectStyle } from "../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/Logger";
 import { clamp, parseNumber } from "../../../utils/numbers";
-import audit from "../../../utils/time-filters/audit";
+import debounce from '../../../utils/time-filters/debounce';
 import { EditorElement } from "../../Editor";
 import { AudioMeterElement } from "../AudioMeter/AudioMeter";
 import parentLogger from "../logger.components";
@@ -76,7 +76,7 @@ export class AudioTrackElement implements EditorElement {
     );
 
     // Bindings
-    const auditSetGain = audit((value: number) => {
+    const auditSetGain = debounce((value: number) => {
       this.trackGraph.setGain(value);
     });
 
@@ -84,7 +84,7 @@ export class AudioTrackElement implements EditorElement {
       auditSetGain(value);
     };
 
-    const auditSetPan = audit(() => {
+    const auditSetPan = debounce(() => {
       this.trackGraph.setPan(parseNumber(this.panSlider.value));
     });
 
