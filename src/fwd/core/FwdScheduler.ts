@@ -23,6 +23,95 @@ class FwdEvent implements Action {
   }
 }
 
+abstract class FwdChainEvent {
+  private _next: FwdChainEvent;
+
+  protected constructor(public readonly scheduler: FwdScheduler) {
+  }
+
+  public get next(): FwdChainEvent {
+    return this._next;
+  }
+
+  public set next(event: FwdChainEvent) {
+    this._next = event;
+  }
+
+  public abstract trigger(): void;
+}
+
+class FwdWait extends FwdChainEvent {
+  constructor(scheduler: FwdScheduler, public readonly time: (() => Time) | Time) {
+    super(scheduler);
+  }
+
+  public trigger(): void {
+    if (this.next && typeof this.next.trigger === 'function') {
+      const timeValue = typeof this.time === 'function' ?
+        this.time() :
+        this.time;
+
+      this.scheduler.schedule(timeValue, () => this.next.trigger(), true);
+    }
+  }
+}
+
+class FwdFire extends FwdChainEvent {
+  constructor(scheduler: FwdScheduler, public readonly action: Function) {
+    super(scheduler);
+  }
+
+  public trigger(): void {
+    if (typeof this.action === 'function')
+      this.action();
+
+    if (this.next && typeof this.next.trigger === 'function') {
+      this.scheduler.schedule(0, () => this.next.trigger(), true);
+    }
+  }
+}
+
+class FwdChain {
+  public readonly chain: FwdChainEvent[] = [];
+
+  constructor(public readonly scheduler: FwdScheduler) {
+  }
+
+  public fire(action: Function): this {
+    this.append(new FwdFire(this.scheduler, action));
+    return this;
+  }
+
+  public wait(time: number): this {
+    this.append(new FwdWait(this.scheduler, time));
+    return this;
+  }
+
+  public trigger(): void {
+    if (this.chain.length > 0) {
+      this.chain[0].trigger();
+    }
+  }
+
+  private last(): FwdChainEvent {
+    if (this.chain.length === 0) {
+      return null;
+    }
+
+    return this.chain[this.chain.length - 1];
+  }
+
+  private append(event: FwdChainEvent): void {
+    const previous = this.last();
+
+    if (previous != null) {
+      previous.next = event;
+    }
+
+    this.chain.push(event);
+  }
+}
+
 type State = 'stopping' | 'stopped' | 'running' | 'ready';
 
 export class FwdScheduler {
@@ -119,13 +208,16 @@ export class FwdScheduler {
     this._scheduler.cancel(eventRef);
   }
 
-  /**
-   * Move the current time position of the scheduler.
-   *
-   * @param time A positive duration in seconds.
-   */
-  public wait(time: Time): void {
-    NOW += time;
+  public wait(time: Time): FwdChain {
+    const chain = new FwdChain(this);
+    chain.wait(time);
+    return chain;
+  }
+
+  public fire(action: Function): FwdChain {
+    const chain = new FwdChain(this);
+    chain.fire(action);
+    return chain;
   }
 
   /**
