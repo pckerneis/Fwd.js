@@ -88,7 +88,8 @@ class FwdChain {
   }
 
   public trigger(): void {
-    if (this.chain.length > 0) {
+    if ((this.scheduler.state === 'running' || this.scheduler.state === 'ready')
+      && this.chain.length > 0) {
       this.chain[0].trigger();
     }
   }
