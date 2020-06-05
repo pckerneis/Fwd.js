@@ -4,7 +4,7 @@ import parentLogger from './logger.core';
 import { Action, Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
-const DBG = new Logger('FwdScheduler', parentLogger, LoggerLevel.warn);
+const DBG = new Logger('FwdScheduler', parentLogger, LoggerLevel.debug);
 
 let NOW: Time = 0;
 
@@ -191,7 +191,8 @@ export class FwdScheduler {
    * @returns an `EventRef` that allows to cancel the event. See {@link cancel}.
    */
   public schedule(time: Time, action: Function, preventCancel?: boolean): EventRef {
-    if (this._state === 'stopped' || this._state === 'stopping') {
+    if (this._state === 'stopped'
+      || (this._state === 'stopping' && ! preventCancel)) {
       return null;
     }
 
