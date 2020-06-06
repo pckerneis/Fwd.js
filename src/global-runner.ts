@@ -19,15 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
   const handshakeMessage = '__HANDSHAKE__';
 
+  let watchedFile: string = null;
+
   ws.onmessage = msg => {
     DBG.debug('Message received from server.');
 
     try {
-      const {type, textContent} = JSON.parse(msg.data);
+      const {type, textContent, files, file} = JSON.parse(msg.data);
       DBG.debug(type);
 
-      if (type === 'sketch') {
+      if (type === 'welcome') {
+        DBG.debug('Welcome received.');
+        runner.setFiles(files);
+        ws.send(JSON.stringify({
+          type: 'watch',
+          file: files[0],
+        }));
+      } else if (type === 'sketch') {
         DBG.debug('Sketch received.');
+        if (watchedFile != file) {
+          runner.reset();
+          watchedFile = file;
+        }
+
         runner.setSketchCode(textContent);
       } else if (type === 'cssInject') {
         DBG.debug('Stylesheet received.');
@@ -48,6 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ws.onopen = () => {
     ws.send(handshakeMessage);
+  };
+
+  // Change runner on sketch file change
+  runner.onSketchFileChange = (file) => {
+    ws.send(JSON.stringify({
+      type: 'watch',
+      file,
+    }));
   };
 
   // Add audio gesture overlay

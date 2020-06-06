@@ -10,4 +10,9 @@ export class Editor {
   constructor() {
     this.root = new ContainerPanel();
   }
+
+  public reset(): void {
+    this.root.htmlElement.innerHTML = '';
+    this.root.elements.clear();
+  }
 }

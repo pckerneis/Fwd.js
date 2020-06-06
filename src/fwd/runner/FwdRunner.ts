@@ -1,6 +1,9 @@
 import { FwdLogger } from '../core/FwdLogger';
 
 export default interface FwdRunner {
+
+  onSketchFileChange: (newSketchFile: string) => void;
+
   /**
    * A simple logger
    */
@@ -14,4 +17,8 @@ export default interface FwdRunner {
   buildEditor(): void;
 
   setSketchCode(newSketch: string): void;
+
+  setFiles(files: string[]): void;
+
+  reset(): void;
 }
