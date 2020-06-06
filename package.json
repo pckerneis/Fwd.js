@@ -24,7 +24,9 @@
   },
   "dependencies": {
     "@types/codeflask": "^1.4.1",
+    "@types/codemirror": "^0.0.95",
     "codeflask": "^1.4.1",
+    "codemirror": "^5.54.0",
     "webmidi": "^2.5.1"
   }
 }

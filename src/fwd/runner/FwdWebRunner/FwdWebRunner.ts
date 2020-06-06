@@ -12,8 +12,9 @@ import { ControlBindingManager } from './components/BindableController';
 import { FwdWebConsole } from './components/Console';
 import { IconButton } from './components/IconButton';
 import { MasterSlider } from './components/MasterSlider';
-import FwdWebImpl from "./FwdWebImpl";
-import { injectStyle } from "./StyleInjector";
+import { RunnerCodeEditor } from './components/RunnerCodeEditor';
+import FwdWebImpl from './FwdWebImpl';
+import { injectStyle } from './StyleInjector';
 
 const masterSliderId = 'master-slider';
 const toolbarId = 'fwd-runner-toolbar';
@@ -108,6 +109,31 @@ class AbstractWebRunner implements FwdRunner {
     this.prepareHeader();
     this.prepareFooter();
 
+    const flexPanel = new FlexPanel();
+    this.codeEditor = new RunnerCodeEditor();
+
+    this.codeEditor.codeMirror.on('changes', () => {
+      if (this._autoBuilds) {
+        this.build();
+      }
+    });
+
+    flexPanel.addFlexItem('left', this.codeEditor, {
+      minWidth: 100,
+      maxWidth: 5000,
+      width: 600,
+    });
+
+    const separator = flexPanel.addSeparator(0, true);
+    separator.separatorSize = 10;
+    separator.htmlElement.classList.add('fwd-runner-large-separator');
+
+    flexPanel.addFlexItem('right', this._fwd.editor.root, {
+      flexGrow: 1,
+      minWidth: 100,
+      maxWidth: 5000,
+    });
+
     document.getElementById('fwd-runner-container')
       .append(flexPanel.htmlElement);
   }
@@ -196,11 +222,19 @@ class AbstractWebRunner implements FwdRunner {
       throw new Error('The sketch could not be executed');
     }
 
-    compileCode(this._sketchCode)(window);
+    try {
+      compileCode(this.codeEditor.code)(window);
+    } catch(e) {
+      this._fwd.err(e);
+    }
 
     if (! this._sketchWasInitialized) {
       if (typeof this._fwd.onInit === 'function') {
-        this._fwd.onInit();
+        try {
+          this._fwd.onInit();
+        } catch(e) {
+          this._fwd.err(e);
+        }
       }
 
       this._sketchWasInitialized = true;
