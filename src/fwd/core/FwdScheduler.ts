@@ -57,13 +57,30 @@ class FwdWait extends FwdChainEvent {
 }
 
 class FwdFire extends FwdChainEvent {
-  constructor(scheduler: FwdScheduler, public readonly action: Function) {
+  constructor(scheduler: FwdScheduler, public readonly action: Function | string) {
     super(scheduler);
   }
 
   public trigger(): void {
-    if (typeof this.action === 'function')
-      this.action();
+    if (typeof this.action === 'function') {
+      try {
+        this.action();
+      } catch(e) {
+        console.error(e);
+      }
+    } else if (typeof this.action === 'string') {
+      const action = this.scheduler.getAction(this.action);
+
+      if (action != null) {
+        try {
+          action();
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    } else {
+      console.error('Cannot fire action. You should provide a function or a defined action name.', this.action);
+    }
 
     if (this.next && typeof this.next.trigger === 'function') {
       this.scheduler.schedule(0, () => this.next.trigger(), true);
@@ -77,7 +94,7 @@ class FwdChain {
   constructor(public readonly scheduler: FwdScheduler) {
   }
 
-  public fire(action: Function): this {
+  public fire(action: Function | string): this {
     this.append(new FwdFire(this.scheduler, action));
     return this;
   }
@@ -125,6 +142,8 @@ export class FwdScheduler {
   private _scheduler: Scheduler<FwdEvent>;
 
   private _state: State = 'ready';
+
+  private _definitions: any = {};
 
   /**
    * Builds an instance of the scheduler with the provided parameters.
@@ -216,7 +235,7 @@ export class FwdScheduler {
     return chain;
   }
 
-  public fire(action: Function): FwdChain {
+  public fire(action: Function | string): FwdChain {
     const chain = new FwdChain(this);
     chain.fire(action);
     return chain;
@@ -283,5 +302,14 @@ export class FwdScheduler {
 
     this._state = 'stopping';
     this._scheduler.keepAlive = false;
+  }
+
+  public getAction(name: string): any {
+    return this._definitions[name];
+  }
+
+  public defineAction(name: string, action: () => any): any {
+    this._definitions[name] = action;
+    return action;
   }
 }
