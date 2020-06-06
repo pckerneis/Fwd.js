@@ -56,10 +56,6 @@ export default class FwdWebImpl implements Fwd {
     this.logger.err(this._scheduler.now(), ...messages);
   }
 
-  public wait(t: Time): void {
-    this._scheduler.wait(t);
-  }
-
   public random(a?: number, b?: number): number {
     if (a == null && b == null) {
       return Math.random();

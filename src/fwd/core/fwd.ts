@@ -22,13 +22,6 @@ export interface Fwd {
   now: () => Time;
 
   /**
-   * Move the current time position of the scheduler.
-   *
-   * @param time A positive duration in seconds.
-   */
-  wait: (time: Time) => void;
-
-  /**
    * Schedule an action. The time passed in is relative to the current time position of the scheduler.
    *
    * @param time The delay before the action gets executed.
