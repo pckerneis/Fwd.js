@@ -73,6 +73,7 @@ injectStyle('Overlay', `
   background: #00000088;
   box-shadow: 0 0 11px 0 #00000036;
   overflow: hidden;
+  z-index: 10;
 }
 
 
