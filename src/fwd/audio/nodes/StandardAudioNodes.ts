@@ -370,8 +370,20 @@ export class FwdNoiseNode extends FwdAudioNode {
 
     this._output = fwdAudio.context.createBufferSource();
     this._output.loop = true;
-    this._output.buffer = this.generateWhiteNoise();
+    this._output.buffer = FwdNoiseNode.generateWhiteNoise(this.fwdAudio.context);
     this._output.start(fwdAudio.now());
+  }
+
+  public static generateWhiteNoise(context: AudioContext, lengthInSeconds: number = 1): AudioBuffer {
+    const sampleRate = context.sampleRate;
+    const buffer = context.createBuffer(1, lengthInSeconds * sampleRate, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < 2 * sampleRate; ++i) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    return buffer;
   }
 
   public get inputNode(): AudioNode { return null; }
@@ -381,18 +393,6 @@ export class FwdNoiseNode extends FwdAudioNode {
     tearDownNativeNode(this._output, when).then(() => {
       this._output = null;
     });
-  }
-
-  private generateWhiteNoise(): AudioBuffer {
-    const sampleRate = this.fwdAudio.context.sampleRate;
-    const buffer = this.fwdAudio.context.createBuffer(1, 2 * sampleRate, sampleRate);
-    const data = buffer.getChannelData(0);
-
-    for (let i = 0; i < 2 * sampleRate; ++i) {
-      data[i] = Math.random() * 2 - 1;
-    }
-
-    return buffer;
   }
 }
 
@@ -553,4 +553,103 @@ export class FwdCompressorNode extends FwdAudioNodeWrapper<DynamicsCompressorNod
 
   public get inputNode(): AudioNode { return this.nativeNode; }
   public get outputNode(): AudioNode { return this.nativeNode; }
+}
+
+//===============================================================
+// TODO: expose parameters
+export class FwdReverbNode extends FwdAudioNode {
+  private _input: GainNode;
+  private _output: GainNode;
+  private _dryGain: GainNode;
+  private _wetGain: GainNode;
+  private _convolver: ConvolverNode;
+  private _preDelay: DelayNode;
+
+  constructor(public fwdAudio: FwdAudio,
+              public reverbTime: number = 1.0,
+              public preDelay: number = 0.5) {
+    super();
+
+    this._input = fwdAudio.context.createGain();
+    this._input.gain.value = 1;
+
+    this._output = fwdAudio.context.createGain();
+    this._output.gain.value = 1;
+
+    this._dryGain = fwdAudio.context.createGain();
+    this._dryGain.gain.value = 1;
+    this._wetGain = fwdAudio.context.createGain();
+    this._wetGain.gain.value = 0.3;
+
+    this._convolver = fwdAudio.context.createConvolver();
+
+    this._preDelay = fwdAudio.context.createDelay(reverbTime);
+    this._preDelay.delayTime.value = preDelay;
+
+    this._input
+      .connect(this._dryGain)
+      .connect(this._output);
+
+    this._input
+      .connect(this._preDelay)
+      .connect(this._convolver)
+      .connect(this._wetGain)
+      .connect(this._output);
+
+    this.refreshBuffer();
+  }
+
+  public get inputNode(): AudioNode { return this._input; }
+  public get outputNode(): AudioNode { return this._output; }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._input, when).then(() => this._input = null);
+    tearDownNativeNode(this._output, when).then(() => this._output = null);
+    tearDownNativeNode(this._wetGain, when).then(() => this._wetGain = null);
+    tearDownNativeNode(this._dryGain, when).then(() => this._dryGain = null);
+    tearDownNativeNode(this._convolver, when).then(() => this._convolver = null);
+    tearDownNativeNode(this._preDelay, when).then(() => this._preDelay = null);
+  }
+
+  private refreshBuffer(): void {
+    const length = this.fwdAudio.context.sampleRate * this.reverbTime;
+
+    const offlineAudioContext = new OfflineAudioContext(2, length, this.fwdAudio.context.sampleRate);
+    const noise = offlineAudioContext.createBufferSource();
+    noise.buffer = FwdNoiseNode.generateWhiteNoise(this.fwdAudio.context, this.reverbTime);
+
+    const gain = offlineAudioContext.createGain();
+
+    const lpf = offlineAudioContext.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 5000;
+    lpf.Q.value = 1;
+
+    const hpf = offlineAudioContext.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = 500;
+    hpf.Q.value = 1;
+
+    noise
+      .connect(gain)
+      .connect(lpf)
+      .connect(hpf)
+      .connect(offlineAudioContext.destination);
+
+    gain.gain.setValueAtTime(1, 0);
+    gain.gain.linearRampToValueAtTime(0, this.reverbTime);
+
+    setTimeout(() => {
+      offlineAudioContext.startRendering().then((buffer) => {
+        this._convolver.buffer = buffer;
+        noise.stop(0);
+        noise.disconnect();
+        gain.disconnect();
+        lpf.disconnect();
+        hpf.disconnect();
+      });
+
+      noise.start(0);
+    });
+  }
 }

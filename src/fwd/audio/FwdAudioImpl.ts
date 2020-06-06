@@ -10,10 +10,10 @@ import {
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
-  FwdOscillatorNode,
+  FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode,
   FwdStereoDelayNode,
-} from "./nodes/StandardAudioNodes";
+} from './nodes/StandardAudioNodes';
 
 const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 
@@ -104,6 +104,11 @@ export class FwdAudioImpl implements FwdAudio {
   public compressor(): FwdCompressorNode {
     this.assertInit();
     return new FwdCompressorNode(this);
+  }
+
+  public reverb(reverbTime?: number, preDelayTime?: number): FwdReverbNode {
+    this.assertInit();
+    return new FwdReverbNode(this);
   }
 
   //=========================================================================

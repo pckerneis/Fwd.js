@@ -7,10 +7,10 @@ import {
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
-  FwdOscillatorNode,
+  FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode,
   FwdStereoDelayNode,
-} from "./nodes/StandardAudioNodes";
+} from './nodes/StandardAudioNodes';
 
 export interface FwdAudioListener {
   audioContextStarted(context: AudioContext): void;
@@ -26,7 +26,7 @@ export interface FwdAudio {
   start(): void;
   now(): Time;
 
-  gain(value?: number ): FwdGainNode;
+  gain(value?: number): FwdGainNode;
   osc(frequency?: number, type?: OscillatorType): FwdOscillatorNode;
   lfo(frequency?: number, type?: OscillatorType): FwdLFONode;
   sampler(pathToFile: string): FwdSamplerNode;
@@ -35,4 +35,5 @@ export interface FwdAudio {
   stereoDelay(): FwdStereoDelayNode;
   distortion(amount: number): FwdDistortionNode;
   compressor(): FwdCompressorNode;
+  reverb(reverbTime?: number, preDelayTime?: number): FwdReverbNode;
 }
