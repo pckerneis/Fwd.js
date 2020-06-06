@@ -65,17 +65,11 @@ interface FlexItemOptions {
 class SeparatorElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
-  private separatorSize: number = 6;
+  private _separatorSize: number = 6;
 
   constructor(public readonly direction: FlexDirection, public readonly index: number, draggable: boolean) {
     const separator = document.createElement('div');
     separator.classList.add('fwd-flex-panel-separator');
-
-    if (this.direction === 'row') {
-      separator.style.width = this.separatorSize + 'px';
-    } else {
-      separator.style.height = this.separatorSize + 'px';
-    }
 
     if (draggable) {
       separator.classList.add('draggable');
@@ -83,6 +77,22 @@ class SeparatorElement implements EditorElement {
     }
 
     this.htmlElement = separator;
+
+    this.separatorSize = 6;
+  }
+
+  public set separatorSize(size: number) {
+    this._separatorSize = size;
+
+    if (this.direction === 'row') {
+      this.htmlElement.style.width = this._separatorSize + 'px';
+    } else {
+      this.htmlElement.style.height = this._separatorSize + 'px';
+    }
+  }
+
+  public get separatorSize(): number {
+    return this._separatorSize;
   }
 }
 
@@ -116,6 +126,7 @@ export class FlexPanel extends ContainerPanel {
 
     // Default values
     element.htmlElement.style.overflow = 'hidden';
+    element.htmlElement.style.position = 'relative';
 
     if (flexItemOptions) {
       const affectIfNotNull = (property: string, suffix: string = '') => {
@@ -142,7 +153,7 @@ export class FlexPanel extends ContainerPanel {
     return this.get(key) || this.addFlexItem(key, elementFactory(), flexItemOptions);
   }
 
-  public addSeparator(index: number, draggable?: boolean): void {
+  public addSeparator(index: number, draggable?: boolean): SeparatorElement {
     if (this.getSeparatorWithIndex(index) != null) {
       // TODO: find a nice way to 'soft' re-add separators
       // throw new Error(`There\'s already a separator with the index ${index}.`);
@@ -156,6 +167,8 @@ export class FlexPanel extends ContainerPanel {
     if (draggable) {
       separator.htmlElement.onmousedown = (event) => this.startDrag(event, separator);
     }
+
+    return separator;
   }
 
   private createSeparatorElement(index: number, draggable: boolean): SeparatorElement {
@@ -185,6 +198,8 @@ export class FlexPanel extends ContainerPanel {
         document.removeEventListener('mouseup', mouseUpHandler);
         return;
       }
+
+      getSelection().removeAllRanges();
 
       const containerPos = vertical ?
         this.htmlElement.getBoundingClientRect().top
