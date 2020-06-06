@@ -12,6 +12,7 @@ export class RunnerCodeEditor {
     this.codeMirror = CodeMirror(this.htmlElement, {
       lineNumbers: true,
       mode: 'javascript',
+      tabSize: 2,
     });
 
     this.htmlElement.children[0].classList.add('fwd-code-editor-cm');

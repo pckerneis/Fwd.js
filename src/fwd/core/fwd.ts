@@ -1,7 +1,6 @@
 import { FwdAudio } from "../audio/FwdAudio";
 import { Editor } from "../editor/Editor";
 import { EventRef, Time } from './EventQueue/EventQueue';
-import { FwdLogger } from './FwdLogger';
 import { FwdScheduler } from './FwdScheduler';
 
 /**
@@ -47,24 +46,9 @@ export interface Fwd {
   scheduler: FwdScheduler;
 
   /**
-   * Log debug messages based on the linked {@link FwdLogger} configuration.
-   */
-  log: (...messages: any[]) => void;
-
-  /**
-   * Log error messages based on the linked {@link FwdLogger} configuration.
-   */
-  err: (...messages: any[]) => void;
-
-  /**
    * The Fwd audio module. See {@link FwdAudio}.
    */
   audio?: FwdAudio;
-
-  /**
-   * The Fwd logger module. See {@link FwdLogger}.
-   */
-  logger?: FwdLogger;
 
   /**
    * The Editor module. See {@link Editor}.
@@ -117,7 +101,7 @@ const proxyHandler = {
       return obj[prop];
     }
 
-    fwd.err(`You're trying to use the undefined property '${prop}' of fwd. `
+    console.error(`You're trying to use the undefined property '${prop}' of fwd. `
       + `Make sure fwd was properly initialized with all needed modules.`);
     return undefined;
   },

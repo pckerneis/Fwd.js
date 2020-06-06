@@ -6,8 +6,7 @@ import FwdWebRunner from './fwd/runner/FwdWebRunner/FwdWebRunner';
 import { Logger, LoggerLevel } from "./fwd/utils/Logger";
 import declareAPI from "./global-api";
 
-// Logger.runtimeLevel = LoggerLevel.error;
-const DBG = new Logger('global-runner', rootLogger, LoggerLevel.debug);
+const DBG = new Logger('global-runner', rootLogger, LoggerLevel.error);
 
 declareAPI('Fwd');
 

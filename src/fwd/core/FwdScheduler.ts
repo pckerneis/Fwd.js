@@ -1,10 +1,10 @@
-import { Logger, LoggerLevel } from '../utils/Logger';
+import { Logger } from '../utils/Logger';
 import { EventRef, Time } from './EventQueue/EventQueue';
 import parentLogger from './logger.core';
 import { Action, Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
 
-const DBG = new Logger('FwdScheduler', parentLogger, LoggerLevel.debug);
+const DBG = new Logger('FwdScheduler', parentLogger);
 
 let NOW: Time = 0;
 

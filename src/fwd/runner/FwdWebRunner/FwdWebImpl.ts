@@ -1,7 +1,6 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { EventRef, Time } from '../../core/EventQueue/EventQueue';
 import { Fwd } from '../../core/Fwd';
-import { FwdLogger } from '../../core/FwdLogger';
 import { FwdScheduler } from '../../core/FwdScheduler';
 import { Editor } from "../../editor/Editor";
 import FwdWebRunner from './FwdWebRunner';
@@ -25,10 +24,6 @@ export default class FwdWebImpl implements Fwd {
     return this._scheduler;
   }
 
-  public get logger(): FwdLogger {
-    return this._runner.logger;
-  }
-
   public get audio(): FwdAudio {
     return this._runner.audio;
   }
@@ -46,14 +41,6 @@ export default class FwdWebImpl implements Fwd {
   }
   public cancel(ref: EventRef): void {
     this._scheduler.cancel(ref);
-  }
-
-  public log(...messages: any[]): void {
-    this.logger.log(this._scheduler.now(), ...messages);
-  }
-
-  public err(...messages: any[]): void {
-    this.logger.err(this._scheduler.now(), ...messages);
   }
 
   public random(a?: number, b?: number): number {

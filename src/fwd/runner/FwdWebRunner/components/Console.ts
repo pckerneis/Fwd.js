@@ -111,7 +111,7 @@ export class FwdWebConsole {
         try {
           Function(this._replInput.innerText)();
         } catch(e) {
-          this._fwd.err(e);
+          console.error(e);
         }
 
         this._replInput.innerText = '';

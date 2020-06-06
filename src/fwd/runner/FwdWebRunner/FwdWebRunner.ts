@@ -1,12 +1,11 @@
 import { FwdAudio } from '../../audio/FwdAudio';
 import { FwdAudioImpl } from '../../audio/FwdAudioImpl';
-import { Time } from '../../core/EventQueue/EventQueue';
 import { fwd, Fwd, putFwd } from '../../core/Fwd';
-import { FwdLogger } from '../../core/FwdLogger';
 import { FlexPanel } from '../../editor/elements/FlexPanel/FlexPanel';
 import { parseNumber } from '../../utils/numbers';
 import { formatTime } from '../../utils/time';
 import audit from '../../utils/time-filters/audit';
+import debounce from '../../utils/time-filters/debounce';
 import FwdRunner from '../FwdRunner';
 import { ControlBindingManager } from './components/BindableController';
 import { FwdWebConsole } from './components/Console';
@@ -29,7 +28,6 @@ class AbstractWebRunner implements FwdRunner {
   private readonly _audio: FwdAudio;
 
   private readonly _terminalDrawer: HTMLElement;
-  private _logger: FwdLogger;
   private _oneLineLogger: HTMLLabelElement;
   private _toolbar: HTMLElement;
   private _buildButton: IconButton;
@@ -71,10 +69,6 @@ class AbstractWebRunner implements FwdRunner {
     return this._audio;
   }
 
-  public get logger(): FwdLogger {
-    return this._logger;
-  }
-
   public setSketchCode(newSketch: string): void {
     this._sketchCode = newSketch;
     this.codeEditor.code = newSketch;
@@ -112,11 +106,11 @@ class AbstractWebRunner implements FwdRunner {
     const flexPanel = new FlexPanel();
     this.codeEditor = new RunnerCodeEditor();
 
-    this.codeEditor.codeMirror.on('changes', () => {
+    this.codeEditor.codeMirror.on('changes', debounce(() => {
       if (this._autoBuilds) {
         this.build();
       }
-    });
+    }, 200));
 
     flexPanel.addFlexItem('left', this.codeEditor, {
       minWidth: 100,
@@ -154,41 +148,45 @@ class AbstractWebRunner implements FwdRunner {
 
   //==================================================================
 
-  private prepareConsole(): FwdLogger {
+  private prepareConsole(): void {
     const webConsole: FwdWebConsole = new FwdWebConsole(this._fwd);
     document.getElementById(terminalDrawerId).append(webConsole.htmlElement);
 
-    return {
-      log: (time: Time, ...messages: any[]) => {
-        time = this._running ? this._fwd.now() : null;
+    const nativeLog = console.log;
+    const nativeErr = console.error;
 
-        webConsole.print(time, messages);
+    const log = (...messages: any[]) => {
+      const time = this._running ? this._fwd.now() : null;
 
-        if (time === null) {
-          this._oneLineLogger.innerText = messages[messages.length - 1];
-          console.log(...messages);
-        } else {
-          const timeStr = formatTime(time);
-          this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
-          console.log(timeStr, ...messages);
-        }
-      },
+      webConsole.print(time, messages);
 
-      err: (time: Time, ...messages: any[]) => {
-        time = this._running ? this._fwd.now() : null;
-
-        webConsole.print(time, messages);
-
-        if (time === null) {
-          this._oneLineLogger.innerText = messages[messages.length - 1];
-          console.error(...messages);
-        } else {
-          const timeStr = formatTime(time);
-          this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
-          console.error(timeStr, ...messages);
-        }
-      },
+      if (time === null) {
+        this._oneLineLogger.innerText = messages[messages.length - 1];
+        nativeLog(...messages);
+      } else {
+        const timeStr = formatTime(time);
+        this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
+        nativeLog(timeStr, ...messages);
+      }
     };
+
+    const err = (...messages: any[]) => {
+      const time = this._running ? this._fwd.now() : null;
+
+      webConsole.print(time, messages);
+
+      if (time === null) {
+        this._oneLineLogger.innerText = messages[messages.length - 1];
+        nativeErr(...messages);
+      } else {
+        const timeStr = formatTime(time);
+        this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
+        nativeErr(timeStr, ...messages);
+      }
+    };
+
+    console.log = log;
+    console.error = err;
   }
 
   private start(): void {
@@ -197,7 +195,7 @@ class AbstractWebRunner implements FwdRunner {
     }
 
     if (typeof fwd.onStart !== 'function') {
-      this.logger.err(null, `Nothing to start.`);
+      console.error(null, `Nothing to start.`);
       return;
     }
 
@@ -224,16 +222,16 @@ class AbstractWebRunner implements FwdRunner {
 
     try {
       compileCode(this.codeEditor.code)(window);
-    } catch(e) {
-      this._fwd.err(e);
+    } catch (e) {
+      console.error(e);
     }
 
     if (! this._sketchWasInitialized) {
       if (typeof this._fwd.onInit === 'function') {
         try {
           this._fwd.onInit();
-        } catch(e) {
-          this._fwd.err(e);
+        } catch (e) {
+          console.error(e);
         }
       }
 
@@ -272,7 +270,7 @@ class AbstractWebRunner implements FwdRunner {
     footer.append(terminalButton.htmlElement);
     footer.append(this._oneLineLogger);
 
-    this._logger = this.prepareConsole();
+    this.prepareConsole();
 
     this._masterSlider = new MasterSlider();
     this._masterSlider.slider.oninput = audit(() => this.applyMasterValue());
