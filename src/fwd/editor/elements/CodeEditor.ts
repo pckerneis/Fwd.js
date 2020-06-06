@@ -12,7 +12,10 @@ export class CodeEditorElement implements EditorElement {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('code-editor-container');
 
-    this.flask = new CodeFlask(this.htmlElement, { language: 'js' });
+    this.flask = new CodeFlask(this.htmlElement, {
+      language: 'js',
+      lineNumbers: true,
+    });
   }
 
   public get code(): string {
@@ -29,5 +32,10 @@ injectStyle('CodeEditorElement', `
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+.code-editor-container ::selection {
+    background: #80808036;
+    text-shadow: none;
 }
 `);
