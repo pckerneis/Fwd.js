@@ -13,7 +13,8 @@
     "build-server": "cd src/server && tsc && cd ../..",
     "doc": "typedoc",
     "test": "jest --coverage",
-    "fwd-serve": "node src/server/server.js"
+    "fwd-serve": "node src/server/server.js",
+    "start": "yarn build-server && yarn fwd-serve"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",
@@ -24,7 +25,7 @@
     "tslint": "^6.1.0",
     "typedoc": "^0.17.3",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.0",
+    "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
   },
