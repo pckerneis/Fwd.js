@@ -12,6 +12,7 @@ import { FwdWebConsole } from './components/Console';
 import { IconButton } from './components/IconButton';
 import { MasterSlider } from './components/MasterSlider';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
+import { TimeDisplay } from './components/TimeDisplay';
 import FwdWebImpl from './FwdWebImpl';
 import { injectStyle } from './StyleInjector';
 
@@ -43,6 +44,7 @@ class AbstractWebRunner implements FwdRunner {
   private _autoBuilds: boolean;
   private _masterSlider: MasterSlider;
   private codeEditor: RunnerCodeEditor;
+  private _timeDisplay: TimeDisplay;
 
   constructor() {
     this._terminalDrawer = document.getElementById(terminalDrawerId);
@@ -214,6 +216,8 @@ class AbstractWebRunner implements FwdRunner {
     this._fwd.scheduler.start();
 
     this.applyMasterValue();
+
+    this._timeDisplay.animate();
   }
 
   private build(): void {
@@ -289,9 +293,11 @@ class AbstractWebRunner implements FwdRunner {
       }
     };
 
-    const spacer = document.createElement('span');
-    spacer.style.flexGrow = '1';
-    this._toolbar.append(spacer);
+    const spacer = () => {
+      const elem = document.createElement('span');
+      elem.style.flexGrow = '1';
+      return elem;
+    };
 
     this._autoBuildInput = document.createElement('input');
     this._autoBuildInput.type = 'checkbox';
@@ -303,12 +309,17 @@ class AbstractWebRunner implements FwdRunner {
 
     this._buildButton = new IconButton('tools');
     this._playButton = new IconButton('play-button');
+
+    this._timeDisplay = new TimeDisplay(this._fwd.scheduler);
+
     this._toolbar.append(
       this._projectSelect,
-      spacer,
+      spacer(),
       autoBuildLabel,
       this._buildButton.htmlElement,
       this._playButton.htmlElement,
+      this._timeDisplay.htmlElement,
+      // spacer(),
     );
 
     this._autoBuildInput.oninput = () => this.handleAutoBuildInputChange();
