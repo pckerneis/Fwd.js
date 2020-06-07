@@ -1,4 +1,4 @@
-import { BindableSlider } from "../../../../../src/fwd/runner/FwdWebRunner/components/BindableSlider";
+import { BindableSlider } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/BindableSlider";
 
 describe('BindableSlider', () => {
   it('can be created', () => {

@@ -1,4 +1,4 @@
-import { Overlay } from "../../../../../src/fwd/runner/FwdWebRunner/components/Overlay";
+import { Overlay } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/Overlay";
 
 describe('Overlay', () => {
   it('can be created', () => {

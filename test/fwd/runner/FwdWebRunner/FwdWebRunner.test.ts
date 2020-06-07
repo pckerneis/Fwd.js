@@ -1,5 +1,5 @@
-import FwdWebRunner from "../../../../src/fwd/runner/FwdWebRunner/FwdWebRunner";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
+import FwdWebRunner from "../../../../src/client/fwd/runner/FwdWebRunner/FwdWebRunner";
+import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
 import { mockAudioContext, mockAudioNodeWithAudioParams } from "../../../mocks/WebAudio.mock";

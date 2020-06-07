@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/global-runner.ts',
+  entry: './src/client/global-runner.ts',
   devtool: 'source-map',
   mode: 'development',
   optimization: {
@@ -24,6 +24,6 @@ module.exports = {
   },
   output: {
     filename: 'fwd-runner.js',
-    path: path.resolve(__dirname, '../fwd-cli/template/lib'),
+    path: path.resolve(__dirname, './dist'),
   },
 };

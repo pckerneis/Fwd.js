@@ -1,4 +1,4 @@
-import { FwdWebConsole } from "../../../../../src/fwd/runner/FwdWebRunner/components/Console";
+import { FwdWebConsole } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/Console";
 
 describe('FwdWebConsole', () => {
   it('can be created', () => {

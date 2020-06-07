@@ -1,8 +1,8 @@
-import { BindableButton } from "../../../../../src/fwd/runner/FwdWebRunner/components/BindableButton";
+import { BindableButton } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/BindableButton";
 import {
   ControlBinding,
   ControlBindingManager,
-} from "../../../../../src/fwd/runner/FwdWebRunner/components/BindableController";
+} from "../../../../../src/client/fwd/runner/FwdWebRunner/components/BindableController";
 
 describe('BindableButton', () => {
   it('can be created', () => {

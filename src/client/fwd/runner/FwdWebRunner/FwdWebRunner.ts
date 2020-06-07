@@ -1,6 +1,6 @@
 import { FwdAudio } from '../../audio/FwdAudio';
 import { FwdAudioImpl } from '../../audio/FwdAudioImpl';
-import { fwd, Fwd, putFwd } from '../../core/Fwd';
+import { fwd, Fwd, putFwd } from '../../core/fwd';
 import { FlexPanel } from '../../editor/elements/FlexPanel/FlexPanel';
 import { parseNumber } from '../../utils/numbers';
 import { formatTime } from '../../utils/time';

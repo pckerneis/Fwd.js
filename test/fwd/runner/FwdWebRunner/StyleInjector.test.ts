@@ -1,4 +1,4 @@
-import { injectStyle } from "../../../../src/fwd/runner/FwdWebRunner/StyleInjector";
+import { injectStyle } from "../../../../src/client/fwd/runner/FwdWebRunner/StyleInjector";
 
 describe('StyleInjector', () => {
   it('registers styles before the DOM is ready', () => {

@@ -1,6 +1,6 @@
 import path from "path";
 import { Time } from "../../core/EventQueue/EventQueue";
-import { fwd } from "../../core/Fwd";
+import { fwd } from "../../core/fwd";
 import { Logger, LoggerLevel } from "../../utils/Logger";
 import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";

@@ -1,15 +1,15 @@
-import { FwdAudioImpl } from "../../../../src/fwd/audio/FwdAudioImpl";
-import { FwdAudioNode } from "../../../../src/fwd/audio/nodes/FwdAudioNode";
+import { FwdAudioImpl } from "../../../../src/client/fwd/audio/FwdAudioImpl";
+import { FwdAudioNode } from "../../../../src/client/fwd/audio/nodes/FwdAudioNode";
 import {
   FwdAudioNodeWrapper, FwdAudioParamWrapper, FwdDelayLineNode,
   FwdGainNode,
   FwdLFONode, FwdNoiseNode,
   FwdOscillatorNode,
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
-} from "../../../../src/fwd/audio/nodes/StandardAudioNodes";
-import { Time } from "../../../../src/fwd/core/EventQueue/EventQueue";
-import * as FwdEntryPoint from "../../../../src/fwd/core/fwd";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
+} from "../../../../src/client/fwd/audio/nodes/StandardAudioNodes";
+import { Time } from "../../../../src/client/fwd/core/EventQueue/EventQueue";
+import * as FwdEntryPoint from "../../../../src/client/fwd/core/fwd";
+import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
 import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";

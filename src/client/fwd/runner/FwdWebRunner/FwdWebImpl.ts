@@ -1,6 +1,6 @@
 import { FwdAudio } from "../../audio/FwdAudio";
 import { EventRef, Time } from '../../core/EventQueue/EventQueue';
-import { Fwd } from '../../core/Fwd';
+import { Fwd } from '../../core/fwd';
 import { FwdScheduler } from '../../core/FwdScheduler';
 import { Editor } from "../../editor/Editor";
 import FwdWebRunner from './FwdWebRunner';

@@ -1,4 +1,4 @@
-import { FwdHTMLControls } from "../../../src/fwd/control/FwdHtmlControl";
+import { FwdHTMLControls } from "../../../src/client/fwd/control/FwdHtmlControl";
 
 describe('FwdHtmlControls', () => {
   beforeAll(() => {

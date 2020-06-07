@@ -1,4 +1,4 @@
-import { fwd } from "./fwd/core/Fwd";
+import { fwd } from "./fwd/core/fwd";
 import rootLogger from './fwd/logger.fwd';
 import FwdRunner from './fwd/runner/FwdRunner';
 import { Overlay } from "./fwd/runner/FwdWebRunner/components/Overlay";

@@ -4,10 +4,16 @@
   "main": "./js/index.js",
   "license": "GPL-3.0",
   "types": "dist/api/index.d.ts",
+  "bin": {
+    "fwd-create": "bin/fwd-init",
+    "fwd-serve": "bin/fwd-serve"
+  },
   "scripts": {
     "webpack-global": "webpack --config webpack-global.config.js --display-error-details",
+    "build-server": "cd src/server && tsc && cd ../..",
     "doc": "typedoc",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "fwd-serve": "node src/server/server.js"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",
@@ -25,8 +31,16 @@
   "dependencies": {
     "@types/codeflask": "^1.4.1",
     "@types/codemirror": "^0.0.95",
+    "chalk": "^4.0.0",
+    "chokidar": "^3.4.0",
     "codeflask": "^1.4.1",
     "codemirror": "^5.54.0",
-    "webmidi": "^2.5.1"
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "minimist": "^1.2.5",
+    "serve-index": "^1.9.1",
+    "serve-static": "^1.14.1",
+    "webmidi": "^2.5.1",
+    "ws": "^7.3.0"
   }
 }

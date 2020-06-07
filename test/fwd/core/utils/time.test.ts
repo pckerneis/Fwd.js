@@ -1,4 +1,4 @@
-import { formatTime } from "../../../../src/fwd/utils/time";
+import { formatTime } from "../../../../src/client/fwd/utils/time";
 
 test('formats time', () => {
   expect(formatTime(null)).toBeNull();

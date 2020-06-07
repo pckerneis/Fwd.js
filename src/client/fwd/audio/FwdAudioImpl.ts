@@ -1,5 +1,5 @@
 import { Time } from '../core/EventQueue/EventQueue';
-import { Fwd } from '../core/Fwd';
+import { Fwd } from '../core/fwd';
 import { Logger, LoggerLevel } from "../utils/Logger";
 import { FwdAudio, FwdAudioListener } from "./FwdAudio";
 import parentLogger from './logger.audio';

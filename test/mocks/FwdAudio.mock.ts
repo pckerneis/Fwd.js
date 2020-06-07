@@ -1,4 +1,4 @@
-import { FwdAudio } from "../../src/fwd/audio/FwdAudio";
+import { FwdAudio } from "../../src/client/fwd/audio/FwdAudio";
 import { mockAudioContext } from "./WebAudio.mock";
 import Mock = jest.Mock;
 

@@ -1,4 +1,4 @@
-import { VerticalSlider } from "../../../../../src/fwd/runner/FwdWebRunner/components/VerticalSlider";
+import { VerticalSlider } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/VerticalSlider";
 
 describe('VerticalSlider', () => {
   it('can be created', () => {

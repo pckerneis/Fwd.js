@@ -1,4 +1,4 @@
-import { frequencyToMidi, midiToFrequency } from "../../../src/fwd/midi/helpers";
+import { frequencyToMidi, midiToFrequency } from "../../../src/client/fwd/midi/helpers";
 
 describe('MIDI helpers', () => {
   it ('converts from MIDI note number to frequency', () => {

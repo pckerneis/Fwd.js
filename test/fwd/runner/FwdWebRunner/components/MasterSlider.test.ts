@@ -1,4 +1,4 @@
-import { MasterSlider } from "../../../../../src/fwd/runner/FwdWebRunner/components/MasterSlider";
+import { MasterSlider } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/MasterSlider";
 
 describe('MasterSlider', () => {
   it('can be created', () => {

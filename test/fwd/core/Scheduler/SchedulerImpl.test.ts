@@ -1,5 +1,5 @@
-import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
-import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
+import { SchedulerImpl } from "../../../../src/client/fwd/core/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
 import { waitSeconds } from "../../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;

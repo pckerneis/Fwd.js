@@ -1,4 +1,4 @@
-import { ToggleButton } from "../../../../../src/fwd/runner/FwdWebRunner/components/ToggleButton";
+import { ToggleButton } from "../../../../../src/client/fwd/runner/FwdWebRunner/components/ToggleButton";
 
 describe('ToggleButton', () => {
   it('can be created', () => {

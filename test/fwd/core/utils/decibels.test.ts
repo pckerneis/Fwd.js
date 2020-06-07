@@ -1,4 +1,4 @@
-import { decibelsToGain, gainToDecibels } from "../../../../src/fwd/utils/decibels";
+import { decibelsToGain, gainToDecibels } from "../../../../src/client/fwd/utils/decibels";
 import { tolerantCompare } from "../../../test-utils";
 
 const testValues = [
