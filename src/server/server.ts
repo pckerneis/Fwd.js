@@ -8,6 +8,7 @@ const SocketServer = require('ws').Server;
 const fs = require('fs');
 const chokidar = require('chokidar');
 const path = require('path');
+const opn = require('opn');
 
 let PORT = require('minimist')(process.argv.slice(2)).port || 3989;
 
@@ -17,7 +18,8 @@ const server = express()
   .use('/', serveIndex('./', {}))
   .listen(PORT)
   .on('listening', () => {
-    console.log('%s Serving at http://localhost:' + PORT, chalk.green.bold('READY'))
+    console.log('%s Serving at http://localhost:' + PORT, chalk.green.bold('READY'));
+    opn('http://localhost:' + PORT);
   });
 
 process.on('uncaughtException', (err => {
@@ -26,7 +28,6 @@ process.on('uncaughtException', (err => {
 
 const wss = new SocketServer({server});
 const handshakeMessage = '__HANDSHAKE__';
-
 
 interface Client {
   ws: WebSocket;
@@ -71,7 +72,7 @@ function isLibraryFile(filePath: string): boolean {
 }
 
 chokidar
-  .watch('.', {ignored: /src|.idea|node_modules|\.git|[\/\\]\./})
+  .watch('.', {ignored: /src|.idea|node_modules|.config.js|\.git|[\/\\]\./})
   .on('change', (file: string) => {
     const textContent = fs.readFileSync(file, 'utf8');
     file = file.replace(__dirname, '');
@@ -118,19 +119,16 @@ function sendSketch(client: Client, file: string, textContent?: string): void {
 }
 
 function sendWelcomePacket(ws: WebSocket): void {
-  console.log('sendWelcomePacket');
-
-  // const textContent = fs.readFileSync(path.resolve(__dirname, '../sketch.js'), 'utf8');
-
   console.log('Scan directory : ' + path.resolve(__dirname, '../../'));
 
   const files = fs.readdirSync(path.resolve(__dirname, '../../'))
-    .filter((file: string) => file.endsWith('.js'));
+    .filter((file: string) => file.endsWith('.js'))
+    .filter((file: string) => ! file.endsWith('.config.js'));
 
   ws.send(JSON.stringify({
     type: 'welcome',
     files,
   }));
 
-  console.log('files', files);
+  console.debug('Available files: ', files);
 }
