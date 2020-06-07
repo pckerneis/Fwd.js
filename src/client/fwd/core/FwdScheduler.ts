@@ -312,4 +312,8 @@ export class FwdScheduler {
     this._definitions[name] = action;
     return action;
   }
+
+  public resetActions(): void {
+    this._definitions = {};
+  }
 }

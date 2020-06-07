@@ -144,6 +144,7 @@ class AbstractWebRunner implements FwdRunner {
     this._sketchCode = null;
     this._sketchWasInitialized = false;
     this._fwd.globals = {};
+    this._fwd.scheduler.resetActions();
   }
 
   //==================================================================
