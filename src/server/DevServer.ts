@@ -4,7 +4,7 @@ import {
   HANDSHAKE_MESSAGE,
   PING_MESSAGE,
   PONG_MESSAGE,
-  REFRESH_TYPE,
+  REFRESH_TYPE, SAVE_TYPE,
   SKETCH_TYPE, WATCH_TYPE,
   WELCOME_TYPE,
 } from './DevServer.constants';
@@ -109,9 +109,9 @@ export class DevServer {
     ws.onmessage = ev => {
       const message = ev.data;
 
-      DBG.debug(`Received from client #${client.id}`, message);
+      DBG.debug(`Received from client #${client.id}`, message.substr(0, 128));
 
-      if (message == HANDSHAKE_MESSAGE) {
+      if (message === HANDSHAKE_MESSAGE) {
         DevServer.sendWelcomePacket(ws);
       } else if (message == PONG_MESSAGE) {
         pong();
@@ -119,13 +119,17 @@ export class DevServer {
         try {
           const parsedMessage = JSON.parse(message);
 
-          if (parsedMessage.type == WATCH_TYPE) {
+          if (parsedMessage.type === WATCH_TYPE) {
             DBG.debug(`Watch file for client #${client.id} : ${parsedMessage.file}`);
 
             if (parsedMessage.file) {
               client.watched = [parsedMessage.file];
               DevServer.sendSketch(client, parsedMessage.file);
             }
+          } else if (parsedMessage.type === SAVE_TYPE) {
+            const pathToFile = path.resolve(__dirname, '../..', parsedMessage.file);
+            console.log('pathToFile', pathToFile);
+            fs.writeFileSync(pathToFile, parsedMessage.textContent, 'utf8');
           }
         } catch (e) {
           DBG.error(e);

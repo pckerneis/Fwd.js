@@ -3,7 +3,7 @@ import { EventRef, Time } from '../../core/EventQueue/EventQueue';
 import { Fwd } from '../../core/fwd';
 import { FwdScheduler } from '../../core/FwdScheduler';
 import { Editor } from "../../editor/Editor";
-import FwdWebRunner from './FwdWebRunner';
+import FwdRunner from '../FwdRunner';
 
 export default class FwdWebImpl implements Fwd {
 
@@ -13,7 +13,7 @@ export default class FwdWebImpl implements Fwd {
 
   private readonly _editor: Editor;
 
-  constructor(private _runner: FwdWebRunner) {
+  constructor(private _runner: FwdRunner) {
     this._scheduler = new FwdScheduler();
     this.audio.initializeModule(this);
 

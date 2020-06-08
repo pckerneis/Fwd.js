@@ -1,3 +1,4 @@
+import { DevClient } from '../../../../server/DevClient';
 import { FwdAudio } from '../../audio/FwdAudio';
 import { FwdAudioImpl } from '../../audio/FwdAudioImpl';
 import { fwd, Fwd, putFwd } from '../../core/fwd';
@@ -22,9 +23,6 @@ const footerId = 'fwd-runner-footer';
 const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
 class AbstractWebRunner implements FwdRunner {
-
-  public onSketchFileChange: (file: string) => void = null;
-
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
@@ -33,18 +31,25 @@ class AbstractWebRunner implements FwdRunner {
   private _toolbar: HTMLElement;
   private _buildButton: IconButton;
   private _playButton: IconButton;
+  private _saveButton: IconButton;
   private _projectSelect: HTMLSelectElement;
-
-  private _audioReady: boolean;
-  private _sketchCode: string;
-  private _sketchWasInitialized: boolean;
-
-  private _running: boolean;
   private _autoBuildInput: HTMLInputElement;
-  private _autoBuilds: boolean;
   private _masterSlider: MasterSlider;
   private codeEditor: RunnerCodeEditor;
   private _timeDisplay: TimeDisplay;
+
+  private _currentCode: string;
+
+  private _audioReady: boolean;
+  private _sketchWasInitialized: boolean;
+  private _running: boolean;
+
+  private _autoBuilds: boolean;
+
+  private readonly _sandboxProxies: WeakMap<any, any> = new WeakMap();
+
+  private _devClient: DevClient;
+  private _watchedFile: string;
 
   constructor() {
     this._terminalDrawer = document.getElementById(terminalDrawerId);
@@ -65,6 +70,8 @@ class AbstractWebRunner implements FwdRunner {
     putFwd(this._fwd);
 
     this.buildEditor();
+
+    this.initDevClient();
   }
 
   public get audio(): FwdAudio {
@@ -72,7 +79,7 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   public setSketchCode(newSketch: string): void {
-    this._sketchCode = newSketch;
+    this._currentCode = newSketch;
     this.codeEditor.code = newSketch;
 
     if (this._sketchWasInitialized && this._autoBuilds) {
@@ -118,6 +125,7 @@ class AbstractWebRunner implements FwdRunner {
       minWidth: 100,
       maxWidth: 5000,
       width: 600,
+      flexShrink: 0,
     });
 
     const separator = flexPanel.addSeparator(0, true);
@@ -143,7 +151,7 @@ class AbstractWebRunner implements FwdRunner {
     this._fwd.onStart = null;
     this._fwd.onStop = null;
     this._fwd.editor.reset();
-    this._sketchCode = null;
+    this._currentCode = null;
     this._sketchWasInitialized = false;
     this._fwd.globals = {};
     this._fwd.scheduler.resetActions();
@@ -155,41 +163,60 @@ class AbstractWebRunner implements FwdRunner {
     const webConsole: FwdWebConsole = new FwdWebConsole(this._fwd);
     document.getElementById(terminalDrawerId).append(webConsole.htmlElement);
 
-    const nativeLog = console.log;
-    const nativeErr = console.error;
+    const useWebConsole = false;
 
-    const log = (...messages: any[]) => {
-      const time = this._running ? this._fwd.now() : null;
+    const methodNames = ['log', 'error', 'warn', 'info'];
 
-      webConsole.print(time, messages);
+    const handler = {
+      get: (target: any, key: any) => {
+        if (methodNames.includes(key)) {
+          const time = this._running ? this._fwd.now() : null;
 
-      if (time === null) {
-        this._oneLineLogger.innerText = messages[messages.length - 1];
-        nativeLog(...messages);
-      } else {
-        const timeStr = formatTime(time);
-        this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
-        nativeLog(timeStr, ...messages);
-      }
+          if (useWebConsole) {
+            return (...messages: any[]) => {
+              webConsole.print(time, ...messages);
+
+              if (time === null) {
+                this._oneLineLogger.innerText = messages[messages.length - 1];
+
+                Reflect.get(target, key)(...messages);
+
+              } else {
+                const timeStr = formatTime(time);
+
+                this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
+
+                Reflect.get(target, key)(
+                  `%c[${timeStr}]`,
+                  'font-weight:bold; color:grey;',
+                  ...messages,
+                );
+              }
+            }
+          }
+
+          if (time != null) {
+            return Function.prototype.bind.call(
+              Reflect.get(target, key),   // Original method
+              target,                     // ... on original console
+              `%c[${formatTime(time)}]`,
+              'font-weight:bold; color:grey;',
+            );
+          }
+        }
+
+        // Just return the original thing
+        return Reflect.get(target, key);
+      },
     };
 
-    const err = (...messages: any[]) => {
-      const time = this._running ? this._fwd.now() : null;
+    const proxyObject = new Proxy(window.console, handler);
 
-      webConsole.print(time, messages);
-
-      if (time === null) {
-        this._oneLineLogger.innerText = messages[messages.length - 1];
-        nativeErr(...messages);
-      } else {
-        const timeStr = formatTime(time);
-        this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
-        nativeErr(timeStr, ...messages);
-      }
-    };
-
-    console.log = log;
-    console.error = err;
+    Object.defineProperty(window, 'console', {
+      get: () => {
+        return proxyObject;
+      },
+    });
   }
 
   private start(): void {
@@ -221,12 +248,12 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   private build(): void {
-    if (this._sketchCode == null) {
+    if (this._currentCode == null) {
       throw new Error('The sketch could not be executed');
     }
 
     try {
-      compileCode(this.codeEditor.code)(window);
+      this.compileCode(this.codeEditor.code)(window);
     } catch (e) {
       console.error(e);
     }
@@ -249,7 +276,6 @@ class AbstractWebRunner implements FwdRunner {
       this._fwd.scheduler.stop();
     }
   }
-
 
   private toggleTerminalDrawer(): void {
     if (this._terminalDrawer.style.display === 'none') {
@@ -288,9 +314,7 @@ class AbstractWebRunner implements FwdRunner {
     this._projectSelect = document.createElement('select');
     this._projectSelect.classList.add('fwd-file-select');
     this._projectSelect.oninput = () => {
-      if (typeof this.onSketchFileChange === 'function') {
-        this.onSketchFileChange(this._projectSelect.value);
-      }
+      this._devClient.watchFile(this._projectSelect.value);
     };
 
     const spacer = () => {
@@ -309,11 +333,13 @@ class AbstractWebRunner implements FwdRunner {
 
     this._buildButton = new IconButton('tools');
     this._playButton = new IconButton('play-button');
+    this._saveButton = new IconButton('save');
 
     this._timeDisplay = new TimeDisplay(this._fwd.scheduler);
 
     this._toolbar.append(
       this._projectSelect,
+      this._saveButton.htmlElement,
       spacer(),
       autoBuildLabel,
       this._buildButton.htmlElement,
@@ -325,6 +351,7 @@ class AbstractWebRunner implements FwdRunner {
     this._autoBuildInput.oninput = () => this.handleAutoBuildInputChange();
     this._buildButton.htmlElement.onclick = () => this.build();
     this._playButton.htmlElement.onclick = () => this.start();
+    this._saveButton.htmlElement.onclick = () => this.save();
   }
 
   private applyMasterValue(): void {
@@ -337,7 +364,7 @@ class AbstractWebRunner implements FwdRunner {
 
   private initializeSketchIfReady(): void {
     if (! this._sketchWasInitialized
-      && this._sketchCode != null
+      && this._currentCode != null
       && this._audioReady) {
       this.build();
     }
@@ -345,6 +372,54 @@ class AbstractWebRunner implements FwdRunner {
 
   private handleAutoBuildInputChange(/*event: Event*/): void {
     this._autoBuilds = this._autoBuildInput.checked;
+  }
+
+  private compileCode(src: string): Function {
+    src = `with (sandbox) { ${src} }`;
+
+    const code = new Function('sandbox', src);
+
+    return (sandbox: any) => {
+      if (! this._sandboxProxies.has(sandbox)) {
+        const sandboxProxy = new Proxy(sandbox, {
+          has(): boolean {
+            return true;
+          },
+
+          get(target: string, key: symbol): any {
+            if (key === Symbol.unscopables) return undefined;
+            return target[key];
+          },
+        });
+
+        this._sandboxProxies.set(sandbox, sandboxProxy);
+      }
+
+      return code(this._sandboxProxies.get(sandbox));
+    }
+  }
+
+  private save(): void {
+    this._currentCode = this.codeEditor.code;
+    this._devClient.saveFile(this._watchedFile, this._currentCode);
+  }
+
+  private initDevClient(): void {
+    this._devClient = new DevClient();
+
+    this._devClient.onFilesAvailable = (files) => {
+      this.setFiles(files);
+      this._devClient.watchFile(files[0]);
+    };
+
+    this._devClient.onFileChange = (file, content) => {
+      if (this._watchedFile != file) {
+        this.reset();
+        this._watchedFile = file;
+      }
+
+      this.setSketchCode(content);
+    };
   }
 }
 
@@ -366,30 +441,4 @@ injectStyle('FwdWebRunner', `
 
 
 export default class FwdWebRunner extends AbstractWebRunner {
-}
-
-const sandboxProxies = new WeakMap();
-
-function compileCode(src: string): Function {
-  src = 'with (sandbox) {' + src + '}';
-  const code = new Function('sandbox', src);
-
-  return function (sandbox: any): any {
-    if (! sandboxProxies.has(sandbox)) {
-      const sandboxProxy = new Proxy(sandbox, {
-        has(): boolean {
-          return true;
-        },
-
-        get(target: string, key: symbol): any {
-          if (key === Symbol.unscopables) return undefined;
-          return target[key];
-        },
-      });
-
-      sandboxProxies.set(sandbox, sandboxProxy);
-    }
-
-    return code(sandboxProxies.get(sandbox));
-  }
 }

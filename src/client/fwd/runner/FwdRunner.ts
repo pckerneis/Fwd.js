@@ -1,6 +1,7 @@
-export default interface FwdRunner {
+import { FwdAudio } from '../audio/FwdAudio';
 
-  onSketchFileChange: (newSketchFile: string) => void;
+export default interface FwdRunner {
+  audio: FwdAudio;
 
   /**
    * Creates and start the audio context
