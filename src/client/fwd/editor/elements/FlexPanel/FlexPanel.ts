@@ -244,7 +244,7 @@ export class FlexPanel extends ContainerPanel {
 
 injectStyle('FlexPanel', `
 .fwd-flex-panel-separator {
-  background: #0000000a;
+  background: rgb(247, 248, 249);
   flex-shrink: 0;
   flex-grow: 0;
 }
