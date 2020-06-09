@@ -34,4 +34,10 @@ injectStyle('RunnerCodeEditor', `
   width: 100%;
   height: 100%;
 }
+
+/* Override CodeMirror style */
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar {
+  outline: none;
+}
 `);
