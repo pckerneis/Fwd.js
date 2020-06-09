@@ -139,4 +139,14 @@ injectStyle('RunnerHeader', `
   background: none;
   min-width: 120px;
 }
+
+.fwd-runner-auto-build-label {
+  font-size: 11px;
+  display: flex;
+    align-items: center;
+}
+
+.fwd-file-select.dirty {
+  font-style: italic;
+}
 `);
