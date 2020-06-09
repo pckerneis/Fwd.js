@@ -356,7 +356,8 @@ export class FwdSamplerNode extends FwdAudioNode {
     fetch(url)
       .then(response => response.arrayBuffer())
       .then(arrayBuffer => this.fwdAudio.context.decodeAudioData(arrayBuffer))
-      .then(audioBuffer => this._buffer = audioBuffer);
+      .then(audioBuffer => this._buffer = audioBuffer)
+      .catch(e => console.error(e));
   }
 }
 
