@@ -15,7 +15,6 @@ export default class FwdWebImpl implements Fwd {
 
   constructor(private _runner: FwdRunner) {
     this._scheduler = new FwdScheduler();
-    this.audio.initializeModule(this);
 
     this._editor = new Editor();
   }

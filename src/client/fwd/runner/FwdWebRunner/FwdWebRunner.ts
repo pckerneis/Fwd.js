@@ -13,65 +13,66 @@ import { FwdWebConsole } from './components/Console';
 import { IconButton } from './components/IconButton';
 import { MasterSlider } from './components/MasterSlider';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
-import { TimeDisplay } from './components/TimeDisplay';
+import { RunnerHeader } from './components/RunnerHeader';
 import FwdWebImpl from './FwdWebImpl';
 import { injectStyle } from './StyleInjector';
 
 const masterSliderId = 'master-slider';
-const toolbarId = 'fwd-runner-toolbar';
 const footerId = 'fwd-runner-footer';
 const terminalDrawerId = 'fwd-runner-terminal-drawer';
+
+export type RunnerCodeExecutionState = 'up-to-date' | 'out-of-date' | 'code-errors';
 
 class AbstractWebRunner implements FwdRunner {
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
+  private readonly _header: RunnerHeader;
+
   private readonly _terminalDrawer: HTMLElement;
   private _oneLineLogger: HTMLLabelElement;
-  private _toolbar: HTMLElement;
-  private _buildButton: IconButton;
-  private _playButton: IconButton;
-  private _saveButton: IconButton;
-  private _projectSelect: HTMLSelectElement;
-  private _autoBuildInput: HTMLInputElement;
   private _masterSlider: MasterSlider;
   private codeEditor: RunnerCodeEditor;
-  private _timeDisplay: TimeDisplay;
 
   private _currentCode: string;
-
   private _audioReady: boolean;
   private _sketchWasInitialized: boolean;
   private _running: boolean;
-
   private _autoBuilds: boolean;
 
   private readonly _sandboxProxies: WeakMap<any, any> = new WeakMap();
 
   private _devClient: DevClient;
   private _watchedFile: string;
+  private _sketchIsDirty: boolean = false;
+  private _executedCode: string;
+  private _savedCode: string;
 
   constructor() {
+    this._fwd = new FwdWebImpl(this);
+
+    this._audio = new FwdAudioImpl();
+    this._audio.initializeModule(this._fwd);
+
+    this.initDevClient();
+
+    this._header = new RunnerHeader(this, this._devClient);
+
     this._terminalDrawer = document.getElementById(terminalDrawerId);
     this._terminalDrawer.style.display = 'none';
 
-    this._audio = new FwdAudioImpl();
-
-    this._fwd = new FwdWebImpl(this);
-
     this._fwd.scheduler.onEnded = () => {
-      this._playButton.iconName = 'play-button';
-      this._playButton.htmlElement.onclick = () => this.start();
+      this._header.onRunnerStop();
       this._running = false;
     };
-
-    this._audio.initializeModule(this._fwd);
 
     putFwd(this._fwd);
 
     this.buildEditor();
+  }
 
-    this.initDevClient();
+  public get fwd(): Fwd {
+    return this._fwd;
   }
 
   public get audio(): FwdAudio {
@@ -81,6 +82,8 @@ class AbstractWebRunner implements FwdRunner {
   public setSketchCode(newSketch: string): void {
     this._currentCode = newSketch;
     this.codeEditor.code = newSketch;
+    this._savedCode = newSketch;
+    this.setDirty(false);
 
     if (this._sketchWasInitialized && this._autoBuilds) {
       this.build();
@@ -90,15 +93,11 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   public setFiles(files: string[]): void {
-    files
-      .map(label => {
-        const option = document.createElement('option');
-        option.value = label;
-        option.innerText = label;
-        return option;
-      }).forEach(option => {
-      this._projectSelect.append(option);
-    });
+    this._header.setFiles(files);
+  }
+
+  public setAutoBuilds(autoBuilds: boolean): void {
+    this._autoBuilds = autoBuilds;
   }
 
   public startAudioContext(): void {
@@ -108,7 +107,88 @@ class AbstractWebRunner implements FwdRunner {
     this._masterSlider.meter.audioSource = this._audio.master;
   }
 
-  public buildEditor(): void {
+  public reset(): void {
+    if (this._running) {
+      this.stop();
+    }
+
+    this._fwd.onInit = null;
+    this._fwd.onStart = null;
+    this._fwd.onStop = null;
+    this._fwd.editor.reset();
+    this._currentCode = null;
+    this._sketchWasInitialized = false;
+    this._fwd.globals = {};
+    this._fwd.scheduler.resetActions();
+  }
+
+  public save(): void {
+    this._currentCode = this.codeEditor.code;
+    this._devClient.saveFile(this._watchedFile, this._currentCode);
+  }
+
+  public start(): void {
+    if (! this._sketchWasInitialized) {
+      throw new Error('The sketch was not initialized');
+    }
+
+    if (typeof fwd.onStart !== 'function') {
+      console.error(null, `Nothing to start.`);
+      return;
+    }
+
+    this._header.onRunnerStart();
+
+    this._fwd.scheduler.clearEvents();
+
+    ControlBindingManager.getInstance().clearCurrentControllers();
+
+    this._running = true;
+
+    this._audio.start();
+    fwd.onStart();
+    this._fwd.scheduler.start();
+
+    this.applyMasterValue();
+  }
+
+  public stop(): void {
+    if (this._fwd != null) {
+      this._fwd.scheduler.stop();
+    }
+  }
+
+  public build(): void {
+    if (this._currentCode == null) {
+      throw new Error('The sketch could not be executed');
+    }
+
+    try {
+      this.compileCode(this.codeEditor.code)(window);
+
+      if (! this._sketchWasInitialized) {
+        if (typeof this._fwd.onInit === 'function') {
+          try {
+            this._fwd.onInit();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        this._sketchWasInitialized = true;
+      }
+
+      this._executedCode = this._currentCode;
+      this._header.setSyncState('up-to-date');
+    } catch (e) {
+      this._header.setSyncState('code-errors');
+      console.error(e);
+    }
+  }
+
+  //==================================================================
+
+  private buildEditor(): void {
     this.prepareHeader();
     this.prepareFooter();
 
@@ -116,6 +196,14 @@ class AbstractWebRunner implements FwdRunner {
     this.codeEditor = new RunnerCodeEditor();
 
     this.codeEditor.codeMirror.on('changes', debounce(() => {
+      if (this.codeEditor.code !== this._executedCode) {
+        this._header.setSyncState('out-of-date');
+      } else {
+        this._header.setSyncState('up-to-date')
+      }
+
+      this.setDirty(this.codeEditor.code !== this._savedCode);
+
       if (this._autoBuilds) {
         this.build();
       }
@@ -142,28 +230,11 @@ class AbstractWebRunner implements FwdRunner {
       .append(flexPanel.htmlElement);
   }
 
-  public reset(): void {
-    if (this._running) {
-      this.stop();
-    }
-
-    this._fwd.onInit = null;
-    this._fwd.onStart = null;
-    this._fwd.onStop = null;
-    this._fwd.editor.reset();
-    this._currentCode = null;
-    this._sketchWasInitialized = false;
-    this._fwd.globals = {};
-    this._fwd.scheduler.resetActions();
-  }
-
-  //==================================================================
-
   private prepareConsole(): void {
     const webConsole: FwdWebConsole = new FwdWebConsole(this._fwd);
     document.getElementById(terminalDrawerId).append(webConsole.htmlElement);
 
-    const useWebConsole = false;
+    const useWebConsole = true;
 
     const methodNames = ['log', 'error', 'warn', 'info'];
 
@@ -219,64 +290,6 @@ class AbstractWebRunner implements FwdRunner {
     });
   }
 
-  private start(): void {
-    if (! this._sketchWasInitialized) {
-      throw new Error('The sketch was not initialized');
-    }
-
-    if (typeof fwd.onStart !== 'function') {
-      console.error(null, `Nothing to start.`);
-      return;
-    }
-
-    this._playButton.iconName = 'stop';
-    this._playButton.htmlElement.onclick = () => this.stop();
-
-    this._fwd.scheduler.clearEvents();
-
-    ControlBindingManager.getInstance().clearCurrentControllers();
-
-    this._running = true;
-
-    this._audio.start();
-    fwd.onStart();
-    this._fwd.scheduler.start();
-
-    this.applyMasterValue();
-
-    this._timeDisplay.animate();
-  }
-
-  private build(): void {
-    if (this._currentCode == null) {
-      throw new Error('The sketch could not be executed');
-    }
-
-    try {
-      this.compileCode(this.codeEditor.code)(window);
-    } catch (e) {
-      console.error(e);
-    }
-
-    if (! this._sketchWasInitialized) {
-      if (typeof this._fwd.onInit === 'function') {
-        try {
-          this._fwd.onInit();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      this._sketchWasInitialized = true;
-    }
-  }
-
-  private stop(): void {
-    if (this._fwd != null) {
-      this._fwd.scheduler.stop();
-    }
-  }
-
   private toggleTerminalDrawer(): void {
     if (this._terminalDrawer.style.display === 'none') {
       this._terminalDrawer.style.display = 'flex';
@@ -309,49 +322,6 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   private prepareHeader(): void {
-    this._toolbar = document.getElementById(toolbarId);
-
-    this._projectSelect = document.createElement('select');
-    this._projectSelect.classList.add('fwd-file-select');
-    this._projectSelect.oninput = () => {
-      this._devClient.watchFile(this._projectSelect.value);
-    };
-
-    const spacer = () => {
-      const elem = document.createElement('span');
-      elem.style.flexGrow = '1';
-      return elem;
-    };
-
-    this._autoBuildInput = document.createElement('input');
-    this._autoBuildInput.type = 'checkbox';
-
-    const autoBuildLabel = document.createElement('label');
-    autoBuildLabel.classList.add('fwd-runner-auto-build-label');
-    autoBuildLabel.innerText = 'Auto-build';
-    autoBuildLabel.append(this._autoBuildInput);
-
-    this._buildButton = new IconButton('tools');
-    this._playButton = new IconButton('play-button');
-    this._saveButton = new IconButton('save');
-
-    this._timeDisplay = new TimeDisplay(this._fwd.scheduler);
-
-    this._toolbar.append(
-      this._projectSelect,
-      this._saveButton.htmlElement,
-      spacer(),
-      autoBuildLabel,
-      this._buildButton.htmlElement,
-      this._playButton.htmlElement,
-      this._timeDisplay.htmlElement,
-      // spacer(),
-    );
-
-    this._autoBuildInput.oninput = () => this.handleAutoBuildInputChange();
-    this._buildButton.htmlElement.onclick = () => this.build();
-    this._playButton.htmlElement.onclick = () => this.start();
-    this._saveButton.htmlElement.onclick = () => this.save();
   }
 
   private applyMasterValue(): void {
@@ -368,10 +338,6 @@ class AbstractWebRunner implements FwdRunner {
       && this._audioReady) {
       this.build();
     }
-  }
-
-  private handleAutoBuildInputChange(/*event: Event*/): void {
-    this._autoBuilds = this._autoBuildInput.checked;
   }
 
   private compileCode(src: string): Function {
@@ -399,11 +365,6 @@ class AbstractWebRunner implements FwdRunner {
     }
   }
 
-  private save(): void {
-    this._currentCode = this.codeEditor.code;
-    this._devClient.saveFile(this._watchedFile, this._currentCode);
-  }
-
   private initDevClient(): void {
     this._devClient = new DevClient();
 
@@ -416,10 +377,21 @@ class AbstractWebRunner implements FwdRunner {
       if (this._watchedFile != file) {
         this.reset();
         this._watchedFile = file;
+        this.setDirty(false);
+        this._header.setSyncState('out-of-date');
       }
 
       this.setSketchCode(content);
     };
+  }
+
+  private setDirty(isDirty: boolean): void {
+    if (isDirty === this._sketchIsDirty) {
+      return;
+    }
+
+    this._sketchIsDirty = isDirty;
+    this._header.setDirty(isDirty);
   }
 }
 
@@ -436,6 +408,10 @@ injectStyle('FwdWebRunner', `
   font-size: 11px;
   display: flex;
     align-items: center;
+}
+
+.fwd-file-select.dirty {
+  font-style: italic;
 }
 `);
 
