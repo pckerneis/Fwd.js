@@ -9,7 +9,7 @@ import {
   WELCOME_TYPE,
 } from './DevServer.constants';
 
-const DBG = new Logger('DevClient', null, LoggerLevel.debug);
+const DBG = new Logger('DevClient', null, LoggerLevel.error);
 
 export class DevClient {
   public readonly _ws: WebSocket;
