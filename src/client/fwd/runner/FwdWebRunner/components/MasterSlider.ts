@@ -16,7 +16,6 @@ export class MasterSlider {
     input.max = '100';
     input.value = '77';
     input.classList.add('master-slider', 'slider');
-    input.id = 'master-slider';
     this.slider = input;
 
     const label = document.createElement('label') as HTMLLabelElement;

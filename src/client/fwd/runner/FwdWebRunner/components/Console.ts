@@ -1,5 +1,4 @@
 import { Time } from '../../../core/EventQueue/EventQueue';
-import { Fwd } from "../../../core/fwd";
 import { clamp } from "../../../utils/numbers";
 import { formatTime } from '../../../utils/time';
 import { injectStyle } from '../StyleInjector';
@@ -17,7 +16,7 @@ export class FwdWebConsole {
   private _autoScrollCheckbox: HTMLInputElement;
   private _replInput: HTMLElement;
 
-  constructor(private readonly _fwd: Fwd) {
+  constructor() {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('web-console');
 

@@ -3,23 +3,15 @@ import { FwdAudio } from '../../audio/FwdAudio';
 import { FwdAudioImpl } from '../../audio/FwdAudioImpl';
 import { fwd, Fwd, putFwd } from '../../core/fwd';
 import { FlexPanel } from '../../editor/elements/FlexPanel/FlexPanel';
-import { parseNumber } from '../../utils/numbers';
 import { formatTime } from '../../utils/time';
-import audit from '../../utils/time-filters/audit';
 import debounce from '../../utils/time-filters/debounce';
 import FwdRunner from '../FwdRunner';
 import { ControlBindingManager } from './components/BindableController';
-import { FwdWebConsole } from './components/Console';
-import { IconButton } from './components/IconButton';
-import { MasterSlider } from './components/MasterSlider';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
+import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import FwdWebImpl from './FwdWebImpl';
 import { injectStyle } from './StyleInjector';
-
-const masterSliderId = 'master-slider';
-const footerId = 'fwd-runner-footer';
-const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
 export type RunnerCodeExecutionState = 'up-to-date' | 'out-of-date' | 'code-errors';
 
@@ -28,10 +20,8 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _audio: FwdAudio;
 
   private readonly _header: RunnerHeader;
+  private readonly _footer: RunnerFooter;
 
-  private readonly _terminalDrawer: HTMLElement;
-  private _oneLineLogger: HTMLLabelElement;
-  private _masterSlider: MasterSlider;
   private codeEditor: RunnerCodeEditor;
 
   private _currentCode: string;
@@ -57,9 +47,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.initDevClient();
 
     this._header = new RunnerHeader(this, this._devClient);
-
-    this._terminalDrawer = document.getElementById(terminalDrawerId);
-    this._terminalDrawer.style.display = 'none';
+    this._footer = new RunnerFooter(this);
 
     this._fwd.scheduler.onEnded = () => {
       this._header.onRunnerStop();
@@ -69,6 +57,8 @@ export default class FwdWebRunner implements FwdRunner {
     putFwd(this._fwd);
 
     this.buildEditor();
+
+    this.prepareConsoleWrappers();
   }
 
   public get fwd(): Fwd {
@@ -104,7 +94,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._audio.start();
     this._audioReady = true;
     this.initializeSketchIfReady();
-    this._masterSlider.meter.audioSource = this._audio.master;
+    this._footer.masterSlider.meter.audioSource = this._audio.master;
   }
 
   public reset(): void {
@@ -137,8 +127,6 @@ export default class FwdWebRunner implements FwdRunner {
       return;
     }
 
-    this._header.onRunnerStart();
-
     this._fwd.scheduler.clearEvents();
 
     ControlBindingManager.getInstance().clearCurrentControllers();
@@ -149,7 +137,8 @@ export default class FwdWebRunner implements FwdRunner {
     fwd.onStart();
     this._fwd.scheduler.start();
 
-    this.applyMasterValue();
+    this._header.onRunnerStart();
+    this._footer.applyMasterValue();
   }
 
   public stop(): void {
@@ -230,10 +219,7 @@ export default class FwdWebRunner implements FwdRunner {
       .append(flexPanel.htmlElement);
   }
 
-  private prepareConsole(): void {
-    const webConsole: FwdWebConsole = new FwdWebConsole(this._fwd);
-    document.getElementById(terminalDrawerId).append(webConsole.htmlElement);
-
+  private prepareConsoleWrappers(): void {
     const useWebConsole = true;
 
     const methodNames = ['log', 'error', 'warn', 'info'];
@@ -245,17 +231,12 @@ export default class FwdWebRunner implements FwdRunner {
 
           if (useWebConsole) {
             return (...messages: any[]) => {
-              webConsole.print(time, ...messages);
+              this._footer.print(time, ...messages);
 
               if (time === null) {
-                this._oneLineLogger.innerText = messages[messages.length - 1];
-
                 Reflect.get(target, key)(...messages);
-
               } else {
                 const timeStr = formatTime(time);
-
-                this._oneLineLogger.innerText = timeStr + ' ' + messages[messages.length - 1];
 
                 Reflect.get(target, key)(
                   `%c[${timeStr}]`,
@@ -290,47 +271,13 @@ export default class FwdWebRunner implements FwdRunner {
     });
   }
 
-  private toggleTerminalDrawer(): void {
-    if (this._terminalDrawer.style.display === 'none') {
-      this._terminalDrawer.style.display = 'flex';
-      this._oneLineLogger.style.display = 'none';
-    } else {
-      this._terminalDrawer.style.display = 'none';
-      this._oneLineLogger.style.display = 'block';
-    }
-  }
-
   private prepareFooter(): void {
-    this._oneLineLogger = document.createElement('label');
-    this._oneLineLogger.classList.add('fwd-runner-one-line-logger');
-    this._oneLineLogger.style.cursor = 'default';
-
-    const terminalButton = new IconButton('terminal');
-    terminalButton.htmlElement.id = 'terminal-drawer-toggle';
-    this._oneLineLogger.htmlFor = terminalButton.htmlElement.id;
-    terminalButton.htmlElement.onclick = () => this.toggleTerminalDrawer();
-
-    const footer = document.getElementById(footerId);
-    footer.append(terminalButton.htmlElement);
-    footer.append(this._oneLineLogger);
-
-    this.prepareConsole();
-
-    this._masterSlider = new MasterSlider();
-    this._masterSlider.slider.oninput = audit(() => this.applyMasterValue());
-    footer.append(this._masterSlider.htmlElement);
+    document.body.append(this._footer.terminalDrawer);
+    document.body.append(this._footer.htmlElement);
   }
 
   private prepareHeader(): void {
     document.body.prepend(this._header.htmlElement)
-  }
-
-  private applyMasterValue(): void {
-    const masterSlider = document.getElementById(masterSliderId) as HTMLInputElement;
-    const masterGain = this._audio.master.gain;
-    const now = this._audio.context.currentTime;
-    const value = parseNumber(masterSlider.value) / 100;
-    masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
 
   private initializeSketchIfReady(): void {
@@ -403,5 +350,10 @@ injectStyle('FwdWebRunner', `
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.fwd-runner-large-separator {
+  border-left: solid 1px #00000015;
+  border-right: solid 1px #00000015;
 }
 `);
