@@ -23,7 +23,7 @@ const terminalDrawerId = 'fwd-runner-terminal-drawer';
 
 export type RunnerCodeExecutionState = 'up-to-date' | 'out-of-date' | 'code-errors';
 
-class AbstractWebRunner implements FwdRunner {
+export default class FwdWebRunner implements FwdRunner {
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
@@ -322,6 +322,7 @@ class AbstractWebRunner implements FwdRunner {
   }
 
   private prepareHeader(): void {
+    document.body.prepend(this._header.htmlElement)
   }
 
   private applyMasterValue(): void {
@@ -414,7 +415,3 @@ injectStyle('FwdWebRunner', `
   font-style: italic;
 }
 `);
-
-
-export default class FwdWebRunner extends AbstractWebRunner {
-}

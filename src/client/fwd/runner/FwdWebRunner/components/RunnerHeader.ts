@@ -1,11 +1,10 @@
 import { DevClient } from '../../../../../server/DevClient';
 import FwdRunner from '../../FwdRunner';
 import { RunnerCodeExecutionState } from '../FwdWebRunner';
+import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
 import { SyncStateElement } from './SyncState';
 import { TimeDisplay } from './TimeDisplay';
-
-const toolbarId = 'fwd-runner-toolbar';
 
 export class RunnerHeader {
   public readonly htmlElement: HTMLDivElement;
@@ -21,7 +20,12 @@ export class RunnerHeader {
 
   constructor(private readonly runner: FwdRunner, private readonly _devClient: DevClient) {
     this.htmlElement = document.createElement('div');
-    this._toolbar = document.getElementById(toolbarId);
+    this.htmlElement.classList.add('fwd-runner-header');
+
+    this._toolbar = document.createElement('div');
+    this._toolbar.classList.add('fwd-runner-toolbar');
+
+    this.htmlElement.append(this._toolbar);
 
     this._projectSelect = document.createElement('select');
     this._projectSelect.classList.add('fwd-file-select');
@@ -114,3 +118,25 @@ export class RunnerHeader {
     }
   }
 }
+
+injectStyle('RunnerHeader', `
+.fwd-runner-header {
+  height: 27px;
+  background: rgb(247, 248, 249);
+  border-bottom: solid 1px #00000020;
+  display: flex;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.fwd-runner-toolbar {
+  display: flex;
+  width: 100%;
+}
+
+.fwd-runner-toolbar .fwd-file-select {
+  border: none;
+  background: none;
+  min-width: 120px;
+}
+`);
