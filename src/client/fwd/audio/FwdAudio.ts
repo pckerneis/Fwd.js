@@ -12,12 +12,7 @@ import {
   FwdStereoDelayNode,
 } from './nodes/StandardAudioNodes';
 
-export interface FwdAudioListener {
-  audioContextStarted(context: AudioContext): void;
-}
-
 export interface FwdAudio {
-  listeners: Partial<FwdAudioListener>[];
   readonly isContextReady: boolean;
   context: AudioContext;
   readonly master: GainNode;

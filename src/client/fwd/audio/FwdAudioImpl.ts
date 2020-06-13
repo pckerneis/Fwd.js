@@ -1,7 +1,7 @@
 import { Time } from '../core/EventQueue/EventQueue';
 import { Fwd } from '../core/fwd';
 import { Logger, LoggerLevel } from "../utils/Logger";
-import { FwdAudio, FwdAudioListener } from "./FwdAudio";
+import { FwdAudio } from "./FwdAudio";
 import parentLogger from './logger.audio';
 import {
   FwdCompressorNode,
@@ -18,8 +18,6 @@ import {
 const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 
 export class FwdAudioImpl implements FwdAudio {
-  public readonly listeners: FwdAudioListener[] = [];
-
   private _fwd: Fwd;
 
   private _ctx: AudioContext;
@@ -51,7 +49,6 @@ export class FwdAudioImpl implements FwdAudio {
     this.resetAudioContext();
     this._startOffset = this._ctx.currentTime;
     DBG.debug('start at ' + this._startOffset);
-
   }
 
   public now(): Time {
@@ -124,12 +121,6 @@ export class FwdAudioImpl implements FwdAudio {
 
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
-
-    this.listeners.forEach(l => {
-      if (typeof l.audioContextStarted === 'function') {
-        l.audioContextStarted(this._ctx)
-      }
-    });
 
     this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
   }
