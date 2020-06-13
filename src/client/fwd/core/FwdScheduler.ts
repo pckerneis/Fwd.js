@@ -88,6 +88,18 @@ class FwdFire extends FwdChainEvent {
   }
 }
 
+class FwdContinueIf extends FwdChainEvent {
+  constructor(scheduler: FwdScheduler, public readonly condition: () => boolean) {
+    super(scheduler);
+  }
+
+  public trigger(): void {
+    if (typeof this.condition === 'function' && this.condition()) {
+      this.scheduler.schedule(0, () => this.next.trigger(), true);
+    }
+  }
+}
+
 class FwdChain {
   private _chain: FwdChainEvent[] = [];
 
@@ -101,9 +113,18 @@ class FwdChain {
     return this;
   }
 
-  public wait(time: number): this {
+  public wait(time: (() => Time) | Time): this {
     this.append(new FwdWait(this.scheduler, time));
     return this;
+  }
+
+  public continueIf(condition: () => boolean): this {
+    this.append(new FwdContinueIf(this.scheduler, condition));
+    return this;
+  }
+
+  public continueIfStillRunning(): this {
+    return this.continueIf(() => this.scheduler.state === 'running');
   }
 
   public concat(chain: FwdChain): this {
