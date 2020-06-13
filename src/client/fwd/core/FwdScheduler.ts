@@ -57,14 +57,14 @@ class FwdWait extends FwdChainEvent {
 }
 
 class FwdFire extends FwdChainEvent {
-  constructor(scheduler: FwdScheduler, public readonly action: Function | string) {
+  constructor(scheduler: FwdScheduler, public readonly action: Function | string, public readonly args: any[]) {
     super(scheduler);
   }
 
   public trigger(): void {
     if (typeof this.action === 'function') {
       try {
-        this.action();
+        this.action(...this.args);
       } catch(e) {
         console.error(e);
       }
@@ -73,7 +73,7 @@ class FwdFire extends FwdChainEvent {
 
       if (action != null) {
         try {
-          action();
+          action(...this.args);
         } catch(e) {
           console.error(e);
         }
@@ -89,13 +89,15 @@ class FwdFire extends FwdChainEvent {
 }
 
 class FwdChain {
-  public readonly chain: FwdChainEvent[] = [];
+  private _chain: FwdChainEvent[] = [];
 
   constructor(public readonly scheduler: FwdScheduler) {
   }
 
-  public fire(action: Function | string): this {
-    this.append(new FwdFire(this.scheduler, action));
+  public get chain(): FwdChainEvent[] { return this._chain; }
+
+  public fire(action: Function | string, ...args: any[]): this {
+    this.append(new FwdFire(this.scheduler, action, args));
     return this;
   }
 
@@ -104,29 +106,50 @@ class FwdChain {
     return this;
   }
 
+  public concat(chain: FwdChain): this {
+    const previous = this.last();
+    const next = chain.first();
+
+    if (previous != null) {
+      previous.next = next;
+    }
+
+    this._chain = [...this._chain, ...chain._chain];
+
+    return this;
+  }
+
   public trigger(): void {
     if ((this.scheduler.state === 'running' || this.scheduler.state === 'ready')
-      && this.chain.length > 0) {
-      this.chain[0].trigger();
+      && this._chain.length > 0) {
+      this._chain[0].trigger();
     }
   }
 
-  private last(): FwdChainEvent {
-    if (this.chain.length === 0) {
+  public first(): FwdChainEvent {
+    if (this._chain.length === 0) {
       return null;
     }
 
-    return this.chain[this.chain.length - 1];
+    return this._chain[0];
   }
 
-  private append(event: FwdChainEvent): void {
+  public last(): FwdChainEvent {
+    if (this._chain.length === 0) {
+      return null;
+    }
+
+    return this._chain[this._chain.length - 1];
+  }
+
+  public append(event: FwdChainEvent): void {
     const previous = this.last();
 
     if (previous != null) {
       previous.next = event;
     }
 
-    this.chain.push(event);
+    this._chain = [...this._chain, event];
   }
 }
 
@@ -235,9 +258,9 @@ export class FwdScheduler {
     return chain;
   }
 
-  public fire(action: Function | string): FwdChain {
+  public fire(action: Function | string, ...args: any[]): FwdChain {
     const chain = new FwdChain(this);
-    chain.fire(action);
+    chain.fire(action, ...args);
     return chain;
   }
 
