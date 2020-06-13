@@ -53,13 +53,11 @@ export class FwdAudioParamWrapper extends FwdAudioNode {
    * @param rampTime the duration for the ramp
    */
   public rampTo(value: number, rampTime: number): void {
-    fwd.schedule(0, () => {
-      const audioNow = this.fwdAudio.now();
-      const holdValue = this.cancelAndHoldAtTime(audioNow);
-      this._param.linearRampToValueAtTime(value, audioNow + rampTime);
+    const audioNow = this.fwdAudio.now();
+    const holdValue = this.cancelAndHoldAtTime(audioNow);
+    this._param.linearRampToValueAtTime(value, audioNow + rampTime);
 
-      this.registerRamp(holdValue, audioNow, value, audioNow + rampTime);
-    }, true);
+    this.registerRamp(holdValue, audioNow, value, audioNow + rampTime);
   }
 
   protected doTearDown(/* when: Time */): void {
@@ -516,8 +514,6 @@ export class FwdStereoDelayNode extends FwdAudioNode {
 //===============================================================
 // TODO: expose parameters
 export class FwdDistortionNode extends FwdAudioNodeWrapper<WaveShaperNode> {
-  // private readonly _delayTime: FwdAudioParamWrapper;
-
   constructor(fwdAudio: FwdAudio, amount: number) {
     super(fwdAudio, fwdAudio.context.createWaveShaper());
     this.nativeNode.curve = this.makeCurve(amount);
