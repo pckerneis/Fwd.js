@@ -15,5 +15,5 @@ export default interface FwdRunner {
   start(): void;
   stop(): void;
   save(): void;
-  render(): void;
+  render(duration: number, fileName: string): void;
 }

@@ -118,14 +118,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public start(): void {
-    if (! this._sketchWasInitialized) {
-      throw new Error('The sketch was not initialized');
-    }
-
-    if (typeof fwd.onStart !== 'function') {
-      console.error(null, `Nothing to start.`);
-      return;
-    }
+    this.checkSketchCanBeStarted();
 
     this._fwd.scheduler.clearEvents();
 
@@ -141,18 +134,20 @@ export default class FwdWebRunner implements FwdRunner {
     this._footer.applyMasterValue();
   }
 
-  public render(): void {
+  public render(duration: number, fileName: string = 'audio.wav'): void {
+    this.checkSketchCanBeStarted();
+
     this._fwd.scheduler.clearEvents();
     ControlBindingManager.getInstance().clearCurrentControllers();
-
-    const duration = 90;
 
     this._running = true;
     const offlineContext = this._audio.startOffline(duration);
     fwd.onStart();
     this._fwd.scheduler.runSync(duration);
     offlineContext.startRendering().then((renderedBuffer: AudioBuffer) => {
-      downloadFile(bufferToWave(renderedBuffer, 0, 44100 * 90), 'audio.wav');
+      downloadFile(
+        bufferToWave(renderedBuffer, 0, 44100 * 90),
+        fileName);
     }).catch((err) => {
       console.error(err);
     });
@@ -357,6 +352,16 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._sketchIsDirty = isDirty;
     this._header.setDirty(isDirty);
+  }
+
+  private checkSketchCanBeStarted(): void {
+    if (! this._sketchWasInitialized) {
+      throw new Error('The sketch was not initialized');
+    }
+
+    if (typeof fwd.onStart !== 'function') {
+      throw new Error(`Nothing to start.`);
+    }
   }
 }
 
