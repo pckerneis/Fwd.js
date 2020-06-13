@@ -14,12 +14,14 @@ import {
 
 export interface FwdAudio {
   readonly isContextReady: boolean;
-  context: AudioContext;
+  context: AudioContext | OfflineAudioContext;
   readonly master: GainNode;
 
   initializeModule(fwd: Fwd): void;
   start(): void;
   now(): Time;
+
+  startOffline(duration: number, sampleRate?: number): OfflineAudioContext;
 
   gain(value?: number): FwdGainNode;
   osc(frequency?: number, type?: OscillatorType): FwdOscillatorNode;

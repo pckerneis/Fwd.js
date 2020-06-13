@@ -107,6 +107,29 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
   }
 
   /** @inheritdoc */
+  public runSync(start: Time, end: Time): void {
+    if (this._running) {
+      DBG.info('Scheduler started while already running. About to stop.');
+      this.stop();
+    }
+
+    DBG.info('Scheduler started at position ' + start + '. About to run.');
+
+    this._running = true;
+    this._startTime = this._timeProvider();
+    this._now = start;
+
+    let next = this._eventQueue.next(end);
+
+    while (next != null) {
+      next.event.trigger();
+      next = this._eventQueue.next(end);
+    }
+
+    this._running = false;
+  }
+
+  /** @inheritdoc */
   public clearQueue(): void {
     this._eventQueue.clear();
   }

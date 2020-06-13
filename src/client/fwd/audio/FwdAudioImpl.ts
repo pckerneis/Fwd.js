@@ -20,7 +20,7 @@ const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 export class FwdAudioImpl implements FwdAudio {
   private _fwd: Fwd;
 
-  private _ctx: AudioContext;
+  private _ctx: AudioContext | OfflineAudioContext;
 
   private _masterGain: FwdGainNode;
 
@@ -35,7 +35,7 @@ export class FwdAudioImpl implements FwdAudio {
     return this._contextReady;
   }
 
-  public get context(): AudioContext { return this._ctx; }
+  public get context(): AudioContext | OfflineAudioContext { return this._ctx; }
 
   public get master(): GainNode {
     return this._masterGain.nativeNode;
@@ -54,6 +54,21 @@ export class FwdAudioImpl implements FwdAudio {
   public now(): Time {
     DBG.debug('now is ' + (this._fwd.now() + this._startOffset));
     return this._fwd.now() + this._startOffset;
+  }
+
+  public startOffline(duration: number, sampleRate: number = 44100): OfflineAudioContext {
+    this._ctx = new OfflineAudioContext(2, duration * sampleRate, sampleRate);
+
+    this._masterGain = new FwdGainNode(this, 0.5);
+    this._masterGain.nativeNode.connect(this._ctx.destination);
+
+    this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
+
+    this._startOffset = this._ctx.currentTime;
+
+    this._contextReady = true;
+
+    return this._ctx;
   }
 
   //===============================================================================

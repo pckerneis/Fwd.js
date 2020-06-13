@@ -373,7 +373,7 @@ export class FwdNoiseNode extends FwdAudioNode {
     this._output.start(fwdAudio.now());
   }
 
-  public static generateWhiteNoise(context: AudioContext, lengthInSeconds: number = 1): AudioBuffer {
+  public static generateWhiteNoise(context: BaseAudioContext, lengthInSeconds: number = 1): AudioBuffer {
     const sampleRate = context.sampleRate;
     const buffer = context.createBuffer(1, lengthInSeconds * sampleRate, sampleRate);
     const data = buffer.getChannelData(0);

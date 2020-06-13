@@ -80,6 +80,8 @@ export interface Scheduler<ActionType extends Action> {
      */
     stop(): void;
 
+    runSync(start: Time, end: Time): void
+
     /**
      * Clear the {@link EventQueue}.
      */

@@ -348,6 +348,14 @@ export class FwdScheduler {
     this._scheduler.keepAlive = false;
   }
 
+  public runSync(duration: Time): void {
+    if (this._state !== 'ready') {
+      throw new Error(`runOffline can only be called when state is 'ready'`);
+    }
+
+    this._scheduler.runSync(0, duration);
+  }
+
   public getAction(name: string): any {
     return this._definitions[name];
   }
