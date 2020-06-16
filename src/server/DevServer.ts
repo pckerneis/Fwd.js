@@ -9,7 +9,7 @@ import {
   WELCOME_TYPE,
 } from './DevServer.constants';
 
-const DBG = new Logger('DevServer', null, LoggerLevel.all);
+const DBG = new Logger('DevServer', null, LoggerLevel.warn);
 
 const chokidar = require('chokidar');
 // tslint:disable-next-line:variable-name
@@ -128,7 +128,7 @@ export class DevServer {
             }
           } else if (parsedMessage.type === SAVE_TYPE) {
             const pathToFile = path.resolve(__dirname, '../..', parsedMessage.file);
-            console.log('pathToFile', pathToFile);
+            DBG.debug('pathToFile', pathToFile);
             fs.writeFileSync(pathToFile, parsedMessage.textContent, 'utf8');
           }
         } catch (e) {
