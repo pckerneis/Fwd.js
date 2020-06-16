@@ -29,7 +29,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
       private _interval: number,
       private _lookAhead: number,
       private _eventQueue: EventQueue<EventType> = new EventQueueImpl<EventType>(),
-      private _timeProvider: () => number = null,
+      private _clockFunction: () => number = null,
   ) {
     DBG.info('Build SchedulerImpl', this);
 
@@ -38,13 +38,13 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
     this.lookAhead = _lookAhead;
 
     // Using default time provider if none is specified
-    this._timeProvider = _timeProvider || systemNowInSeconds;
-    DBG.debug('Using time provider:', this._timeProvider);
+    this._clockFunction = _clockFunction || systemNowInSeconds;
+    DBG.debug('Using time provider:', this._clockFunction);
   }
 
   /** @inheritdoc */
-  public set timeProvider(timeProvider: () => number) {
-    this._timeProvider = timeProvider;
+  public set clockFunction(clockFunction: () => number) {
+    this._clockFunction = clockFunction;
   }
 
   /** @inheritdoc */
@@ -90,10 +90,10 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
     }
 
     DBG.info('Scheduler started at position ' + position + '. About to run.');
-    // DBG.info('Time provider is :', this._timeProvider);
+    // DBG.info('Time provider is :', this._clockFunction);
 
     this._running = true;
-    this._startTime = this._timeProvider();
+    this._startTime = this._clockFunction();
     this._now = position;
     this.run();
   }
@@ -116,7 +116,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
     DBG.info('Scheduler started at position ' + start + '. About to run.');
 
     this._running = true;
-    this._startTime = this._timeProvider();
+    this._startTime = this._clockFunction();
     this._now = start;
 
     let next = this._eventQueue.next(end);
@@ -153,9 +153,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
       return;
     }
 
-    const rtNow = this._timeProvider();
-
-    this._now = rtNow - this._startTime;
+    this._now = this._clockFunction() - this._startTime;
     const t1 = this._now;
     const when = this._now + this.lookAhead;
 
@@ -168,7 +166,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
       next = this._eventQueue.next(when);
     }
 
-    const elapsed = (this._timeProvider() - this._startTime) - t1;
+    const elapsed = (this._clockFunction() - this._startTime) - t1;
 
     if (this._eventQueue.events.length > 0 || this.keepAlive) {
       const waitTime = Math.max(0, this.interval - elapsed);

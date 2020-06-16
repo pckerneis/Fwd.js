@@ -54,9 +54,9 @@ export interface Scheduler<ActionType extends Action> {
     /**
      * Set the scheduler's time keeper.
      *
-     * @param timeProvider a function that returns the current time in seconds.
+     * @param clockFunction a function that returns the current time in seconds.
      */
-    timeProvider: () => number;
+    clockFunction: () => number;
 
     /**
      * Returns the current time position for the scheduler in seconds. It's only useful when called inside the

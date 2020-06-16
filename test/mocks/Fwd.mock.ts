@@ -1,7 +1,7 @@
 
 export const mockScheduler = jest.fn().mockImplementation(() => {
   return {
-    timeProvider: jest.fn(),
+    clockFunction: jest.fn(),
   };
 });
 

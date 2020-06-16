@@ -211,10 +211,10 @@ export class FwdScheduler {
   /**
    * Set the time provider for the scheduler.
    *
-   * @param timeProvider a function that returns a time position in milliseconds
+   * @param clockFunction a function that returns a time position in milliseconds
    */
-  public set timeProvider(timeProvider: () => number) {
-    this._scheduler.timeProvider = timeProvider;
+  public set clockFunction(clockFunction: () => number) {
+    this._scheduler.clockFunction = clockFunction;
   }
 
   /**
@@ -224,7 +224,7 @@ export class FwdScheduler {
 
   /**
    * Returns the current time position for the scheduler. It's only useful when called inside the `FwdScheduler`'s
-   * execution stack as otherwise it will always return `0`. See {@link rtNow}.
+   * execution stack as otherwise it will always return `0`. See {@link clock}.
    *
    * @returns The current position of the scheduler's head in seconds.
    */
@@ -233,13 +233,13 @@ export class FwdScheduler {
   }
 
   /**
-   * Returns the current real-time position for the scheduler. Unlike {@link now}, rtNow gives a value that's not relying
+   * Returns the current real-time position for the scheduler. Unlike {@link now}, clock gives a value that's not relying
    * upon the execution stack so whenever you'll want to now the execution time from the outside of the scheduler, that's
    * the method you'd use.
    *
    * @returns The time elapsed since the FwdScheduler's start in seconds.
    */
-  public rtNow(): Time {
+  public clock(): Time {
     return this._scheduler.now();
   }
 

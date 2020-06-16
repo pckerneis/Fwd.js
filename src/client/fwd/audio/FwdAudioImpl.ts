@@ -62,7 +62,7 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
+    this._fwd.scheduler.clockFunction = () => this._ctx.currentTime;
 
     this._startOffset = this._ctx.currentTime;
 
@@ -137,7 +137,7 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    this._fwd.scheduler.timeProvider = () => this._ctx.currentTime;
+    this._fwd.scheduler.clockFunction = () => this._ctx.currentTime;
   }
 
   private assertInit(): void {

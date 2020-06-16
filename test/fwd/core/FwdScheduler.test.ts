@@ -42,7 +42,7 @@ describe('FwdScheduler', () => {
   });
 
   it ('triggers scheduled events', async () => {
-    scheduler.timeProvider = () => mockPerformanceNow() / 1000;
+    scheduler.clockFunction = () => mockPerformanceNow() / 1000;
 
     const t1 = 0;
     const t2 = 0.01;
@@ -237,10 +237,10 @@ describe('FwdScheduler', () => {
   });
 
   it ('sets time provider', async () => {
-    scheduler.timeProvider = () => 2;
+    scheduler.clockFunction = () => 2;
     scheduler.start();                        // start is 2
-    scheduler.timeProvider = () => 44;
+    scheduler.clockFunction = () => 44;
     await waitSeconds(0, TIME);                   // start is now - start, 44 - 2
-    expect(scheduler.rtNow()).toBe(42);
+    expect(scheduler.clock()).toBe(42);
   });
 });

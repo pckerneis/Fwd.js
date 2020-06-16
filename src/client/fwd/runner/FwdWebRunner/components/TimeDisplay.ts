@@ -25,7 +25,7 @@ export class TimeDisplay {
   }
 
   private getTimeString(): string {
-    return formatTime(this.scheduler.rtNow());
+    return formatTime(this.scheduler.clock());
   }
 }
 
