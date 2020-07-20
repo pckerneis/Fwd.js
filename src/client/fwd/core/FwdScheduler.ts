@@ -234,7 +234,7 @@ export class FwdScheduler {
 
   /**
    * Returns the current real-time position for the scheduler. Unlike {@link now}, clock gives a value that's not relying
-   * upon the execution stack so whenever you'll want to now the execution time from the outside of the scheduler, that's
+   * upon the execution stack so whenever you'll want to know the execution time from the outside of the scheduler, that's
    * the method you'd use.
    *
    * @returns The time elapsed since the FwdScheduler's start in seconds.

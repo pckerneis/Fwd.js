@@ -84,17 +84,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
 
   /** @inheritdoc */
   public start(position: Time): void {
-    if (this._running) {
-      DBG.info('Scheduler started while already running. About to stop.');
-      this.stop();
-    }
-
-    DBG.info('Scheduler started at position ' + position + '. About to run.');
-    // DBG.info('Time provider is :', this._clockFunction);
-
-    this._running = true;
-    this._startTime = this._clockFunction();
-    this._now = position;
+    this.prepareToRun(position);
     this.run();
   }
 
@@ -108,16 +98,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
 
   /** @inheritdoc */
   public runSync(start: Time, end: Time): void {
-    if (this._running) {
-      DBG.info('Scheduler started while already running. About to stop.');
-      this.stop();
-    }
-
-    DBG.info('Scheduler started at position ' + start + '. About to run.');
-
-    this._running = true;
-    this._startTime = this._clockFunction();
-    this._now = start;
+    this.prepareToRun(start);
 
     let next = this._eventQueue.next(end);
 
@@ -142,6 +123,19 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
   /** @inheritDoc */
   public cancel(eventRef: EventRef): void {
     this._eventQueue.remove(eventRef);
+  }
+
+  private prepareToRun(startPosition: Time): void {
+    if (this._running) {
+      DBG.info('Scheduler started while already running. About to stop.');
+      this.stop();
+    }
+
+    DBG.info('Scheduler started at position ' + startPosition + '. About to run.');
+
+    this._running = true;
+    this._startTime = this._clockFunction();
+    this._now = startPosition;
   }
 
   /**
