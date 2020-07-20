@@ -24,7 +24,7 @@ const mockPerformance = jest.fn().mockImplementation(() => {
 describe('FwdScheduler', () => {
   beforeEach(() => {
     // This ugly line is needed for mocking 'jsdom' global
-    Object.defineProperty((global as any).performance, 'now', { value: mockPerformanceNow, writable: true });
+    Object.defineProperty((global as any).performance, 'now', {value: mockPerformanceNow, writable: true});
 
     jest.useFakeTimers();
     mockPerformance.mockClear();
@@ -35,13 +35,13 @@ describe('FwdScheduler', () => {
     scheduler = new FwdScheduler(0.005, 0.001);
   });
 
-  it ('creates with default values', () => {
+  it('creates with default values', () => {
     const defaultScheduler = new FwdScheduler();
     expect(defaultScheduler['_scheduler'].interval).toBe(SchedulerImpl.MIN_INTERVAL);
     expect(defaultScheduler['_scheduler'].lookAhead).toBe(SchedulerImpl.DEFAULT_LOOKAHEAD);
   });
 
-  it ('triggers scheduled events', async () => {
+  it('triggers scheduled events', async () => {
     scheduler.clockFunction = () => mockPerformanceNow() / 1000;
 
     const t1 = 0;
@@ -64,7 +64,16 @@ describe('FwdScheduler', () => {
     expect(mockAction).toHaveBeenCalledTimes(3);
   });
 
-  it ('trigger non canceled events', async () => {
+  it('triggers events scheduled with scheduleNow', async () => {
+    scheduler.clockFunction = () => mockPerformanceNow() / 1000;
+    scheduler.scheduleNow(mockAction);
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(mockAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('trigger non canceled events', async () => {
     scheduler.schedule(0, mockAction);
     const ref1 = scheduler.schedule(0, mockAction);
     const ref2 = scheduler.schedule(0, mockAction);
@@ -78,7 +87,7 @@ describe('FwdScheduler', () => {
     expect(mockAction).toHaveBeenCalledTimes(1);
   });
 
-  it ('stops firing events when not running', async () => {
+  it('stops firing events when not running', async () => {
     const t2 = 0.2;
 
     scheduler.schedule(0, mockAction);
@@ -94,7 +103,7 @@ describe('FwdScheduler', () => {
     expect(mockAction).toHaveBeenCalledTimes(2);
   });
 
-  it ('change state and fire onEnded callback', async () => {
+  it('change state and fire onEnded callback', async () => {
     const onEnded = jest.fn();
     scheduler.onEnded = onEnded;
 
@@ -111,7 +120,7 @@ describe('FwdScheduler', () => {
     expect(onEnded).toHaveBeenCalledTimes(1);
   });
 
-  it ('passes scoped time to events', async () => {
+  it('passes scoped time to events', async () => {
     const action1 = jest.fn(() => {
       expect(scheduler.now()).toBe(0.01);
     });
@@ -132,7 +141,7 @@ describe('FwdScheduler', () => {
     scheduler.stop();
   });
 
-  it ('schedules no event when stopping', async () => {
+  it('schedules no event when stopping', async () => {
     const action = jest.fn();
 
     scheduler.start();
@@ -146,7 +155,7 @@ describe('FwdScheduler', () => {
     expect(action).not.toHaveBeenCalled();
   });
 
-  it ('throws exception when clearing events before stop is called', async () => {
+  it('throws exception when clearing events before stop is called', async () => {
     scheduler.start();
     expect(() => scheduler.clearEvents()).toThrowError();
     scheduler.stop();
@@ -155,10 +164,13 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.clearEvents()).not.toThrowError();
   });
 
-  it ('clears events', async () => {
-    scheduler.schedule(0, () => {});
-    scheduler.schedule(0, () => {});
-    scheduler.schedule(0, () => {});
+  it('clears events', async () => {
+    scheduler.schedule(0, () => {
+    });
+    scheduler.schedule(0, () => {
+    });
+    scheduler.schedule(0, () => {
+    });
 
     scheduler.clearEvents();
 
@@ -166,7 +178,7 @@ describe('FwdScheduler', () => {
     expect(scheduler.state).toBe('ready');
   });
 
-  it ('throws exception when start is called but scheduler is not ready', async () => {
+  it('throws exception when start is called but scheduler is not ready', async () => {
     scheduler.start();
     expect(() => scheduler.start()).toThrowError();
     scheduler.stop();
@@ -175,7 +187,7 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.start()).not.toThrowError();
   });
 
-  it ('throws exception when stop is called but scheduler is not running', async () => {
+  it('throws exception when stop is called but scheduler is not running', async () => {
     expect(scheduler.state).toBe('ready');
     expect(() => scheduler.stop()).toThrowError();
     scheduler.start();
@@ -189,7 +201,7 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.stop()).toThrowError();
   });
 
-  it ('fired FwdEvents change the scheduler\'s scoped time position', async () => {
+  it('fired FwdEvents change the scheduler\'s scoped time position', async () => {
     scheduler.schedule(0.001, () => {
       expect(scheduler.now()).toBe(0.001);
     });
@@ -199,7 +211,7 @@ describe('FwdScheduler', () => {
     scheduler.stop();
   });
 
-  it ('non-cancellable events still fire when cancelled', async () => {
+  it('non-cancellable events still fire when cancelled', async () => {
     const action = jest.fn();
 
     scheduler.schedule(0.01, action, true);
@@ -216,11 +228,233 @@ describe('FwdScheduler', () => {
     expect(action).toHaveBeenCalledTimes(1);
   });
 
-  it ('sets time provider', async () => {
+  it('sets time provider', async () => {
     scheduler.clockFunction = () => 2;
     scheduler.start();                        // start is 2
     scheduler.clockFunction = () => 44;
     await waitSeconds(0, TIME);                   // start is now - start, 44 - 2
     expect(scheduler.clock()).toBe(42);
+  });
+
+  it('create event chains', async () => {
+    const chain = scheduler.fire(() => {
+    }).wait(1).fire('action1');
+    expect(chain.events.length).toBe(3);
+  });
+
+  it('fires event chains', async () => {
+    const action1 = jest.fn();
+    scheduler.defineAction('action1', action1);
+    scheduler.fire(action1).wait(1).fire('action1').trigger();
+
+    scheduler.start();
+    await waitSeconds(1, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(2);
+  });
+
+  it('catch errors for fired events in chains', async () => {
+    console.error = jest.fn();
+
+    const error = new Error();
+
+    const throwingAction = () => {
+      throw error;
+    };
+    scheduler.defineAction('action1', throwingAction);
+    scheduler.fire(throwingAction).fire('action1').trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenCalledWith(error);
+  });
+
+  it('shows error when providing bad argument to fire', async () => {
+    console.error = jest.fn();
+
+    scheduler
+      // @ts-ignore
+      .fire(123456)     // bad type
+      .fire('action1')  // undefined key
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(console.error).toHaveBeenCalledTimes(2);
+  });
+
+  it('should continue after a truthy continueIf condition', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .fire(action1)
+      .continueIf(() => true)
+      .fire(action1)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(2);
+  });
+
+  it('should break a chain with falsy continueIf condition', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .fire(action1)
+      .continueIf(() => false)
+      .fire(action1)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(1);
+  });
+
+  it('should accept functions in wait', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .wait(() => 1)
+      .fire(action1)
+      .wait(() => 1)
+      .fire(action1)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(1.5, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not schedule action when wait is followed by invalid action', async () => {
+    scheduler['schedule'] = jest.fn();
+    scheduler.wait(0).trigger();
+    scheduler.start();
+    await waitSeconds(0.1, TIME);
+    scheduler.stop();
+    expect(scheduler['schedule']).not.toHaveBeenCalled();
+  });
+
+  it('should stop after continueIfStillRunning', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .wait(() => 1)
+      .continueIfStillRunning()
+      .fire(action1)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.5, TIME);
+    scheduler.stop();
+    await waitSeconds(1, TIME);
+    expect(action1).toHaveBeenCalledTimes(0);
+  });
+
+  it('should continue after continueIfStillRunning', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .wait(() => 0.5)
+      .continueIfStillRunning()
+      .fire(action1)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(1, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(1);
+  });
+
+  it('should concatenate event chains', async () => {
+    const action1 = jest.fn();
+
+    const chain1 = scheduler
+      .fire(action1);
+
+    const chain2 = scheduler
+      .fire(action1);
+
+    chain1
+      .concat(chain2)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(2);
+  });
+
+  it('should still concatenate with empty event chains', async () => {
+    const action1 = jest.fn();
+
+    const chain1 = scheduler.chain();
+    expect(chain1.first()).toBeNull();
+
+    const chain2 = scheduler
+      .fire(action1);
+
+    chain1
+      .concat(chain2)
+      .trigger();
+
+    scheduler.start();
+    await waitSeconds(0.01, TIME);
+    scheduler.stop();
+    expect(action1).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not trigger a chain when not ready or running', async () => {
+    const actionMock = jest.fn();
+    const chain = scheduler.wait(0).fire(actionMock);
+    scheduler.start();
+    scheduler.stop();
+    chain.trigger();
+
+    await waitSeconds(0.01, TIME);
+
+    expect(actionMock).not.toHaveBeenCalled();
+  });
+
+  it('should run sync', async () => {
+    const action1 = jest.fn();
+
+    scheduler
+      .fire(action1)
+      .wait(() => 100)
+      .fire(action1)
+      .wait(() => 100)
+      .fire(action1)
+      .trigger();
+
+    scheduler.runSync(150);
+    expect(action1).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not run sync when not ready', async () => {
+    scheduler.start();
+    expect(() => scheduler.runSync(1)).toThrowError();
+    scheduler.stop();
+    expect(() => scheduler.runSync(1)).toThrowError();
+
+    waitSeconds(0.1, TIME);
+    expect(() => scheduler.runSync(1)).toThrowError();
+
+    scheduler.clearEvents();
+    expect(() => scheduler.runSync(1)).not.toThrowError();
+  });
+
+  it('should reset defined actions', async () => {
+    const definedAction = () => {};
+    scheduler.defineAction('hey', definedAction);
+    expect(scheduler.getAction('hey')).toBe(definedAction);
+    scheduler.resetActions();
+    expect(scheduler.getAction('hey')).toBeUndefined();
   });
 });

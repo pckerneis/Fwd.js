@@ -6,7 +6,7 @@ Logger.runtimeLevel = LoggerLevel.none;
 
 const mockEventTrigger = jest.fn(() => {});
 
-const mockBasicEvent = jest.fn().mockImplementation(() => {
+const mockAction = jest.fn().mockImplementation(() => {
   return {
     trigger: mockEventTrigger,
   }
@@ -36,7 +36,7 @@ describe('SchedulerImpl', () => {
     (global as any).performance = mockPerformance();
 
     // Clear all instances and calls to constructor and all methods:
-    mockBasicEvent.mockClear();
+    mockAction.mockClear();
     mockEventTrigger.mockClear();
   });
 
@@ -72,9 +72,9 @@ describe('SchedulerImpl', () => {
     const t2 = 0.1;
     const t3 = 0.2;
 
-    scheduler.schedule(t1, mockBasicEvent());
-    scheduler.schedule(t2, mockBasicEvent());
-    scheduler.schedule(t3, mockBasicEvent());
+    scheduler.schedule(t1, mockAction());
+    scheduler.schedule(t2, mockAction());
+    scheduler.schedule(t3, mockAction());
     scheduler.start(0);
 
     waitSeconds(0, TIME);
@@ -93,9 +93,9 @@ describe('SchedulerImpl', () => {
     scheduler.keepAlive = false;
     scheduler.onEnded = jest.fn();
 
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
     scheduler.start(0);
 
     waitSeconds(0.5, TIME);
@@ -109,9 +109,9 @@ describe('SchedulerImpl', () => {
     scheduler.keepAlive = true;
     scheduler.onEnded = jest.fn();
 
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
     scheduler.start(0);
 
     waitSeconds(0.1, TIME);
@@ -125,9 +125,9 @@ describe('SchedulerImpl', () => {
   it ('trigger non canceled events', () => {
     const scheduler = new SchedulerImpl(0, 0);
 
-    scheduler.schedule(0, mockBasicEvent());
-    const ref1 = scheduler.schedule(0, mockBasicEvent());
-    const ref2 = scheduler.schedule(0, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    const ref1 = scheduler.schedule(0, mockAction());
+    const ref2 = scheduler.schedule(0, mockAction());
 
     scheduler.cancel(ref1);
     scheduler.cancel(ref2);
@@ -141,10 +141,10 @@ describe('SchedulerImpl', () => {
   it ('stops firing events when not running', () => {
     const scheduler = new SchedulerImpl(0, 0);
 
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0.2, mockAction());
+    scheduler.schedule(0.2, mockAction());
 
     scheduler.start(0);
     waitSeconds(0, TIME);
@@ -157,10 +157,10 @@ describe('SchedulerImpl', () => {
   it ('fire no events when cleared', () => {
     const scheduler = new SchedulerImpl(0, 0);
 
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0.2, mockAction());
+    scheduler.schedule(0.2, mockAction());
 
     scheduler.start(0);
     waitSeconds(0.1, TIME);
@@ -174,10 +174,10 @@ describe('SchedulerImpl', () => {
   it ('fire no events when stopping', () => {
     const scheduler = new SchedulerImpl(0, 0);
 
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
-    scheduler.schedule(0.2, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0, mockAction());
+    scheduler.schedule(0.2, mockAction());
+    scheduler.schedule(0.2, mockAction());
 
     scheduler.start(0);
     waitSeconds(0.1, TIME);
@@ -192,7 +192,7 @@ describe('SchedulerImpl', () => {
     const scheduler = new SchedulerImpl(0, 10);
 
     const action = jest.fn();
-    scheduler.schedule(0, mockBasicEvent());
+    scheduler.schedule(0, mockAction());
 
     scheduler['run']();
 
@@ -203,5 +203,16 @@ describe('SchedulerImpl', () => {
     const scheduler = new SchedulerImpl(0, 10);
     scheduler.start(0);
     expect(mockPerformanceNow).toHaveBeenCalled();
+  });
+
+  it ('runs synchronously', () => {
+    const scheduler = new SchedulerImpl(0, 10);
+    const mock = mockAction();
+    scheduler.schedule(0, mock);
+    scheduler.schedule(5, mock);
+    scheduler.schedule(10, mock);
+    scheduler.schedule(15, mock);
+    scheduler.runSync(0, 10);
+    expect(mock.trigger).toHaveBeenCalledTimes(3);
   });
 });

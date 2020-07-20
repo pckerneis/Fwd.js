@@ -77,6 +77,8 @@ class FwdFire extends FwdChainEvent {
         } catch(e) {
           console.error(e);
         }
+      } else {
+        console.error(`No action was found with the key '${this.action}'.`);
       }
     } else {
       console.error('Cannot fire action. You should provide a function or a defined action name.', this.action);
@@ -101,9 +103,10 @@ class FwdContinueIf extends FwdChainEvent {
 }
 
 class FwdChain {
-  private fwdChainEvents: FwdChainEvent[] = [];
+  private fwdChainEvents: FwdChainEvent[];
 
-  constructor(public readonly scheduler: FwdScheduler) {
+  constructor(public readonly scheduler: FwdScheduler, events?: FwdChainEvent[]) {
+    this.fwdChainEvents = events || [];
   }
 
   public get events(): FwdChainEvent[] { return this.fwdChainEvents; }
@@ -278,7 +281,7 @@ export class FwdScheduler {
     this._scheduler.cancel(eventRef);
   }
 
-  public wait(time: Time): FwdChain {
+  public wait(time: Time | (() => Time)): FwdChain {
     const chain = new FwdChain(this);
     chain.wait(time);
     return chain;
@@ -372,5 +375,9 @@ export class FwdScheduler {
 
   public resetActions(): void {
     this._definitions = {};
+  }
+
+  public chain(fwdChainEvents?: FwdChainEvent[]): FwdChain {
+    return new FwdChain(this, fwdChainEvents);
   }
 }
