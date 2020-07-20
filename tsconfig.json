@@ -15,14 +15,12 @@
       "outDir": "dist/api"
     },
     "typedocOptions": {
-      "inputFiles": [
-        "./src/fwd/"
-      ],
-      "mode": "module",
+      "inputFiles": ["./src/public-api.ts"],
+      "mode": "file",
       "out": "doc",
       "name": "Fwd API documentation",
-      "includeVersion": true,
-      "excludePrivate": true,
+      "includeVersion": false,
+      "excludePrivate": false,
       "excludeNotExported": false,
       "exclude": "**/*+(index|.spec|.e2e|.test).ts"
     },
