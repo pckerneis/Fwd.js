@@ -61,7 +61,7 @@ describe('Logger', () => {
     const logger = new Logger('a', null, LoggerLevel.info);
     logAll(logger);
 
-    expect(console.log).toHaveBeenCalledTimes(2);
+    expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -70,7 +70,7 @@ describe('Logger', () => {
     const logger = new Logger('a', null, LoggerLevel.debug);
     logAll(logger);
 
-    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledTimes(2);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });

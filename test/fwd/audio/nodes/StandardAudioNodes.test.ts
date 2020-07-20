@@ -121,9 +121,10 @@ describe('StandardAudioNodes', () => {
 
     it ('accept frequencies and types', () => {
       (global as any).AudioParam = mockAudioParam;
-      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+      const fwdAudioMock = mockFwdAudio();
+      fwdAudioMock.fwdScheduler['scheduleNow'] = (fn: Function) => fn();
 
-      const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
+      const node = new FwdOscillatorNode(fwdAudioMock, 440, 'sine');
       node.setFrequency(220);
       node.setType('triangle');
 
@@ -172,9 +173,10 @@ describe('StandardAudioNodes', () => {
 
     it('allow to change type and frequency', () => {
       (global as any).AudioParam = mockAudioParam;
-      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+      const fwdAudioMock = mockFwdAudio();
+      fwdAudioMock.fwdScheduler['scheduleNow'] = (fn: Function) => fn();
 
-      const node = new FwdLFONode(mockFwdAudio(), 0.1, 'square');
+      const node = new FwdLFONode(fwdAudioMock, 0.1, 'square');
 
       node.frequency = 3;
       node.type = 'triangle';
@@ -203,14 +205,15 @@ describe('StandardAudioNodes', () => {
 
     it('can be played', () => {
       (global as any).AudioParam = mockAudioParam;
-      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
+      const fwdAudioMock = mockFwdAudio();
+      fwdAudioMock.fwdScheduler['schedule'] = (t: Time, fn: Function) => fn();
 
       // We need to provide fetch
       (global as any).fetch = jest.fn().mockImplementation(() => {
         return new Promise(jest.fn());
       });
 
-      const node = new FwdSamplerNode(mockFwdAudio(), '');
+      const node = new FwdSamplerNode(fwdAudioMock, '');
       // @ts-ignore
       node.outputNode['context'] = mockAudioContext();
 
@@ -223,8 +226,7 @@ describe('StandardAudioNodes', () => {
   describe('FwdNoiseNode', () => {
     it('creates a noise node', () => {
       (global as any).AudioContext = mockAudioContext;
-      const fwdAudio = new FwdAudioImpl();
-      fwdAudio.initializeModule(mockFwd());
+      const fwdAudio = new FwdAudioImpl(mockFwd().scheduler);
       fwdAudio.start();
       const node = new FwdNoiseNode(fwdAudio);
 

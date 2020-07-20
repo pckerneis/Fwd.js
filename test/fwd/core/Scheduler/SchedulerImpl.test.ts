@@ -78,14 +78,14 @@ describe('SchedulerImpl', () => {
     scheduler.start(0);
 
     waitSeconds(0, TIME);
-    expect(mockEventTrigger).toHaveBeenCalledWith(t1);
+    expect(mockEventTrigger).toHaveBeenCalledTimes(1);
 
     waitSeconds(t2, TIME);
-    expect(mockEventTrigger).toHaveBeenCalledWith(t2);
+    expect(mockEventTrigger).toHaveBeenCalledTimes(2);
 
     waitSeconds(t2, TIME);
     scheduler.stop();
-    expect(mockEventTrigger).toHaveBeenCalledWith(t3);
+    expect(mockEventTrigger).toHaveBeenCalledTimes(3);
   });
 
   it ('stops when all events were triggered and keepAlive is set to false', () => {

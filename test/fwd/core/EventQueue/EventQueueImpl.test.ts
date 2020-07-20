@@ -1,24 +1,15 @@
-import { Event, Time } from '../../../../src/client/fwd/core/EventQueue/EventQueue';
 import { EventQueueImpl } from '../../../../src/client/fwd/core/EventQueue/EventQueueImpl';
-import { BasicEvent } from "../../../../src/client/fwd/core/Scheduler/SchedulerImpl";
+import { Action } from "../../../../src/client/fwd/core/Scheduler/Scheduler";
 import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
 
-class DummyEvent extends Event {
-  public trigger(t: Time): void {
+class DummyEvent implements Action {
+  public trigger(): void {
   }
 }
 
 Logger.runtimeLevel = LoggerLevel.none;
 
 describe('EventQueueImpl', () => {
-  it ('Basic events should trigger their actions', () => {
-    const action = jest.fn();
-    const basicEvent = new BasicEvent(action);
-
-    basicEvent.trigger(123);
-    expect(action).toHaveBeenCalledWith(123);
-  });
-
   it ('events added to the queue are kept sorted', () => {
     const events = new EventQueueImpl<DummyEvent>();
 

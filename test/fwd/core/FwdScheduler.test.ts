@@ -146,26 +146,6 @@ describe('FwdScheduler', () => {
     expect(action).not.toHaveBeenCalled();
   });
 
-  it ('moves time pointer when wait is called', async () => {
-    const action1 = jest.fn(() => {
-      expect(scheduler.now()).toBe(0.01);
-    });
-
-    const action2 = jest.fn(() => {
-      expect(scheduler.now()).toBe(0.02);
-    });
-
-    scheduler.schedule(0.01, action1);
-    scheduler.wait(0.02);
-    scheduler.schedule(0, action2);
-    scheduler.start();
-    expect(scheduler.now()).toBe(0);
-    await waitSeconds(0.03, TIME);
-    expect(scheduler.now()).toBe(0);
-
-    scheduler.stop();
-  });
-
   it ('throws exception when clearing events before stop is called', async () => {
     scheduler.start();
     expect(() => scheduler.clearEvents()).toThrowError();
@@ -202,7 +182,7 @@ describe('FwdScheduler', () => {
     expect(scheduler.state).toBe('running');
     expect(() => scheduler.stop()).not.toThrowError();
     expect(scheduler.state).toBe('stopping');
-    expect(() => scheduler.stop()).toThrowError();
+    expect(() => scheduler.stop()).not.toThrowError();
 
     await waitSeconds(0, TIME);
     expect(scheduler.state).toBe('stopped');
