@@ -1,7 +1,7 @@
 import { DevClient } from '../../../../server/DevClient';
 import { FwdAudio } from '../../audio/FwdAudio';
 import { FwdAudioImpl } from '../../audio/FwdAudioImpl';
-import { fwd, Fwd, putFwd } from '../../core/fwd';
+import { FwdContext } from '../../core/FwdContext';
 import { FlexPanel } from '../../editor/elements/FlexPanel/FlexPanel';
 import { formatTime } from '../../utils/time';
 import debounce from '../../utils/time-filters/debounce';
@@ -16,7 +16,7 @@ import { injectStyle } from './StyleInjector';
 export type RunnerCodeExecutionState = 'up-to-date' | 'out-of-date' | 'code-errors';
 
 export default class FwdWebRunner implements FwdRunner {
-  private readonly _fwd: Fwd;
+  private readonly _fwd: FwdContext;
   private readonly _audio: FwdAudio;
 
   private readonly _header: RunnerHeader;
@@ -41,8 +41,7 @@ export default class FwdWebRunner implements FwdRunner {
   constructor() {
     this._fwd = new FwdWebImpl(this);
 
-    this._audio = new FwdAudioImpl();
-    this._audio.initializeModule(this._fwd);
+    this._audio = new FwdAudioImpl(this._fwd.scheduler);
 
     this.initDevClient();
 
@@ -54,14 +53,12 @@ export default class FwdWebRunner implements FwdRunner {
       this._running = false;
     };
 
-    putFwd(this._fwd);
-
     this.buildEditor();
 
     this.prepareConsoleWrappers();
   }
 
-  public get fwd(): Fwd {
+  public get fwd(): FwdContext {
     return this._fwd;
   }
 
@@ -127,7 +124,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._running = true;
 
     this._audio.start();
-    fwd.onStart();
+    this.fwd.onStart();
     this._fwd.scheduler.start();
 
     this._header.onRunnerStart();
@@ -142,7 +139,7 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._running = true;
     const offlineContext = this._audio.startOffline(duration);
-    fwd.onStart();
+    this.fwd.onStart();
     this._fwd.scheduler.runSync(duration);
     offlineContext.startRendering().then((renderedBuffer: AudioBuffer) => {
       downloadFile(
@@ -239,7 +236,7 @@ export default class FwdWebRunner implements FwdRunner {
     const handler = {
       get: (target: any, key: any) => {
         if (methodNames.includes(key)) {
-          const time = this._running ? this._fwd.now() : null;
+          const time = this._running ? this._fwd.scheduler.now() : null;
 
           if (useWebConsole) {
             return (...messages: any[]) => {
@@ -359,7 +356,7 @@ export default class FwdWebRunner implements FwdRunner {
       throw new Error('The sketch was not initialized');
     }
 
-    if (typeof fwd.onStart !== 'function') {
+    if (typeof this.fwd.onStart !== 'function') {
       throw new Error(`Nothing to start.`);
     }
   }

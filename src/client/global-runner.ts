@@ -1,5 +1,3 @@
-import { DevClient } from '../server/DevClient';
-import { fwd } from "./fwd/core/fwd";
 import rootLogger from './fwd/logger.fwd';
 import FwdRunner from './fwd/runner/FwdRunner';
 import { Overlay } from "./fwd/runner/FwdWebRunner/components/Overlay";
@@ -13,8 +11,7 @@ declareAPI('Fwd');
 
 document.addEventListener('DOMContentLoaded', () => {
   const runner: FwdRunner = new FwdWebRunner();
-
-  (window as any).fwd = fwd;
+  (window as any).fwd = runner.fwd;
 
   // Add audio gesture overlay
   const overlay = new Overlay();

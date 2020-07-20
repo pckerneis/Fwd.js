@@ -1,5 +1,5 @@
 import { Time } from "../core/EventQueue/EventQueue";
-import { Fwd } from "../core/fwd";
+import { FwdScheduler } from '../core/FwdScheduler';
 import {
   FwdCompressorNode,
   FwdDelayLineNode,
@@ -16,8 +16,8 @@ export interface FwdAudio {
   readonly isContextReady: boolean;
   context: AudioContext | OfflineAudioContext;
   readonly master: GainNode;
+  readonly fwdScheduler: FwdScheduler;
 
-  initializeModule(fwd: Fwd): void;
   start(): void;
   now(): Time;
 
@@ -33,4 +33,10 @@ export interface FwdAudio {
   distortion(amount: number): FwdDistortionNode;
   compressor(): FwdCompressorNode;
   reverb(reverbTime?: number, preDelayTime?: number): FwdReverbNode;
+  // convolver
+  // filters
+  // - highPass
+  // - lowPass
+  // - bandPass
+  // - allPass
 }

@@ -1,6 +1,5 @@
 import path from "path";
 import { Time } from "../../core/EventQueue/EventQueue";
-import { fwd } from "../../core/fwd";
 import { Logger, LoggerLevel } from "../../utils/Logger";
 import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";
@@ -209,7 +208,7 @@ export class FwdOscillatorNode extends FwdAudioNode {
 
   public setType(type: OscillatorType): void {
     this.assertIsReady('set type');
-    fwd.schedule(fwd.now(), () => {
+    this.fwdAudio.fwdScheduler.scheduleNow(() => {
       this._type = type;
       this._osc.type = type;
     });
@@ -299,7 +298,7 @@ export class FwdLFONode extends FwdAudioNode {
   }
 
   public set type(type: OscillatorType) {
-    fwd.schedule(fwd.now(), () => {
+    this.fwdAudio.fwdScheduler.scheduleNow(() => {
       this._osc.type = type;
     });
   }
@@ -334,7 +333,7 @@ export class FwdSamplerNode extends FwdAudioNode {
   public get outputNode(): AudioNode { return this._output; }
 
   public play(): void {
-    fwd.schedule(0, () => {
+    this.fwdAudio.fwdScheduler.schedule(0, () => {
       const source = this._output.context.createBufferSource();
       source.buffer = this._buffer;
       source.connect(this._output);
@@ -516,13 +515,10 @@ export class FwdStereoDelayNode extends FwdAudioNode {
 export class FwdDistortionNode extends FwdAudioNodeWrapper<WaveShaperNode> {
   constructor(fwdAudio: FwdAudio, amount: number) {
     super(fwdAudio, fwdAudio.context.createWaveShaper());
-    this.nativeNode.curve = this.makeCurve(amount);
+    this.nativeNode.curve = FwdDistortionNode.makeCurve(amount);
   }
 
-  public get inputNode(): AudioNode { return this.nativeNode; }
-  public get outputNode(): AudioNode { return this.nativeNode; }
-
-  private makeCurve(amount: number, numSamples: number = 44100): Float32Array {
+  private static makeCurve(amount: number, numSamples: number = 44100): Float32Array {
     const curve = new Float32Array(numSamples);
 
     for (let i = 0; i < numSamples; ++i ) {
@@ -532,6 +528,9 @@ export class FwdDistortionNode extends FwdAudioNodeWrapper<WaveShaperNode> {
 
     return curve;
   }
+
+  public get inputNode(): AudioNode { return this.nativeNode; }
+  public get outputNode(): AudioNode { return this.nativeNode; }
 }
 
 //===============================================================

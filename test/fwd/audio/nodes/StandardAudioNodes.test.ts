@@ -8,7 +8,7 @@ import {
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
 } from "../../../../src/client/fwd/audio/nodes/StandardAudioNodes";
 import { Time } from "../../../../src/client/fwd/core/EventQueue/EventQueue";
-import * as FwdEntryPoint from "../../../../src/client/fwd/core/fwd";
+import * as FwdEntryPoint from "../../../../src/client/fwd/core/FwdContext";
 import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
 import { mockFwd } from "../../../mocks/Fwd.mock";
 import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";

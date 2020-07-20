@@ -1,5 +1,5 @@
 import { Time } from '../core/EventQueue/EventQueue';
-import { Fwd } from '../core/fwd';
+import { FwdScheduler } from '../core/FwdScheduler';
 import { Logger, LoggerLevel } from "../utils/Logger";
 import { FwdAudio } from "./FwdAudio";
 import parentLogger from './logger.audio';
@@ -18,7 +18,6 @@ import {
 const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 
 export class FwdAudioImpl implements FwdAudio {
-  private _fwd: Fwd;
 
   private _ctx: AudioContext | OfflineAudioContext;
 
@@ -28,7 +27,7 @@ export class FwdAudioImpl implements FwdAudio {
 
   private _contextReady: boolean = false;
 
-  constructor() {
+  constructor(public readonly fwdScheduler: FwdScheduler) {
   }
 
   public get isContextReady(): boolean {
@@ -41,10 +40,6 @@ export class FwdAudioImpl implements FwdAudio {
     return this._masterGain.nativeNode;
   }
 
-  public initializeModule(fwd: Fwd): void {
-    this._fwd = fwd;
-  }
-
   public start(): void {
     this.resetAudioContext();
     this._startOffset = this._ctx.currentTime;
@@ -52,8 +47,8 @@ export class FwdAudioImpl implements FwdAudio {
   }
 
   public now(): Time {
-    DBG.debug('now is ' + (this._fwd.now() + this._startOffset));
-    return this._fwd.now() + this._startOffset;
+    DBG.debug('now is ' + (this.fwdScheduler.now() + this._startOffset));
+    return this.fwdScheduler.now() + this._startOffset;
   }
 
   public startOffline(duration: number, sampleRate: number = 44100): OfflineAudioContext {
@@ -62,7 +57,8 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    this._fwd.scheduler.clockFunction = () => this._ctx.currentTime;
+    // TODO: in a many-to-one situation (many FwdAudio for one FwdScheduler), this is BAD
+    this.fwdScheduler.clockFunction = () => this._ctx.currentTime;
 
     this._startOffset = this._ctx.currentTime;
 
@@ -137,11 +133,12 @@ export class FwdAudioImpl implements FwdAudio {
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    this._fwd.scheduler.clockFunction = () => this._ctx.currentTime;
+    // TODO: in a many-to-one situation (many FwdAudio for one FwdScheduler), this is BAD
+    this.fwdScheduler.clockFunction = () => this._ctx.currentTime;
   }
 
   private assertInit(): void {
-    if (this._fwd == null) {
+    if (this.fwdScheduler == null) {
       throw new Error('The module FwdAudio wasn\'t properly initialized!');
     }
   }

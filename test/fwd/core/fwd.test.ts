@@ -1,4 +1,4 @@
-import { fwd, putFwd } from "../../../src/client/fwd/core/fwd";
+import { fwd, putFwd } from "../../../src/client/fwd/core/FwdContext";
 import { Logger, LoggerLevel } from "../../../src/client/fwd/utils/Logger";
 
 Logger.runtimeLevel = LoggerLevel.none;

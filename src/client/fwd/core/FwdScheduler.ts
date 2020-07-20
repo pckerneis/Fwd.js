@@ -101,12 +101,12 @@ class FwdContinueIf extends FwdChainEvent {
 }
 
 class FwdChain {
-  private _chain: FwdChainEvent[] = [];
+  private fwdChainEvents: FwdChainEvent[] = [];
 
   constructor(public readonly scheduler: FwdScheduler) {
   }
 
-  public get chain(): FwdChainEvent[] { return this._chain; }
+  public get events(): FwdChainEvent[] { return this.fwdChainEvents; }
 
   public fire(action: Function | string, ...args: any[]): this {
     this.append(new FwdFire(this.scheduler, action, args));
@@ -135,32 +135,32 @@ class FwdChain {
       previous.next = next;
     }
 
-    this._chain = [...this._chain, ...chain._chain];
+    this.fwdChainEvents = [...this.fwdChainEvents, ...chain.fwdChainEvents];
 
     return this;
   }
 
   public trigger(): void {
     if ((this.scheduler.state === 'running' || this.scheduler.state === 'ready')
-      && this._chain.length > 0) {
-      this._chain[0].trigger();
+      && this.fwdChainEvents.length > 0) {
+      this.fwdChainEvents[0].trigger();
     }
   }
 
   public first(): FwdChainEvent {
-    if (this._chain.length === 0) {
+    if (this.fwdChainEvents.length === 0) {
       return null;
     }
 
-    return this._chain[0];
+    return this.fwdChainEvents[0];
   }
 
   public last(): FwdChainEvent {
-    if (this._chain.length === 0) {
+    if (this.fwdChainEvents.length === 0) {
       return null;
     }
 
-    return this._chain[this._chain.length - 1];
+    return this.fwdChainEvents[this.fwdChainEvents.length - 1];
   }
 
   public append(event: FwdChainEvent): void {
@@ -170,7 +170,7 @@ class FwdChain {
       previous.next = event;
     }
 
-    this._chain = [...this._chain, event];
+    this.fwdChainEvents = [...this.fwdChainEvents, event];
   }
 }
 
@@ -261,6 +261,11 @@ export class FwdScheduler {
 
     const nextTime = NOW + time;
     return this._scheduler.schedule(nextTime, new FwdEvent(nextTime, action, ! preventCancel));
+  }
+
+
+  public scheduleNow(action: Function, preventCancel?: boolean): EventRef {
+    return this.schedule(this.now(), action, preventCancel);
   }
 
   /**
