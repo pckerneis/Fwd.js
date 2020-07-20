@@ -34,7 +34,6 @@
     "@types/codemirror": "^0.0.95",
     "chalk": "^4.0.0",
     "chokidar": "^3.4.0",
-    "codeflask": "^1.4.1",
     "codemirror": "^5.54.0",
     "esm": "^3.2.25",
     "express": "^4.17.1",
