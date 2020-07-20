@@ -3,7 +3,7 @@ import { clamp } from "../../../utils/numbers";
 import audit from "../../../utils/time-filters/audit";
 import { EditorElement } from "../../Editor";
 
-abstract class EditorContainer implements EditorElement {
+abstract class AbstractContainerElement implements EditorElement {
   public abstract htmlElement: HTMLDivElement;
 
   public elements: Map<string, EditorElement>;
@@ -28,7 +28,7 @@ abstract class EditorContainer implements EditorElement {
   }
 }
 
-export class ContainerPanel extends EditorContainer {
+export class ContainerPanel extends AbstractContainerElement {
   public readonly htmlElement: HTMLDivElement;
 
   constructor() {
