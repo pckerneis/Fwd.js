@@ -3,13 +3,13 @@ fwd.onStart = () => {
     .fire('arp')
     .wait(2)
   	.continueIfStillRunning();
-  
+
   chain.concat(chain).trigger();
 };
 
 fwd.scheduler.defineAction('arp', () => {
   console.log('arppp');
-  const noteOffset = Math.round(fwd.random(-5, 5));
+  const noteOffset = Math.round(random(-5, 5));
   const notes = [48, 60, 67, 71, 74, 78, 90, 83, 86, 102, 95, 98];
   const reverbTime = 5;
 
@@ -45,7 +45,7 @@ fwd.scheduler.defineAction('arp', () => {
     + attack
     + release;
 
-  fwd.schedule(totalTime, () => {
+  fwd.scheduler.schedule(totalTime, () => {
     del.tearDown();
     rvb.tearDown();
   });
@@ -53,4 +53,16 @@ fwd.scheduler.defineAction('arp', () => {
 
 function mtof(noteNumber) {
   return (2 ** ((noteNumber - 69) / 12)) * 440;
+}
+
+function random(a, b) {
+  if (a == null && b == null) {
+    return Math.random();
+  }
+
+  if (b == null) {
+    return a * Math.random();
+  }
+
+  return a + ((b - a) * Math.random());
 }

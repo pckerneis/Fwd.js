@@ -120,7 +120,7 @@ if (fwd.globals.hhSampler == null) {
 }
 
 fwd.globals.hiHat = (vel = 0.9) => {
-  fwd.schedule(0, () => {
+  fwd.scheduler.schedule(0, () => {
     fwd.globals.hhSampler.outputNode.gain.value = 0.5 * vel * vel * vel * vel;
     fwd.globals.hhSampler.play();
   });
@@ -157,12 +157,12 @@ fwd.globals.hiHat = (vel = 0.9) => {
     const padGain = 0.3;
 
     for (let i = 0; i < voices; ++i) {
-      chord.forEach((note) => playNote(synthFxChain, base + note + fwd.random(-detune, detune), dur, 0.1 * padGain));
-      playNote(synthFxChain, chord[0] + base + fwd.random(-detune, detune) - oct(2), dur, 0.2 * padGain);
-      playNote(synthFxChain, chord[0] + base + fwd.random(-detune, detune) - oct(1), dur, 0.2 * padGain);
+      chord.forEach((note) => playNote(synthFxChain, base + note + random(-detune, detune), dur, 0.1 * padGain));
+      playNote(synthFxChain, chord[0] + base + random(-detune, detune) - oct(2), dur, 0.2 * padGain);
+      playNote(synthFxChain, chord[0] + base + random(-detune, detune) - oct(1), dur, 0.2 * padGain);
     }
 
-    fwd.schedule(dur, next);
+    fwd.scheduler.schedule(dur, next);
 
     counter++;
   };
@@ -175,7 +175,7 @@ fwd.globals.hiHat = (vel = 0.9) => {
   function globalLoop() {
     console.log(fwd.globals.myMessage);
 
-    fwd.schedule(1, () => {
+    fwd.scheduler.schedule(1, () => {
       globalLoop();
     });
   }
@@ -227,7 +227,7 @@ fwd.globals.hiHat = (vel = 0.9) => {
       playNote(arpDelay, step, 1 / 8, 0.2);
       i++;
       i %= 16;
-      fwd.schedule(1 / 8, next);
+      fwd.scheduler.schedule(1 / 8, next);
     }
   }
 
@@ -247,7 +247,7 @@ fwd.globals.hiHat = (vel = 0.9) => {
       });
 
       i++;
-      fwd.schedule(1 / 8, next);
+      fwd.scheduler.schedule(1 / 8, next);
     }
   }
 
@@ -306,3 +306,15 @@ fwd.globals.kick = (track, tuning = 30) => {
     })
     .trigger();
 };
+
+function random(a, b) {
+  if (a == null && b == null) {
+    return Math.random();
+  }
+
+  if (b == null) {
+    return a * Math.random();
+  }
+
+  return a + ((b - a) * Math.random());
+}

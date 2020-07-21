@@ -93,7 +93,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
     + attack
     + release;
 
-  fwd.schedule(totalTime, () => {
+  fwd.scheduler.schedule(totalTime, () => {
     del.tearDown();
     rvb.tearDown();
   });
