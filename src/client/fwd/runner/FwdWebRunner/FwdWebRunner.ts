@@ -123,7 +123,7 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._running = true;
 
-    this._audio.start();
+    this.startAudioContext();
     this.fwd.onStart();
     this._fwd.scheduler.start();
 
