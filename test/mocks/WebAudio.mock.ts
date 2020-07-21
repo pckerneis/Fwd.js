@@ -53,12 +53,14 @@ export const mockAudioContext = jest.fn().mockImplementation(() => {
     createBufferSource: createAudioNodeFactoryMock(),
     createConstantSource: createAudioNodeFactoryMock(),
     createStereoPanner: createAudioNodeFactoryMock('pan'),
-    createBuffer: jest.fn().mockImplementation(() => {
-      return {
+    createBuffer: jest.fn().mockImplementation(() => ({
         getChannelData: jest.fn().mockImplementation(() => []),
-      }
-    }),
+    })),
     createDelay: createAudioNodeFactoryMock('delayTime'),
     createAnalyser: createAudioNodeFactoryMock(),
+    createWaveShaper: createAudioNodeFactoryMock(),
+    createDynamicsCompressor: createAudioNodeFactoryMock('threshold', 'knee', 'ratio', 'attack', 'release'),
+    createConvolver: createAudioNodeFactoryMock(),
+    createBiquadFilter: createAudioNodeFactoryMock('frequency', 'Q'),
   }
 });

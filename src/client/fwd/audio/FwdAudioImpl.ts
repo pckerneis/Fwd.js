@@ -1,7 +1,7 @@
 import { Time } from '../core/EventQueue/EventQueue';
 import { FwdScheduler } from '../core/FwdScheduler';
-import { Logger, LoggerLevel } from "../utils/Logger";
-import { FwdAudio } from "./FwdAudio";
+import { Logger, LoggerLevel } from '../utils/Logger';
+import { FwdAudio } from './FwdAudio';
 import parentLogger from './logger.audio';
 import {
   FwdCompressorNode,
@@ -34,16 +34,12 @@ export class FwdAudioImpl implements FwdAudio {
     return this._contextReady;
   }
 
-  public get context(): AudioContext | OfflineAudioContext { return this._ctx; }
-
-  public get master(): GainNode {
-    return this._masterGain.nativeNode;
+  public get context(): AudioContext | OfflineAudioContext {
+    return this._ctx;
   }
 
-  public start(): void {
-    this.resetAudioContext();
-    this._startOffset = this._ctx.currentTime;
-    DBG.debug('start at ' + this._startOffset);
+  public get master(): GainNode {
+    return this._masterGain?.nativeNode;
   }
 
   public now(): Time {
@@ -51,20 +47,23 @@ export class FwdAudioImpl implements FwdAudio {
     return this.fwdScheduler.now() + this._startOffset;
   }
 
+  public start(): AudioContext {
+    const newContext = new AudioContext();
+    this.setAudioContext(newContext);
+
+    this._startOffset = this._ctx.currentTime;
+    DBG.debug('start at ' + this._startOffset);
+
+    return newContext;
+  }
+
   public startOffline(duration: number, sampleRate: number = 44100): OfflineAudioContext {
-    this._ctx = new OfflineAudioContext(2, duration * sampleRate, sampleRate);
-
-    this._masterGain = new FwdGainNode(this, 0.5);
-    this._masterGain.nativeNode.connect(this._ctx.destination);
-
-    // TODO: in a many-to-one situation (many FwdAudio for one FwdScheduler), this is BAD
-    this.fwdScheduler.clockFunction = () => this._ctx.currentTime;
+    const newContext = new OfflineAudioContext(2, duration * sampleRate, sampleRate);
+    this.setAudioContext(newContext);
 
     this._startOffset = this._ctx.currentTime;
 
-    this._contextReady = true;
-
-    return this._ctx;
+    return newContext;
   }
 
   //===============================================================================
@@ -121,25 +120,23 @@ export class FwdAudioImpl implements FwdAudio {
 
   //=========================================================================
 
-  private resetAudioContext(): void {
-    if (this._ctx) {
-      return;
+  private setAudioContext(audioContext: OfflineAudioContext | AudioContext): void {
+    this._ctx = audioContext;
+
+    if (this._masterGain) {
+      this._masterGain.tearDown();
+      this._masterGain = null;
     }
-
-    this._ctx = new AudioContext();
-
-    this._contextReady = true;
 
     this._masterGain = new FwdGainNode(this, 0.5);
     this._masterGain.nativeNode.connect(this._ctx.destination);
 
-    // TODO: in a many-to-one situation (many FwdAudio for one FwdScheduler), this is BAD
-    this.fwdScheduler.clockFunction = () => this._ctx.currentTime;
+    this._contextReady = true;
   }
 
   private assertInit(): void {
-    if (this.fwdScheduler == null) {
-      throw new Error('The module FwdAudio wasn\'t properly initialized!');
+    if (! this.isContextReady) {
+      throw new Error('The FwdAudio\'s audio context is not ready. You should call "start" or "startOffline".`');
     }
   }
 }
