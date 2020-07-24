@@ -1,29 +1,27 @@
-import { FwdAudioImpl } from "../../../../src/client/fwd/audio/FwdAudioImpl";
-import { FwdAudioNode } from "../../../../src/client/fwd/audio/nodes/FwdAudioNode";
+import { FwdAudioImpl } from '../../../../src/client/fwd/audio/FwdAudioImpl';
+import { FwdAudioNode } from '../../../../src/client/fwd/audio/nodes/FwdAudioNode';
 import {
-  FwdAudioNodeWrapper, FwdAudioParamWrapper, FwdDelayLineNode,
+  FwdAudioNodeWrapper, FwdAudioParamWrapper, FwdCompressorNode, FwdDelayLineNode, FwdDistortionNode,
   FwdGainNode,
   FwdLFONode, FwdNoiseNode,
-  FwdOscillatorNode,
+  FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
-} from "../../../../src/client/fwd/audio/nodes/StandardAudioNodes";
-import { Time } from "../../../../src/client/fwd/core/EventQueue/EventQueue";
-import * as FwdEntryPoint from "../../../../src/client/fwd/core/FwdContext";
-import { Logger, LoggerLevel } from "../../../../src/client/fwd/utils/Logger";
-import { mockFwd } from "../../../mocks/Fwd.mock";
-import { mockFwdAudio } from "../../../mocks/FwdAudio.mock";
-import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/WebAudio.mock";
-import { seconds } from "../../../test-utils";
+} from '../../../../src/client/fwd/audio/nodes/StandardAudioNodes';
+import { Time } from '../../../../src/client/fwd/core/EventQueue/EventQueue';
+import { Logger, LoggerLevel } from '../../../../src/client/fwd/utils/Logger';
+import { mockFwd } from '../../../mocks/Fwd.mock';
+import { mockFwdAudio } from '../../../mocks/FwdAudio.mock';
+import { mockAudioContext, mockAudioNode, mockAudioParam } from '../../../mocks/WebAudio.mock';
+import { seconds } from '../../../test-utils';
 
 Logger.runtimeLevel = LoggerLevel.none;
 
 describe('StandardAudioNodes', () => {
   beforeEach(() => {
     mockFwdAudio.mockClear();
-
     mockFwd.mockClear();
 
-    (FwdEntryPoint as any).fwd = mockFwd();
+    jest.useRealTimers();
   });
 
   describe('FwdAudioParamWrapper ', () => {
@@ -50,6 +48,46 @@ describe('StandardAudioNodes', () => {
 
       const wrapper = new ConcreteParam();
       expect(wrapper['doTearDown']).toThrowError();
+    });
+
+    it('sets the value', () => {
+      const audioParamMock = mockAudioParam();
+      const fwdAudioMock = mockFwdAudio();
+
+      class ConcreteParam extends FwdAudioParamWrapper {
+        constructor() {
+          super(fwdAudioMock, audioParamMock);
+        }
+      }
+
+      fwdAudioMock['now'] = jest.fn().mockImplementation(() => 30);
+
+      const wrapper = new ConcreteParam();
+      wrapper.value = 12;
+      expect(audioParamMock['linearRampToValueAtTime']).toHaveBeenCalledWith(12, 30);
+    });
+
+    it('gets value at a given time based on scheduled ramps', () => {
+      const audioParamMock = mockAudioParam();
+      const fwdAudioMock = mockFwdAudio();
+
+      class ConcreteParam extends FwdAudioParamWrapper {
+        constructor() {
+          super(fwdAudioMock, audioParamMock);
+        }
+      }
+
+      fwdAudioMock['now'] = jest.fn().mockImplementation(() => 10);
+
+      const wrapper = new ConcreteParam();
+      wrapper.value = 12;
+      wrapper.rampTo(0, 10);
+      expect(wrapper['getValueAtTime'](0)).toBe(12);
+      expect(wrapper['getValueAtTime'](10)).toBe(12);
+      expect(wrapper['getValueAtTime'](12.5)).toBe(9);
+      expect(wrapper['getValueAtTime'](15)).toBe(6);
+      expect(wrapper['getValueAtTime'](20)).toBe(0);
+      expect(wrapper['getValueAtTime'](30)).toBe(0);
     });
   });
 
@@ -99,7 +137,7 @@ describe('StandardAudioNodes', () => {
   });
 
   describe('FwdOscillatorNode', () => {
-    it ('creates a oscillator node', () => {
+    it('creates a oscillator node', () => {
       const node = new FwdOscillatorNode(mockFwdAudio(), 220, 'square');
 
       expect(node).toBeTruthy();
@@ -110,7 +148,7 @@ describe('StandardAudioNodes', () => {
       checkTearDown(node);
     });
 
-    it ('uses default frequency value if the value provided isn\'t a number', () => {
+    it('uses default frequency value if the value provided isn\'t a number', () => {
       (global as any).AudioParam = mockAudioParam;
       // @ts-ignore
       const node = new FwdOscillatorNode(mockFwdAudio(), {foo: 'bar'}, 'square');
@@ -119,7 +157,7 @@ describe('StandardAudioNodes', () => {
       expect(node.oscillator.frequency.value).toBe(0);
     });
 
-    it ('accept frequencies and types', () => {
+    it('accept frequencies and types', () => {
       (global as any).AudioParam = mockAudioParam;
       const fwdAudioMock = mockFwdAudio();
       fwdAudioMock.fwdScheduler['scheduleNow'] = (fn: Function) => fn();
@@ -132,9 +170,8 @@ describe('StandardAudioNodes', () => {
       expect(node.type).toBe('triangle');
     });
 
-    it ('reject invalid frequencies', () => {
+    it('reject invalid frequencies', () => {
       (global as any).AudioParam = mockAudioParam;
-      (FwdEntryPoint as any).fwd['schedule'] = (time: Time, fn: Function) => fn();
 
       const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
 
@@ -147,17 +184,24 @@ describe('StandardAudioNodes', () => {
       expect(node.oscillator.frequency.setValueAtTime).not.toHaveBeenCalled();
     });
 
-    it ('can be stopped', () => {
+    it('can be stopped', () => {
       (global as any).AudioNode = mockAudioNode;
-      (FwdEntryPoint as any).fwd['fwdAudio'] = mockFwdAudio();
 
       const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
       node.stop();
 
       expect(node.oscillator.stop).toHaveBeenCalled();
     });
-  });
 
+    it('throw an exception when not ready', () => {
+      (global as any).AudioNode = mockAudioNode;
+
+      const node = new FwdOscillatorNode(mockFwdAudio(), 440, 'sine');
+
+      node.tearDown();
+      expect(() => node.setFrequency(12)).toThrowError();
+    });
+  });
 
   describe('FwdLFONode', () => {
     it('creates a lfo node', () => {
@@ -183,6 +227,17 @@ describe('StandardAudioNodes', () => {
 
       expect(node.oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(3, undefined);
       expect(node.oscillator.type).toBe('triangle');
+    });
+
+    it('defaults to frequency = 0 when constructor parameter is not a number', () => {
+      (global as any).AudioParam = mockAudioParam;
+      const fwdAudioMock = mockFwdAudio();
+      fwdAudioMock.fwdScheduler['scheduleNow'] = (fn: Function) => fn();
+
+      // @ts-ignore
+      const node = new FwdLFONode(fwdAudioMock, 'bonjour', 'square');
+
+      expect(node.oscillator.frequency.value).toBe(0);
     });
   });
 
@@ -260,6 +315,49 @@ describe('StandardAudioNodes', () => {
       expect(node.outputNode).not.toBeNull();
 
       checkTearDown(node);
+    });
+  });
+
+  describe('FwdDistortionNode', () => {
+    it('creates a distortion node', () => {
+      const node = new FwdDistortionNode(mockFwdAudio(), 10);
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
+      expect(node.outputNode).not.toBeNull();
+
+      checkTearDown(node);
+    });
+  });
+
+  describe('FwdCompressorNode', () => {
+    it('creates a compressor node', () => {
+      const node = new FwdCompressorNode(mockFwdAudio());
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
+      expect(node.outputNode).not.toBeNull();
+
+      checkTearDown(node);
+    });
+  });
+
+
+  describe('FwdReverbNode', () => {
+    it('creates a reverb node', () => {
+      jest.useFakeTimers();
+
+      (global as any).OfflineAudioContext = mockAudioContext;
+      (global as any).AudioScheduledSourceNode = mockAudioNode;
+      const node = new FwdReverbNode(mockFwdAudio());
+
+      expect(node).toBeTruthy();
+      expect(node.inputNode).not.toBeNull();
+      expect(node.outputNode).not.toBeNull();
+
+      checkTearDown(node);
+
+      jest.runAllTimers();
     });
   });
 

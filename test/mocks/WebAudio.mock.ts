@@ -62,5 +62,9 @@ export const mockAudioContext = jest.fn().mockImplementation(() => {
     createDynamicsCompressor: createAudioNodeFactoryMock('threshold', 'knee', 'ratio', 'attack', 'release'),
     createConvolver: createAudioNodeFactoryMock(),
     createBiquadFilter: createAudioNodeFactoryMock('frequency', 'Q'),
+    // This method is only defined for OfflineAudioContext...
+    startRendering: jest.fn().mockImplementation(() => ({
+      then: jest.fn().mockImplementation((cb) => cb()),
+    })),
   }
 });

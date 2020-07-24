@@ -8,7 +8,7 @@ import { mockAudioContext, mockAudioNode, mockAudioParam } from "../../../mocks/
 Logger.runtimeLevel = LoggerLevel.none;
 
 class ConcreteNode extends FwdAudioNode {
-  public readonly fwdAudio: FwdAudio;
+  public readonly fwdAudio: FwdAudio = mockFwdAudio();
   public inputNode: AudioNode | AudioParam;
   public outputNode: AudioNode;
   protected doTearDown(): void {}
@@ -75,5 +75,12 @@ describe('FwdAudioNode', () => {
     expect(() => node3.connect(node1)).toThrowError();
     expect(() => node1.connectToMaster()).toThrowError();
     expect(() => node3.connectToMaster()).toThrowError();
+  });
+
+  it('can be torn down', () => {
+    const node1 = new ConcreteNode();
+    expect(node1.wasTornDown).toBeFalsy();
+    node1.tearDown();
+    expect(node1.wasTornDown).toBeTruthy();
   });
 });

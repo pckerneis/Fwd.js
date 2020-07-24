@@ -244,7 +244,7 @@ export class FwdOscillatorNode extends FwdAudioNode {
   }
 
   private assertIsReady(context: string): void {
-    if (this._osc == null || this._output == null) {
+    if (this._osc == null || this._output == null || this.wasTornDown) {
       throw new Error(context + ': this audio node was teared down or not initialized.');
     }
   }
