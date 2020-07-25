@@ -68,8 +68,12 @@ export default class FwdWebRunner implements FwdRunner {
 
   public setSketchCode(newSketch: string): void {
     this._currentCode = newSketch;
-    this.codeEditor.code = newSketch;
     this._savedCode = newSketch;
+
+    if (this.codeEditor) {
+      this.codeEditor.code = newSketch;
+    }
+
     this.setDirty(false);
 
     if (this._sketchWasInitialized && this._autoBuilds) {
@@ -110,6 +114,10 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public save(): void {
+    if (! this.codeEditor) {
+      throw new Error('Cannot save when code editor is not used.');
+    }
+
     this._currentCode = this.codeEditor.code;
     this._devClient.saveFile(this._watchedFile, this._currentCode);
   }
@@ -162,7 +170,7 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     try {
-      this.compileCode(this.codeEditor.code)(window);
+      this.compileCode(this._currentCode)(window);
 
       if (! this._sketchWasInitialized) {
         if (typeof this._fwd.onInit === 'function') {
@@ -189,47 +197,11 @@ export default class FwdWebRunner implements FwdRunner {
   private buildEditor(): void {
     this.prepareHeader();
     this.prepareFooter();
-
-    const flexPanel = new FlexPanel();
-    this.codeEditor = new RunnerCodeEditor();
-
-    this.codeEditor.codeMirror.on('changes', debounce(() => {
-      if (this.codeEditor.code !== this._executedCode) {
-        this._header.setSyncState('out-of-date');
-      } else {
-        this._header.setSyncState('up-to-date')
-      }
-
-      this.setDirty(this.codeEditor.code !== this._savedCode);
-
-      if (this._autoBuilds) {
-        this.build();
-      }
-    }, 200));
-
-    flexPanel.addFlexItem('left', this.codeEditor, {
-      minWidth: 100,
-      maxWidth: 5000,
-      width: 600,
-      flexShrink: 0,
-    });
-
-    const separator = flexPanel.addSeparator(0, true);
-    separator.separatorSize = 10;
-    separator.htmlElement.classList.add('fwd-runner-large-separator');
-
-    flexPanel.addFlexItem('right', this._fwd.editor.root, {
-      flexGrow: 1,
-      minWidth: 100,
-      maxWidth: 5000,
-    });
-
-    document.getElementById('fwd-runner-container')
-      .append(flexPanel.htmlElement);
+    this.buildMainSection();
   }
 
   private prepareConsoleWrappers(): void {
-    const useWebConsole = true;
+    const useWebConsole = false;
 
     const methodNames = ['log', 'error', 'warn', 'info'];
 
@@ -359,6 +331,60 @@ export default class FwdWebRunner implements FwdRunner {
     if (typeof this.fwd.onStart !== 'function') {
       throw new Error(`Nothing to start.`);
     }
+  }
+
+  private buildMainSection(): void {
+    const useCodeEditor = true;
+    const useEditorApi = false;
+
+    const flexPanel = new FlexPanel();
+    document.getElementById('fwd-runner-container').append(flexPanel.htmlElement);
+
+    if (useCodeEditor) {
+      this.codeEditor = this.buildCodeEditor();
+
+      flexPanel.addFlexItem('left', this.codeEditor, {
+        minWidth: 100,
+        maxWidth: 5000,
+        width: 600,
+        flexShrink: 0,
+        flexGrow: useEditorApi ? undefined : 1,
+      });
+    }
+
+    if (useCodeEditor && useEditorApi) {
+      const separator = flexPanel.addSeparator(0, true);
+      separator.separatorSize = 10;
+      separator.htmlElement.classList.add('fwd-runner-large-separator');
+    }
+
+    if (useEditorApi) {
+      flexPanel.addFlexItem('right', this._fwd.editor.root, {
+        flexGrow: 1,
+        minWidth: 100,
+        maxWidth: 5000,
+      });
+    }
+  }
+
+  private buildCodeEditor(): RunnerCodeEditor {
+    const editor = new RunnerCodeEditor();
+
+    editor.codeMirror.on('changes', debounce(() => {
+      if (this.codeEditor.code !== this._executedCode) {
+        this._header.setSyncState('out-of-date');
+      } else {
+        this._header.setSyncState('up-to-date')
+      }
+
+      this.setDirty(this.codeEditor.code !== this._savedCode);
+
+      if (this._autoBuilds) {
+        this.build();
+      }
+    }, 200));
+
+    return editor;
   }
 }
 
