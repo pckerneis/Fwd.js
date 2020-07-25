@@ -3,11 +3,12 @@ fwd.globals.dur = 5;
 
 const chords_C9 = 	[ 0,  2,  4,  7];
 const chords_Am9 = 	[-3, -1,  0,  4];
-const chords_F9 = 	[-7, -5, -3,  0];
-const chords_G9 = 	[-5, -3, -1,  2];
+const chords_F9 = 	[-3,  0,  5,  7];
+const chords_G9r = 	[-1,  2,  7,  9];
 const chords_AbM7 = [-4,  0,  3,  7];
 const chords_BbM7 = [-2,  2,  5,  9];
 const chords_Fm9 = 	[-7, -5, -4,  0];
+const chords_G9 = 	[-5, -3, -1,  2];
 
 function concat(...chains) {
   return chains.reduce((accumulator, currentValue) => {
@@ -28,7 +29,7 @@ const A = () => concat(
   arp(chords_C9, 		() => fwd.globals.dur),
   arp(chords_Am9, 	() => fwd.globals.dur),
   arp(chords_F9, 		() => fwd.globals.dur),
-  arp(chords_G9, 		() => fwd.globals.dur),
+  arp(chords_G9r, 	() => fwd.globals.dur),
   arp(chords_AbM7, 	() => fwd.globals.dur),
   arp(chords_BbM7, 	() => fwd.globals.dur),
 );
