@@ -5,135 +5,10 @@ import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";
 import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";
+import { FwdAudioNodeWrapper } from './FwdAudioNodeWrapper';
+import { FwdAudioParamWrapper } from './FwdAudioParamWrapper';
 
 const DBG = new Logger('StandardAudioNodes', parentLogger, LoggerLevel.error);
-
-interface LinearRamp {
-  startTime: number,
-  startValue: number,
-  endTime: number,
-  endValue: number,
-}
-
-export class FwdAudioParamWrapper extends FwdAudioNode {
-  public outputNode: AudioNode = null;
-
-  private _latestRamp: LinearRamp;
-
-  constructor(readonly fwdAudio: FwdAudio, private _param: AudioParam) {
-    super();
-  }
-
-  public get inputNode(): AudioParam {
-    return this._param;
-  }
-
-  /**
-   * Sets the value at the current FwdScheduler's time position.
-   * @param newValue the value the param should take. This value is not checked against the validity range of the underlying
-   * AudioParam.
-   */
-  public set value(newValue: number) {
-    // Still process the event as a ramp to have a consistent 'getValueAtTime' behaviour.
-    this.rampTo(newValue, 0);
-  }
-
-  /**
-   * Gets the value at the current audio context time.
-   */
-  // TODO: should we take into account the currently scheduled ramps like in 'getValueAtTime' ?
-  public get value(): number { return this._param.value}
-
-  /**
-   * Starts a ramp from the FWD scheduler's time position to a time position in the future (current time + rampTime).
-   * This is a deferred action: the automation will be effectively scheduled 'later', based on the FwdScheduler's settings.
-   *
-   * @param value the target value
-   * @param rampTime the duration for the ramp
-   */
-  public rampTo(value: number, rampTime: number): void {
-    const audioNow = this.fwdAudio.now();
-    const holdValue = this.cancelAndHoldAtTime(audioNow);
-    this._param.linearRampToValueAtTime(value, audioNow + rampTime);
-
-    this.registerRamp(holdValue, audioNow, value, audioNow + rampTime);
-  }
-
-  protected doTearDown(/* when: Time */): void {
-    throw new Error('You shouldn\'t call "tearDown" on a audio parameter.');
-  }
-
-  private cancelAndHoldAtTime(when: Time): number {
-    const holdValue = this.getValueAtTime(when);
-    DBG.debug('holdValue : ' + holdValue);
-    this._param.setValueAtTime(holdValue, when);
-    return holdValue;
-  }
-
-  private registerRamp(startValue: number, startTime: Time, endValue: number, endTime: Time): void {
-    this._latestRamp = {
-      startTime, startValue, endTime, endValue,
-    };
-  }
-
-  private getValueAtTime(when: Time): number {
-    // If no ramp was ever scheduled, just return the current native AudioParam's value.
-    if (this._latestRamp == null) {
-      DBG.debug('no ramp');
-      return this._param.value;
-    }
-
-    if (when < this._latestRamp.startTime) {
-      DBG.debug('before');
-      return this._latestRamp.startValue;
-    } else if (when > this._latestRamp.endTime) {
-      DBG.debug('after');
-      return this._latestRamp.endValue;
-    } else {
-      // Linear interpolation
-      const t1 = this._latestRamp.startTime;
-      const t2 = this._latestRamp.endTime;
-      const v1 = this._latestRamp.startValue;
-      const v2 = this._latestRamp.endValue;
-
-      if (t1 === t2) {
-        return v2;
-      }
-
-      const linearInterpolation = ((v1 - v2) / (t1 - t2)) * when + ((t1 * v2 - t2 * v1) / (t1 - t2));
-      DBG.debug('linear interp :' + linearInterpolation);
-      return linearInterpolation;
-    }
-  }
-}
-
-//=========================================================================
-
-export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioNode {
-
-  protected constructor(private readonly _fwdAudio: FwdAudio, private _nativeNode: T) {
-    super();
-  }
-  public abstract get inputNode(): AudioNode | AudioParam;
-
-  public abstract get outputNode(): AudioNode;
-
-  public get nativeNode(): T { return this._nativeNode; }
-
-  public get fwdAudio(): FwdAudio { return this._fwdAudio; }
-
-  protected assertIsReady(context: string): void {
-    if (this._nativeNode == null) {
-      throw new Error(context + ': this audio node was teared down or not initialized.');
-    }
-  }
-
-  protected doTearDown(when: Time): void {
-    tearDownNativeNode(this._nativeNode, when).then(() => {
-      this._nativeNode = null;
-    });
-  }
-}
 
 //=========================================================================
 
@@ -511,7 +386,7 @@ export class FwdStereoDelayNode extends FwdAudioNode {
 }
 
 //===============================================================
-// TODO: expose parameters
+
 export class FwdDistortionNode extends FwdAudioNodeWrapper<WaveShaperNode> {
   constructor(fwdAudio: FwdAudio, amount: number) {
     super(fwdAudio, fwdAudio.context.createWaveShaper());
@@ -534,7 +409,7 @@ export class FwdDistortionNode extends FwdAudioNodeWrapper<WaveShaperNode> {
 }
 
 //===============================================================
-// TODO: expose parameters
+
 export class FwdCompressorNode extends FwdAudioNodeWrapper<DynamicsCompressorNode> {
   // private readonly _delayTime: FwdAudioParamWrapper;
 
@@ -552,7 +427,7 @@ export class FwdCompressorNode extends FwdAudioNodeWrapper<DynamicsCompressorNod
 }
 
 //===============================================================
-// TODO: expose parameters
+
 export class FwdReverbNode extends FwdAudioNode {
   private _input: GainNode;
   private _output: GainNode;

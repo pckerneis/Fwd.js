@@ -1,7 +1,9 @@
 import { FwdAudioImpl } from '../../../../src/client/fwd/audio/FwdAudioImpl';
 import { FwdAudioNode } from '../../../../src/client/fwd/audio/nodes/FwdAudioNode';
+import { FwdAudioNodeWrapper } from '../../../../src/client/fwd/audio/nodes/FwdAudioNodeWrapper';
+import { FwdAudioParamWrapper } from '../../../../src/client/fwd/audio/nodes/FwdAudioParamWrapper';
 import {
-  FwdAudioNodeWrapper, FwdAudioParamWrapper, FwdCompressorNode, FwdDelayLineNode, FwdDistortionNode,
+  FwdCompressorNode, FwdDelayLineNode, FwdDistortionNode,
   FwdGainNode,
   FwdLFONode, FwdNoiseNode,
   FwdOscillatorNode, FwdReverbNode,
@@ -21,6 +23,8 @@ describe('StandardAudioNodes', () => {
     mockFwdAudio.mockClear();
     mockFwd.mockClear();
 
+    global['AudioParam'] = mockAudioParam;
+
     jest.useRealTimers();
   });
 
@@ -35,19 +39,8 @@ describe('StandardAudioNodes', () => {
       }
 
       const wrapper = new ConcreteParam();
-      expect(wrapper.inputNode).toBe(param);
+      expect(wrapper.nativeParam).toBe(param);
       expect(wrapper.value).toBe(param.value);
-    });
-
-    it('throws when calling doTearDown', () => {
-      class ConcreteParam extends FwdAudioParamWrapper {
-        constructor() {
-          super(null, null);
-        }
-      }
-
-      const wrapper = new ConcreteParam();
-      expect(wrapper['doTearDown']).toThrowError();
     });
 
     it('sets the value', () => {

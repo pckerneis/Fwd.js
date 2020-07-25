@@ -1,12 +1,13 @@
 import { FwdAudioImpl } from '../../../src/client/fwd/audio/FwdAudioImpl';
 import { mockFwd, mockScheduler } from '../../mocks/Fwd.mock';
-import { mockAudioContext } from '../../mocks/WebAudio.mock';
+import { mockAudioContext, mockAudioParam } from '../../mocks/WebAudio.mock';
 
 describe('FwdAudioNode', () => {
   beforeEach(() => {
     mockFwd.mockClear();
     global['AudioContext'] = mockAudioContext;
     global['OfflineAudioContext'] = mockAudioContext;
+    global['AudioParam'] = mockAudioParam;
 
     // We need to provide fetch for FwdSamplerNode
     (global as any).fetch = jest.fn().mockImplementation(() => {
