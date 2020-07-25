@@ -1,4 +1,4 @@
-import { clamp, map, parseNumber } from "../../../../src/client/fwd/utils/numbers";
+import { clamp, map, parseNumber, random } from '../../../../src/client/fwd/utils/numbers';
 
 it('maps a value from a range to another', () => {
   expect(map(0, 0, 0, 0, 0)).toBe(0);
@@ -35,4 +35,33 @@ it ('clamps numeric values', () => {
   expect(clamp(500, 100, 0)).toBe(100);
 
   expect(clamp(500, 100, -100)).toBe(100);
+});
+
+
+it('generates random numbers', () => {
+  const times = 1000;
+
+  for (let i = 0; i < times; ++i) {
+    const r = random();
+    expect(r).toBeGreaterThanOrEqual(0);
+    expect(r).toBeLessThan(1);
+  }
+
+  for (let i = 0; i < times; ++i) {
+    const r = random(100);
+    expect(r).toBeGreaterThanOrEqual(0);
+    expect(r).toBeLessThan(100);
+  }
+
+  for (let i = 0; i < times; ++i) {
+    const r = random(-100);
+    expect(r).toBeGreaterThanOrEqual(-100);
+    expect(r).toBeLessThan(0);
+  }
+
+  for (let i = 0; i < times; ++i) {
+    const r = random(-100, 100);
+    expect(r).toBeGreaterThanOrEqual(-100);
+    expect(r).toBeLessThan(100);
+  }
 });
