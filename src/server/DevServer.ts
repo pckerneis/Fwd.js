@@ -1,4 +1,4 @@
-import { Logger, LoggerLevel } from '../client/fwd/utils/Logger';
+import { Logger, LoggerLevel } from '../utils/Logger';
 import {
   CSS_TYPE,
   HANDSHAKE_MESSAGE,
