@@ -1,14 +1,17 @@
-fwd.onStart = () => {
-};
+if (imgui.textButton("do something")) {
+  someFunction();
+}
 
-const htmlElement = document.createElement('div');
-htmlElement.style.width = '100px';
-htmlElement.style.height = '100px';
-htmlElement.style.background = 'blue';
-
-const gridElement = fwd.editor.root.get('grid') || fwd.editor.root.add('grid', {
-  htmlElement
+imgui.collapsePanel("source settings", () => {
+  imgui.verticalSlider("osc freq", osc.frequency);
+  imgui.verticalSlider("osc gain", osc.gain);
+  
+  imgui.collapsePanel("LFO", () => {
+    imgui.rotarySlider("lfo freq", lfo.frequency.value);
+    imgui.rotarySlider("lfo gain", lfo.gain.value);
+  });
 });
 
-gridElement.htmlElement.style.background = 'yellow';
-
+imgui.toggleButton("mute", (toggled) => {
+  gain.value = toggled ? 0 : 1;
+});
