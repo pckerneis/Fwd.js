@@ -268,7 +268,11 @@ export class FwdScheduler {
 
 
   public scheduleNow(action: Function, preventCancel?: boolean): EventRef {
-    return this.schedule(this.now() - this.clock(), action, preventCancel);
+    // TODO: errhh.. what should it do when called inside scheduler's stack or outside ?
+    // fixme
+    // Maybe this.schedule should be changed so that it will always schedule from scheduler's start
+    // The "schedule forward" concept would only apply inside event chains ? Or something ? Needs careful design
+    return this.schedule(this.now() || this.clock(), action, preventCancel);
   }
 
   /**
