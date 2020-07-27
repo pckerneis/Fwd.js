@@ -24,13 +24,11 @@ export default class FwdWebRunner implements FwdRunner {
 
   private codeEditor: RunnerCodeEditor;
 
-  private _currentCode: string;
+  private _transformedSource: string;
   private _audioReady: boolean;
   private _sketchWasInitialized: boolean;
   private _running: boolean;
   private _autoBuilds: boolean;
-
-  private readonly _sandboxProxies: WeakMap<any, any> = new WeakMap();
 
   private _devClient: DevClient;
   private _watchedFile: string;
@@ -66,12 +64,12 @@ export default class FwdWebRunner implements FwdRunner {
     return this._audio;
   }
 
-  public setSketchCode(newSketch: string): void {
-    this._currentCode = newSketch;
-    this._savedCode = newSketch;
+  public setSketchCode(newCode: string, transformedSource: string): void {
+    this._transformedSource = transformedSource;
+    this._savedCode = newCode;
 
     if (this.codeEditor) {
-      this.codeEditor.code = newSketch;
+      this.codeEditor.code = newCode;
     }
 
     this.setDirty(false);
@@ -107,7 +105,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.onStart = null;
     this._fwd.onStop = null;
     this._fwd.editor.reset();
-    this._currentCode = null;
+    this._transformedSource = null;
     this._sketchWasInitialized = false;
     this._fwd.globals = {};
     this._fwd.scheduler.resetActions();
@@ -118,8 +116,7 @@ export default class FwdWebRunner implements FwdRunner {
       throw new Error('Cannot save when code editor is not used.');
     }
 
-    this._currentCode = this.codeEditor.code;
-    this._devClient.saveFile(this._watchedFile, this._currentCode);
+    this._devClient.saveFile(this._watchedFile, this.codeEditor.code);
   }
 
   public start(): void {
@@ -165,12 +162,12 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public build(): void {
-    if (this._currentCode == null) {
+    if (this._transformedSource == null) {
       throw new Error('The sketch could not be executed');
     }
 
     try {
-      this.compileCode(this._currentCode)(window);
+      this.compileCode(this._transformedSource)(window);
 
       if (! this._sketchWasInitialized) {
         if (typeof this._fwd.onInit === 'function') {
@@ -184,7 +181,7 @@ export default class FwdWebRunner implements FwdRunner {
         this._sketchWasInitialized = true;
       }
 
-      this._executedCode = this._currentCode;
+      this._executedCode = this._transformedSource;
       this._header.setSyncState('up-to-date');
     } catch (e) {
       this._header.setSyncState('code-errors');
@@ -263,35 +260,14 @@ export default class FwdWebRunner implements FwdRunner {
 
   private initializeSketchIfReady(): void {
     if (! this._sketchWasInitialized
-      && this._currentCode != null
+      && this._transformedSource != null
       && this._audioReady) {
       this.build();
     }
   }
 
   private compileCode(src: string): Function {
-    src = `with (sandbox) { ${src} }`;
-
-    const code = new Function('sandbox', src);
-
-    return (sandbox: any) => {
-      if (! this._sandboxProxies.has(sandbox)) {
-        const sandboxProxy = new Proxy(sandbox, {
-          has(): boolean {
-            return true;
-          },
-
-          get(target: string, key: symbol): any {
-            if (key === Symbol.unscopables) return undefined;
-            return target[key];
-          },
-        });
-
-        this._sandboxProxies.set(sandbox, sandboxProxy);
-      }
-
-      return code(this._sandboxProxies.get(sandbox));
-    }
+    return new Function(src);
   }
 
   private initDevClient(): void {
@@ -302,7 +278,11 @@ export default class FwdWebRunner implements FwdRunner {
       this._devClient.watchFile(files[0]);
     };
 
-    this._devClient.onFileChange = (file, content) => {
+    this._devClient.onServerError = (errors: string[]) => {
+      console.error(...errors);
+    };
+
+    this._devClient.onFileChange = (file, content, transformedSource) => {
       if (this._watchedFile != file) {
         this.reset();
         this._watchedFile = file;
@@ -310,7 +290,7 @@ export default class FwdWebRunner implements FwdRunner {
         this._header.setSyncState('out-of-date');
       }
 
-      this.setSketchCode(content);
+      this.setSketchCode(content, transformedSource || content);
     };
   }
 
@@ -335,7 +315,7 @@ export default class FwdWebRunner implements FwdRunner {
 
   private buildMainSection(): void {
     const useCodeEditor = true;
-    const useEditorApi = false;
+    const useEditorApi = true;
 
     const flexPanel = new FlexPanel();
     document.getElementById('fwd-runner-container').append(flexPanel.htmlElement);

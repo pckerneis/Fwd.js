@@ -268,7 +268,7 @@ export class FwdScheduler {
 
 
   public scheduleNow(action: Function, preventCancel?: boolean): EventRef {
-    return this.schedule(this.now(), action, preventCancel);
+    return this.schedule(this.now() - this.clock(), action, preventCancel);
   }
 
   /**

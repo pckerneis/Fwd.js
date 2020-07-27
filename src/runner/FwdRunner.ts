@@ -6,7 +6,7 @@ export default interface FwdRunner {
   audio: FwdAudio;
 
   startAudioContext(): void;
-  setSketchCode(newSketch: string): void;
+  setSketchCode(newSketch: string, transformedSource: string): void;
   setFiles(files: string[]): void;
   setAutoBuilds(autoBuilds: boolean): void;
 

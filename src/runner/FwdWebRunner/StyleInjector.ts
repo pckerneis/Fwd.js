@@ -4,7 +4,9 @@ const injectedStyles: StyleMap =  {};
 const preloadStyle: StyleMap = {};
 
 let dynamicStyleContainer: HTMLStyleElement;
-let documentLoaded = false;
+
+// TODO: broken ! If set to false, rollup-ed files won't load their CSS
+let documentLoaded = true;
 
 export function injectStyle(id: string, css: string): void {
   if (injectedStyles[id] == null) {

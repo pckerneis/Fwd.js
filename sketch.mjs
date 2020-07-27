@@ -1,17 +1,17 @@
-
+import {TextAreaElement} from "./dist/api/api/editor/elements/TextArea/TextArea";
+import {FlexPanel} from "./dist/api/api/editor/elements/FlexPanel/FlexPanel";
+import {AudioMixerElement} from "./dist/api/api/editor/elements/AudioMixerPanel/AudioMixerElement";
 
 fwd.onStart = function () {
-
-
 
 fwd.globals.myMessage = 'hey you :)';
 
   const hFlex = fwd.editor.root.get('hflex')
-  || fwd.editor.root.add('hflex', new Fwd.FlexPanel('row'));
+  || fwd.editor.root.add('hflex', new FlexPanel('row'));
 
 const propertyPanel = hFlex.getOrAddFlexItem(
   'properties',
-  () => new Fwd.FlexPanel('column'),
+  () => new FlexPanel('column'),
   {
     width: 300,
     minWidth: 100,
@@ -24,7 +24,7 @@ hFlex.addSeparator(0, true);
 
 const flex = hFlex.getOrAddFlexItem(
   'flex',
-  () => new Fwd.FlexPanel('column'),
+  () => new FlexPanel('column'),
   {
     flexShrink: 1,
   }
@@ -32,7 +32,7 @@ const flex = hFlex.getOrAddFlexItem(
 
 const mixer = flex.getOrAddFlexItem(
   'mixer',
-  () => new Fwd.AudioMixerPanel(fwd.audio.context),
+  () => new AudioMixerElement(fwd.audio.context),
   {
     height: 200,
     minHeight: 120,
@@ -40,16 +40,6 @@ const mixer = flex.getOrAddFlexItem(
   });
 
 flex.addSeparator(0, true);
-
-const sequencer = flex.getOrAddFlexItem(
-  'sequencer',
-  () => new Fwd.NoteSequencerElement(fwd.audio.context),
-  {
-    minHeight: 0,
-    maxHeight: 600,
-    flexGrow: 1,
-  }
-);
 
 const padTrack = mixer.getOrAddTrack("pad");
 padTrack.htmlElement.style.background = "rgb(124,255,92)";
@@ -66,7 +56,7 @@ hhTrack.htmlElement.style.background = "rgb(156,144,255)";
 const editor0 = propertyPanel.getOrAddFlexItem(
   'editor0',
   () => {
-    const editor = new Fwd.TextAreaElement();
+    const editor = new TextAreaElement();
     editor.value = '0, 2, 4, 7, 11';
     return editor;
   },
@@ -75,7 +65,7 @@ const editor0 = propertyPanel.getOrAddFlexItem(
 const editor1 = propertyPanel.getOrAddFlexItem(
   'editor1',
   () => {
-    const editor = new Fwd.TextAreaElement();
+    const editor = new TextAreaElement();
     editor.maxLength = 16;
     editor.mode = 'overwrite';
     editor.value = 'x-----x-----x---';
@@ -86,7 +76,7 @@ const editor1 = propertyPanel.getOrAddFlexItem(
 const editor2 = propertyPanel.getOrAddFlexItem(
   'editor2',
   () => {
-    const editor = new Fwd.TextAreaElement();
+    const editor = new TextAreaElement();
     editor.maxLength = 16;
     editor.mode = 'overwrite';
     editor.value = 'x---x---x---x---';
@@ -97,7 +87,7 @@ const editor2 = propertyPanel.getOrAddFlexItem(
 const editor3 = propertyPanel.getOrAddFlexItem(
   'editor3',
   () => {
-    const editor = new Fwd.TextAreaElement();
+    const editor = new TextAreaElement();
     editor.maxLength = 16;
     editor.mode = 'overwrite';
     editor.value = '--x---x---x---x-';

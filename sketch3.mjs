@@ -1,3 +1,6 @@
+import {random} from './dist/api/utils/numbers';
+import {midiToFrequency} from "./dist/api/api/midi/helpers";
+
 fwd.globals.steps = 32;
 fwd.globals.dur = 5;
 
@@ -64,7 +67,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
   const timeBetweenNotes = fwd.globals.dur / fwd.globals.steps;
 
 	const playNote = (idx, noteNumber) => {
-    const osc = fwd.audio.osc(mtof(noteNumber));
+    const osc = fwd.audio.osc(midiToFrequency(noteNumber + random(0)));
     osc.connect(del);
 
     fwd.scheduler
@@ -85,6 +88,8 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
       const i = t > fwd.globals.steps / 2 ? fwd.globals.steps - t : t;
       const p = notes[i % notes.length] + (Math.floor(i / notes.length) * 12);
       playNote(t, p);
+      playNote(t, p);
+      playNote(t, p);
     }
   }
 
@@ -99,7 +104,3 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
     rvb.tearDown();
   });
 });
-
-function mtof(noteNumber) {
-  return (2 ** ((noteNumber - 69) / 12)) * 440;
-}

@@ -1,6 +1,6 @@
 import { Logger, LoggerLevel } from '../utils/Logger';
 import {
-  CSS_TYPE, HANDSHAKE_MESSAGE,
+  CSS_TYPE, ERROR_TYPE, HANDSHAKE_MESSAGE,
   PING_MESSAGE,
   PONG_MESSAGE,
   REFRESH_TYPE, SAVE_TYPE,
@@ -15,7 +15,8 @@ export class DevClient {
   public readonly _ws: WebSocket;
 
   public onFilesAvailable: (files: string[]) => void;
-  public onFileChange: (file: string, textContent: string) => void;
+  public onFileChange: (file: string, textContent: string, transformedSource: string) => void;
+  public onServerError: (errors: string[]) => void;
 
   constructor() {
     this._ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
@@ -49,7 +50,7 @@ export class DevClient {
     }
 
     try {
-      const {type, textContent, files, file} = JSON.parse(msg.data);
+      const {type, textContent, files, file, transformed, error} = JSON.parse(msg.data);
       DBG.debug(type);
 
       if (type === WELCOME_TYPE) {
@@ -62,7 +63,7 @@ export class DevClient {
         DBG.debug('Sketch received.');
 
         if (typeof this.onFileChange === 'function') {
-          this.onFileChange(file, textContent);
+          this.onFileChange(file, textContent, transformed);
         }
       } else if (type === CSS_TYPE) {
         DBG.debug('Stylesheet received.');
@@ -75,6 +76,12 @@ export class DevClient {
       } else if (type === REFRESH_TYPE) {
         DBG.debug('Refreshing...');
         location.reload();
+      } else if (type === ERROR_TYPE) {
+        DBG.debug('Error', error);
+
+        if (typeof this.onServerError === 'function') {
+          this.onServerError([error]);
+        }
       }
     } catch (e) {
       DBG.error(e);

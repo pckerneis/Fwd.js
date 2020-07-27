@@ -1,6 +1,6 @@
 import { Logger, LoggerLevel } from '../utils/Logger';
 import {
-  CSS_TYPE,
+  CSS_TYPE, ERROR_TYPE,
   HANDSHAKE_MESSAGE,
   PING_MESSAGE,
   PONG_MESSAGE,
@@ -16,6 +16,7 @@ const chokidar = require('chokidar');
 const SocketServer = require('ws').Server;
 const fs = require('fs');
 const path = require('path');
+const rollup = require('rollup');
 
 export interface Client {
   id: number;
@@ -43,15 +44,33 @@ export class DevServer {
     return filePath.includes('fwd-runner') && filePath.endsWith('.js');
   }
 
-  private static sendSketch(client: Client, file: string, textContent?: string): void {
+  private static sendSketch(client: Client, file: string): void {
     try {
-      textContent = textContent || fs.readFileSync(path.resolve(__dirname, '../../' + file), 'utf8');
+      const textContent = fs.readFileSync(
+        path.resolve(__dirname, '../../' + file),
+        'utf8');
 
-      client.ws.send(JSON.stringify({
-        type: SKETCH_TYPE,
-        file,
-        textContent,
-      }));
+      if (file.endsWith('.mjs')) {
+        DevServer.buildModule(file, textContent)
+          .then(transformed => {
+            client.ws.send(JSON.stringify({
+              type: SKETCH_TYPE,
+              file,
+              textContent,
+              transformed,
+            }));
+          })
+          .catch(error => client.ws.send(JSON.stringify({
+            type: ERROR_TYPE,
+            error,
+          })));
+      } else {
+        client.ws.send(JSON.stringify({
+          type: SKETCH_TYPE,
+          file,
+          textContent,
+        }));
+      }
     } catch (e) {
       DBG.error(e);
     }
@@ -61,7 +80,7 @@ export class DevServer {
     DBG.debug('Scan directory : ' + path.resolve(__dirname, '../../'));
 
     const files = fs.readdirSync(path.resolve(__dirname, '../../'))
-      .filter((file: string) => file.endsWith('.js'))
+      .filter((file: string) => this.isExecutableFile(file))
       .filter((file: string) => ! file.endsWith('.config.js'));
 
     ws.send(JSON.stringify({
@@ -70,6 +89,35 @@ export class DevServer {
     }));
 
     DBG.debug('Available files: ', files);
+  }
+
+  private static isExecutableFile(file: string): boolean {
+    return file.endsWith('.js') || file.endsWith('.mjs');
+  }
+
+  private static async buildModule(file: string, textContent: string): Promise<string> {
+    const inputOptions = {
+      input: file,
+    };
+
+    const outputOptions = {
+      format: 'iife',
+      name: 'fwdProgram',
+    };
+
+    const bundle = await rollup.rollup(inputOptions);
+    console.log('watchFiles', bundle.watchFiles);
+    const { output } = await bundle.generate(outputOptions);
+
+    for (const chunkOrAsset of output) {
+      if (chunkOrAsset.type === 'asset') {
+        // Nothing to do for now...
+      } else {
+        return chunkOrAsset.code;
+      }
+    }
+
+    return '';
   }
 
   private addClient(ws: WebSocket): void {
@@ -161,14 +209,15 @@ export class DevServer {
               type: REFRESH_TYPE,
             }));
           });
-        } else if (file.endsWith('.js')) {
+        } else if (DevServer.isExecutableFile(file)) {
           const clientsWatching = this._clients.filter(client => {
             return client.watched.includes(file);
           });
 
-          DBG.info(`Transmit sketch to ${clientsWatching.length} clients.`);
-
-          clientsWatching.forEach(client => DevServer.sendSketch(client, file, textContent));
+          if (clientsWatching.length !== 0) {
+            DBG.info(`Transmit module to ${clientsWatching.length} clients.`);
+            clientsWatching.forEach(client => DevServer.sendSketch(client, file));
+          }
         }
       });
   }
