@@ -1,12 +1,15 @@
 type StyleMap = { [key: string]: string };
 
+// TODO make these static (double module inclusion because of webpack bundle vs. rollup lib
 const injectedStyles: StyleMap =  {};
 const preloadStyle: StyleMap = {};
 
 let dynamicStyleContainer: HTMLStyleElement;
 
-// TODO: broken ! If set to false, rollup-ed files won't load their CSS
-let documentLoaded = true;
+let documentLoaded = document.readyState === "complete"
+    || document.readyState === "interactive"
+    // @ts-ignore
+    || document.readyState === "loaded";
 
 export function injectStyle(id: string, css: string): void {
   if (injectedStyles[id] == null) {
