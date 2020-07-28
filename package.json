@@ -31,7 +31,6 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
-    "@types/codeflask": "^1.4.1",
     "@types/codemirror": "^0.0.95",
     "chalk": "^4.0.0",
     "chokidar": "^3.4.0",
