@@ -1,22 +1,6 @@
-// imgui.textButton("do something", () => {
-//   someFunction();
-// });
-//
-// imgui.collapsePanel("source settings", () => {
-//   imgui.verticalSlider("osc freq", osc.frequency);
-//   imgui.verticalSlider("osc gain", osc.gain);
-//
-//   imgui.collapsePanel("LFO", () => {
-//     imgui.rotarySlider("lfo freq", lfo.frequency.value);
-//     imgui.rotarySlider("lfo gain", lfo.gain.value);
-//   });
-// });
-//
-// imgui.toggleButton("mute", (toggled) => {
-//   gain.value = toggled ? 0 : 1;
-// });
+import {getGuiManager} from "./dist/api/api/gui/GuiManager";
 
-import gui from "./gui.js";
+const gui = getGuiManager(fwd.editor.root.htmlElement);
 
 console.log(gui);
 
@@ -24,6 +8,7 @@ if (window.programState == null) {
   window.programState = {
     min: {value: 0},
     max: {value: 1},
+    other: {value: 0.3},
   };
 }
 
@@ -31,29 +16,41 @@ const min = window.programState.min;
 const max = window.programState.max;
 
 gui.update = () => {
-  gui.horizontalSlider(() => min.value, (newValue) => {
-    min.value = newValue;
-    max.value = Math.max(newValue, max.value);
-    return newValue;
-  });
+  gui.horizontalSlider(
+    {
+      provide: () => min.value,
+      validate: (newValue) => {
+        min.value = newValue;
+        max.value = Math.max(newValue, max.value);
+        return newValue;
+      }
+    },
+    {
+      style: { width: "200px" }
+    });
 
   if (min.value > 0.5) {
-    gui.horizontalSlider(() => 0.3, () => {
-      return 0.3;
-    });
+    gui.horizontalSlider({
+      provide: () => window.programState.other,
+      validate: (v) => v,
+    }, {min: 0, max: 100});
   }
 
-  gui.horizontalSlider(() => max.value, (newValue) => {
-    max.value = newValue;
-    min.value = Math.min(newValue, min.value);
-    return newValue;
+  gui.horizontalSlider({
+    provide: () => max.value,
+    validate: (newValue) => {
+      max.value = newValue;
+      min.value = Math.min(newValue, min.value);
+      return newValue;
+    }
   });
   
-  // gui.horizontalSlider(() => max.value, (newValue) => {
-  //   max.value = newValue;
-  //   min.value = Math.min(newValue, min.value);
-  //   return newValue;
-  // });
+  gui.horizontalSlider({
+    provide: () => window.programState.other,
+    validate: (v) => { window.programState.other.value = v; return v; },
+  }, {style:{width:'500px'}});
+
+  console.dir(Object.keys(window.programState).map(key => `${key}: ${window.programState[key].value}`).join(', '));
 }
 
 gui.changed();
