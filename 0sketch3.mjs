@@ -1,5 +1,14 @@
-import {random} from './dist/api/utils/numbers';
 import {midiToFrequency} from "./dist/api/api/midi/helpers";
+import {getGuiManager} from "./dist/api/api/gui/Gui";
+
+const gui = getGuiManager(fwd.editor.root.htmlElement);
+
+gui.update = () => {
+  gui.horizontalSlider('base', { max: 12, style: { width: "200px" } });
+  console.log('gui updated', gui.getValue('base'));
+}
+
+gui.changed();
 
 fwd.globals.steps = 32;
 fwd.globals.dur = 5;
@@ -50,6 +59,7 @@ fwd.onStart = () => {
     .fire(() => loop.trigger());
 
   loop.trigger();
+	gui.changed();
 };
 
 fwd.scheduler.defineAction('arp', (chord, duration) => {
@@ -66,30 +76,14 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
 
   const timeBetweenNotes = fwd.globals.dur / fwd.globals.steps;
 
-	const playNote = (idx, noteNumber) => {
-    const osc = fwd.audio.osc(midiToFrequency(noteNumber + random(0)));
-    osc.connect(del);
-
-    fwd.scheduler
-      .wait(idx * timeBetweenNotes)
-      .fire(() => osc.gain.rampTo(0.1, attack))
-      .wait(attack)
-      .fire(() => osc.gain.rampTo(0, release))
-      .wait(release)
-      .wait(reverbTime)
-      .fire(() => {
-        osc.tearDown();
-      })
-      .trigger();
-	};
-
   for (let t = 0; t < fwd.globals.steps; ++t) {
     if (t * timeBetweenNotes < duration) {
       const i = t > fwd.globals.steps / 2 ? fwd.globals.steps - t : t;
       const p = notes[i % notes.length] + (Math.floor(i / notes.length) * 12);
-      playNote(t, p);
-      playNote(t, p);
-      playNote(t, p);
+
+      fwd.scheduler
+    		.wait(t * timeBetweenNotes)
+        .fire('playNote', t, p, timeBetweenNotes, attack, reverbTime, del, release).trigger();
     }
   }
 
@@ -104,3 +98,17 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
     rvb.tearDown();
   });
 });
+
+fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
+  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('base')));
+  osc.connect(del);
+
+  fwd.scheduler
+    .fire(() => osc.gain.rampTo(0.1, attack))
+    .wait(attack)
+    .fire(() => osc.gain.rampTo(0, release))
+    .wait(release)
+    .wait(reverbTime)
+    .fire(() => osc.tearDown())
+    .trigger();
+})

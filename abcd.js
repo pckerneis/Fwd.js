@@ -1,29 +1,26 @@
 const keyMappings = {
-  'q': 60,
-  'z': 61,
-  's': 62,
-  'e': 63,
-  'd': 64,
-  'f': 65,
-  't': 66,
-  'g': 67,
-  'y': 68,
-  'h': 69,
-  'u': 70,
-  'j': 71,
-  'k': 72,
-  'o': 73,
-  'l': 74,
-  'p': 75,
-  'm': 76,
-  'ù': 77,
-  '$': 78,
-  '*': 79,
+  'q': 60, 'z': 61, 's': 62, 'e': 63, 'd': 64, 'f': 65, 't': 66, 'g': 67,
+  'y': 68, 'h': 69, 'u': 70, 'j': 71, 'k': 72, 'o': 73, 'l': 74, 'p': 75, 
+  'm': 76, 'ù': 77, '$': 78, '*': 79,
 };
 
 const gain = 0.4;
 const attackTime = 0.01;
 const releaseTime = 0.3;
+
+fwd.scheduler.defineAction('noteOn', (pitch) => {
+  const freq = mtof(pitch);
+  const osc = fwd.audio.osc(freq);
+  const distorsion = fwd.audio.distortion(30);
+  osc.connect(distorsion).connect(fwd.audio.master);
+
+  fwd.scheduler
+    .wait(() => fwd.scheduler.clock() + 0.01)
+    .fire(() => osc.gain.rampTo(gain, attackTime))
+    .trigger();
+
+  fwd.globals.notes[pitch] = osc;
+});
 
 fwd.onStart = () => {
   fwd.globals.notes = [];
@@ -56,17 +53,7 @@ function press(pitch) {
     return;
   }
 
-  const freq = mtof(pitch);
-
-  const osc = fwd.audio.osc(freq);
-  osc.connect(fwd.audio.master);
-
-  fwd.scheduler
-    .wait(() => fwd.scheduler.clock() + 0.01)
-    .fire(() => osc.gain.rampTo(gain, attackTime))
-    .trigger();
-
-  fwd.globals.notes[pitch] = osc;
+  fwd.scheduler.fire('noteOn', pitch).trigger();
 }
 
 function releaseAll() {
