@@ -2,6 +2,7 @@ import { FwdAudio } from '../../api/audio/FwdAudio';
 import { FwdAudioImpl } from '../../api/audio/FwdAudioImpl';
 import { FwdContext } from '../../api/core/FwdContext';
 import { FlexPanel } from '../../api/editor/elements/FlexPanel/FlexPanel';
+import { clearGuiManagers } from '../../api/gui/Gui';
 import { DevClient } from '../../server/DevClient';
 import { formatTime } from '../../utils/time';
 import debounce from '../../utils/time-filters/debounce';
@@ -109,6 +110,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._sketchWasInitialized = false;
     this._fwd.globals = {};
     this._fwd.scheduler.resetActions();
+    clearGuiManagers();
   }
 
   public save(): void {
@@ -167,7 +169,7 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     try {
-      this.compileCode(this._transformedSource)(window);
+      new Function(this._transformedSource)(window);
 
       if (! this._sketchWasInitialized) {
         if (typeof this._fwd.onInit === 'function') {
@@ -264,10 +266,6 @@ export default class FwdWebRunner implements FwdRunner {
       && this._audioReady) {
       this.build();
     }
-  }
-
-  private compileCode(src: string): Function {
-    return new Function(src);
   }
 
   private initDevClient(): void {

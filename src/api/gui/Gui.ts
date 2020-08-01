@@ -1,3 +1,8 @@
+import { Logger } from '../../utils/Logger';
+import parentLogger from './logger.gui';
+
+const DBG = new Logger('gui', parentLogger);
+
 export interface ControlModel<T> {
     provide: () => T;
     validate: (value: T) => T;
@@ -12,6 +17,7 @@ export interface ElementOptions {
     id: string;
     className: string;
 
+    defaultValue: number;
     min: number;
     max: number;
     step: number;
@@ -24,10 +30,11 @@ const defaultElementOptionsAndStyle: ElementOptionsAndStyle = {
     className: '',
     style: null,
 
+    defaultValue: undefined,
     min: 0,
     max: 1,
     step: 0.1,
-}
+};
 
 export class GuiManager {
 
@@ -36,22 +43,18 @@ export class GuiManager {
     private sliders: Slider[] = [];
 
     private controls: Map<string, ControlModel<number>> = new Map();
-    
+
     private index: number = 0;
-    
+
     constructor(public readonly rootElement: HTMLElement) {
     }
 
     private static createSliderElement(): HTMLInputElement {
         const s = document.createElement('input');
         s.type = "range";
-        s.min = '0';
-        s.max = '1';
-        s.step = '0.1';
-
         return s;
     }
-    
+
     private static setOptionOrDefault(element: HTMLInputElement, options: ElementOptions, key: keyof ElementOptions): any {
         const isOptionDefined = !!options && Object.keys(options).includes(key);
         const value = isOptionDefined ? options[key] : defaultElementOptionsAndStyle[key];
@@ -60,7 +63,7 @@ export class GuiManager {
 
     public horizontalSlider(controlId: string | ControlModel<number>, elementOptions?: ElementOptionsAndStyle): void {
         const controlModel = typeof controlId === 'string' ?
-            (this.controls.get(controlId) || this.createAndAddControlModel(controlId))
+            (this.controls.get(controlId) || this.createAndAddControlModel(controlId, elementOptions.defaultValue))
             : controlId;
 
         const slider = this.sliders[this.index] || this.createAndAddSlider();
@@ -86,16 +89,11 @@ export class GuiManager {
     }
 
     private changed(): void {
-        const previousIndex = this.index;
         this.index = 0;
-
-        //=================================================================
 
         if (this.update && typeof this.update === 'function') {
             this.update();
         }
-
-        //=================================================================
 
         // Cleanup (remove excessive controls)
         this.sliders.filter((s, i) => i >= this.index && !!s)
@@ -104,14 +102,12 @@ export class GuiManager {
                 this.sliders[this.sliders.indexOf(s)] = undefined;
             });
 
-        if (previousIndex !== this.index)
-
         // Apply values (model to view)
         this.sliders
             .filter(s => !!s)
             .forEach(s => s.htmlElement.value = s.controlModel.provide()?.toString());
     }
-    
+
     private createAndAddSlider(): Slider {
         const htmlElement = GuiManager.createSliderElement();
 
@@ -121,7 +117,7 @@ export class GuiManager {
         // Do add it...
         this.rootElement.append(htmlElement);
 
-        console.log('created slider #' + this.index);
+        DBG.info('created slider #' + this.index);
         return slider;
     }
 
@@ -149,8 +145,8 @@ export class GuiManager {
         }
     }
 
-    private createAndAddControlModel(controlId: string): ControlModel<number> {
-        let memoized = 0;
+    private createAndAddControlModel(controlId: string, defaultValue: number): ControlModel<number> {
+        let memoized = defaultValue || defaultElementOptionsAndStyle.defaultValue;
 
         const controlModel = {
             provide: () => memoized,
@@ -173,8 +169,13 @@ const staticMap = window[STATIC_MAP_NAME] as Map<HTMLElement, GuiManager>;
 
 export function getGuiManager(root: HTMLElement): GuiManager {
     return staticMap.get(root) || (() => {
-        const guiManager = new GuiManager(root)
+        const guiManager = new GuiManager(root);
         staticMap.set(root, guiManager);
         return guiManager;
     })();
+}
+
+export function clearGuiManagers(): void {
+    DBG.info('clear gui managers');
+    staticMap.clear();
 }
