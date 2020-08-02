@@ -1,4 +1,3 @@
-import path from "path";
 import { Logger, LoggerLevel } from "../../../utils/Logger";
 import { clamp } from "../../../utils/numbers";
 import { Time } from "../../core/EventQueue/EventQueue";
@@ -223,9 +222,7 @@ export class FwdSamplerNode extends FwdAudioNode {
   }
 
   private load(): void {
-    const url = path.resolve('../../data', this.pathToFile);
-
-    fetch(url)
+    fetch(this.pathToFile)
       .then(response => response.arrayBuffer())
       .then(arrayBuffer => this.fwdAudio.context.decodeAudioData(arrayBuffer))
       .then(audioBuffer => this._buffer = audioBuffer)
