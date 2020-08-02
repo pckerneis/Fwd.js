@@ -1,6 +1,6 @@
 import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
-import { clamp } from "../../../../utils/numbers";
-import audit from "../../../../utils/time-filters/audit";
+import { clamp } from "../../../utils/numbers";
+import audit from "../../../utils/time-filters/audit";
 import { EditorElement } from "../../Editor";
 
 abstract class AbstractContainerElement implements EditorElement {

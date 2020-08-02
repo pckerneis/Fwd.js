@@ -1,7 +1,7 @@
-import { FwdAudioImpl } from '../../../../src/api/audio/FwdAudioImpl';
-import { FwdAudioNode } from '../../../../src/api/audio/nodes/FwdAudioNode';
-import { FwdAudioNodeWrapper } from '../../../../src/api/audio/nodes/FwdAudioNodeWrapper';
-import { FwdAudioParamWrapper } from '../../../../src/api/audio/nodes/FwdAudioParamWrapper';
+import { FwdAudioImpl } from '../../../../src/fwd/audio/FwdAudioImpl';
+import { FwdAudioNode } from '../../../../src/fwd/audio/nodes/FwdAudioNode';
+import { FwdAudioNodeWrapper } from '../../../../src/fwd/audio/nodes/FwdAudioNodeWrapper';
+import { FwdAudioParamWrapper } from '../../../../src/fwd/audio/nodes/FwdAudioParamWrapper';
 import {
   FwdCompressorNode,
   FwdDelayLineNode, FwdDistortionNode,
@@ -9,9 +9,9 @@ import {
   FwdLFONode, FwdNoiseNode,
   FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
-} from '../../../../src/api/audio/nodes/StandardAudioNodes';
-import { Time } from '../../../../src/api/core/EventQueue/EventQueue';
-import { Logger, LoggerLevel } from '../../../../src/utils/Logger';
+} from '../../../../src/fwd/audio/nodes/StandardAudioNodes';
+import { Time } from '../../../../src/fwd/core/EventQueue/EventQueue';
+import { Logger, LoggerLevel } from '../../../../src/fwd/utils/Logger';
 import { mockFwd } from '../../../mocks/Fwd.mock';
 import { mockFwdAudio } from '../../../mocks/FwdAudio.mock';
 import { mockAudioContext, mockAudioNode, mockAudioParam } from '../../../mocks/WebAudio.mock';

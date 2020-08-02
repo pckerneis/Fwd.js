@@ -1,7 +1,7 @@
-import { FwdAudio } from '../../api/audio/FwdAudio';
-import { FwdContext } from '../../api/core/FwdContext';
-import { FwdScheduler } from '../../api/core/FwdScheduler';
-import { Editor } from '../../api/editor/Editor';
+import { FwdAudio } from '../../fwd/audio/FwdAudio';
+import { FwdContext } from '../../fwd/core/FwdContext';
+import { FwdScheduler } from '../../fwd/core/FwdScheduler';
+import { Editor } from '../../fwd/editor/Editor';
 import FwdRunner from '../FwdRunner';
 
 export default class FwdWebImpl implements FwdContext {

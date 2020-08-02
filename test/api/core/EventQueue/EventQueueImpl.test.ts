@@ -1,6 +1,6 @@
-import { EventQueueImpl } from '../../../../src/api/core/EventQueue/EventQueueImpl';
-import { Action } from "../../../../src/api/core/Scheduler/Scheduler";
-import { Logger, LoggerLevel } from "../../../../src/utils/Logger";
+import { EventQueueImpl } from '../../../../src/fwd/core/EventQueue/EventQueueImpl';
+import { Action } from "../../../../src/fwd/core/Scheduler/Scheduler";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 
 class DummyEvent implements Action {
   public trigger(): void {

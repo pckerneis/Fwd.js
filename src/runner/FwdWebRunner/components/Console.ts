@@ -1,5 +1,5 @@
-import { clamp } from "../../../utils/numbers";
-import { formatTime } from '../../../utils/time';
+import { clamp } from "../../../fwd/utils/numbers";
+import { formatTime } from '../../../fwd/utils/time';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from "./IconButton";
 

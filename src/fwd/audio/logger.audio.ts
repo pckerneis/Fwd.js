@@ -1,4 +1,4 @@
-import { Logger } from "../../utils/Logger";
 import parentLogger from '../logger.fwd';
+import { Logger } from "../utils/Logger";
 
 export default new Logger('audio', parentLogger);

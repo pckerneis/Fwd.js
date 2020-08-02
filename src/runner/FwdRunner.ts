@@ -1,5 +1,5 @@
-import { FwdAudio } from '../api/audio/FwdAudio';
-import { FwdContext } from '../api/core/FwdContext';
+import { FwdAudio } from '../fwd/audio/FwdAudio';
+import { FwdContext } from '../fwd/core/FwdContext';
 
 export default interface FwdRunner {
   fwd: FwdContext;

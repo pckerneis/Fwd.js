@@ -1,4 +1,4 @@
-import { AudioMeterElement } from '../../../api/editor/elements/AudioMeter/AudioMeter';
+import { AudioMeterElement } from '../../../fwd/editor/elements/AudioMeter/AudioMeter';
 import { injectStyle } from '../StyleInjector';
 
 export class MasterSlider {

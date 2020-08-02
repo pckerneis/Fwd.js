@@ -1,4 +1,4 @@
-import debounce from '../../src/utils/time-filters/debounce';
+import debounce from '../../src/fwd/utils/time-filters/debounce';
 
 beforeEach(() => {
   jest.useFakeTimers();

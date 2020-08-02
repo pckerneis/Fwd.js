@@ -1,5 +1,5 @@
-import { SchedulerImpl } from "../../../../src/api/core/Scheduler/SchedulerImpl";
-import { Logger, LoggerLevel } from "../../../../src/utils/Logger";
+import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 import { seconds } from "../../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;

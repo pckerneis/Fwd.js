@@ -1,9 +1,9 @@
 import { ToggleButton } from "../../../../runner/FwdWebRunner/components/ToggleButton";
 import { VerticalSlider } from "../../../../runner/FwdWebRunner/components/VerticalSlider";
 import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
-import { Logger } from "../../../../utils/Logger";
-import { clamp, parseNumber } from "../../../../utils/numbers";
-import debounce from '../../../../utils/time-filters/debounce';
+import { Logger } from "../../../utils/Logger";
+import { clamp, parseNumber } from "../../../utils/numbers";
+import debounce from '../../../utils/time-filters/debounce';
 import { EditorElement } from "../../Editor";
 import { AudioMeterElement } from "../AudioMeter/AudioMeter";
 import parentLogger from "../logger.components";

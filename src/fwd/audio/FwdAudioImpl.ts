@@ -1,6 +1,6 @@
-import { Logger, LoggerLevel } from '../../utils/Logger';
 import { Time } from '../core/EventQueue/EventQueue';
 import { FwdScheduler } from '../core/FwdScheduler';
+import { Logger, LoggerLevel } from '../utils/Logger';
 import { FwdAudio } from './FwdAudio';
 import parentLogger from './logger.audio';
 import {

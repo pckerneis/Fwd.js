@@ -1,6 +1,6 @@
 import { injectStyle } from '../../../../runner/FwdWebRunner/StyleInjector';
-import { gainToDecibels } from '../../../../utils/decibels';
-import debounce from '../../../../utils/time-filters/debounce';
+import { gainToDecibels } from '../../../utils/decibels';
+import debounce from '../../../utils/time-filters/debounce';
 import { EditorElement } from "../../Editor";
 
 export class AudioMeterElement implements EditorElement {

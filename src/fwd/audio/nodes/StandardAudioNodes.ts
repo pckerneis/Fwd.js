@@ -1,6 +1,6 @@
-import { Logger, LoggerLevel } from "../../../utils/Logger";
-import { clamp } from "../../../utils/numbers";
 import { Time } from "../../core/EventQueue/EventQueue";
+import { Logger, LoggerLevel } from "../../utils/Logger";
+import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";
 import parentLogger from "../logger.audio";
 import { FwdAudioNode } from "./FwdAudioNode";

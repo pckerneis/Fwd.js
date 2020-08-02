@@ -1,4 +1,4 @@
-import { Logger } from "../../../utils/Logger";
+import { Logger } from "../../utils/Logger";
 import parentLogger from "../logger.core";
 import { EventQueue, EventRef, ScheduledEvent, Time } from './EventQueue';
 

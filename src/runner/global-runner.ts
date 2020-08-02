@@ -1,8 +1,8 @@
-import FwdRunner from '../runner/FwdRunner';
-import { Overlay } from "../runner/FwdWebRunner/components/Overlay";
-import FwdWebRunner from '../runner/FwdWebRunner/FwdWebRunner';
-import { Logger, LoggerLevel } from "../utils/Logger";
-import rootLogger from './logger.fwd';
+import rootLogger from '../fwd/logger.fwd';
+import { Logger, LoggerLevel } from "../fwd/utils/Logger";
+import FwdRunner from './FwdRunner';
+import { Overlay } from "./FwdWebRunner/components/Overlay";
+import FwdWebRunner from './FwdWebRunner/FwdWebRunner';
 
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.error);
 

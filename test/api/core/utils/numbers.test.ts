@@ -1,4 +1,4 @@
-import { clamp, map, parseNumber, random } from '../../../../src/utils/numbers';
+import { clamp, map, parseNumber, random } from '../../../../src/fwd/utils/numbers';
 
 it('maps a value from a range to another', () => {
   expect(map(0, 0, 0, 0, 0)).toBe(0);
