@@ -146,7 +146,7 @@ export class GuiManager {
     }
 
     private createAndAddControlModel(controlId: string, defaultValue: number): ControlModel<number> {
-        let memoized = defaultValue || defaultElementOptionsAndStyle.defaultValue;
+        let memoized = isNaN(defaultValue) ? defaultElementOptionsAndStyle.defaultValue : defaultValue;
 
         const controlModel = {
             provide: () => memoized,

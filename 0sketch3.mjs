@@ -4,7 +4,7 @@ import {getGuiManager} from "./dist/api/api/gui/Gui";
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
-  gui.horizontalSlider('base', { max: 12, style: { width: "200px" } });
+  gui.horizontalSlider('base', { defaultValue: 0, max: 12, style: { width: "200px" } });
   console.log('gui updated', gui.getValue('base'));
 }
 
