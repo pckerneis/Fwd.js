@@ -6,16 +6,20 @@ const express = require('express');
 const serveStatic = require('serve-static');
 const serveIndex = require('serve-index');
 const opn = require('opn');
+const path = require('path');
 
-let PORT = require('minimist')(process.argv.slice(2)).port || 3989;
+const args = require('minimist')(process.argv.slice(2));
+
+let PORT = args.port || 3989;
+const directoryToServe = path.resolve(__dirname, args.path || '.');
 
 // Prepare server
 const server = express()
-  .use(serveStatic('./'))
-  .use('/', serveIndex('./', {}))
+  .use(serveStatic(directoryToServe))
+  .use('/', serveIndex(directoryToServe, {}))
   .listen(PORT)
   .on('listening', () => {
-    console.log('%s Serving at http://localhost:' + PORT, chalk.green.bold('READY'));
+    console.log('%s Serving ' + directoryToServe + ' at http://localhost:' + PORT, chalk.green.bold('READY'));
     opn('http://localhost:' + PORT);
   });
 
@@ -23,4 +27,4 @@ process.on('uncaughtException', (err => {
   return (err as any).errno === 'EADDRINUSE' ? server.listen(++PORT) : 0;
 }));
 
-new DevServer(server);
+new DevServer(server, directoryToServe);

@@ -30,7 +30,7 @@ export class DevServer {
 
   private latestId: number = 0;
 
-  constructor(server: any) {
+  constructor(server: any, public readonly rootPath: string) {
     this._wss = new SocketServer({server});
 
     this._wss.on('connection', (ws: WebSocket) => {
@@ -44,10 +44,10 @@ export class DevServer {
     return filePath.includes('fwd-runner') && filePath.endsWith('.js');
   }
 
-  private static sendSketch(client: Client, file: string): void {
+  private static sendSketch(client: Client, file: string, pathToProgram: string): void {
     try {
       const textContent = fs.readFileSync(
-        path.resolve(__dirname, '../../' + file),
+        path.resolve(pathToProgram, file),
         'utf8');
 
       if (file.endsWith('.mjs')) {
@@ -76,8 +76,8 @@ export class DevServer {
     }
   }
 
-  private static sendWelcomePacket(ws: WebSocket): void {
-    DBG.debug('Scan directory : ' + path.resolve(__dirname, '../../'));
+  private static sendWelcomePacket(ws: WebSocket, rootPath: string): void {
+    DBG.debug('Scan directory : ' + path.resolve(rootPath));
 
     const files = fs.readdirSync(path.resolve(__dirname, '../../'))
       .filter((file: string) => this.isExecutableFile(file))
@@ -160,7 +160,7 @@ export class DevServer {
       DBG.debug(`Received from client #${client.id}`, message.substr(0, 128));
 
       if (message === HANDSHAKE_MESSAGE) {
-        DevServer.sendWelcomePacket(ws);
+        DevServer.sendWelcomePacket(ws, this.rootPath);
       } else if (message == PONG_MESSAGE) {
         pong();
       } else {
@@ -172,7 +172,7 @@ export class DevServer {
 
             if (parsedMessage.file) {
               client.watched = [parsedMessage.file];
-              DevServer.sendSketch(client, parsedMessage.file);
+              DevServer.sendSketch(client, parsedMessage.file, this.rootPath);
             }
           } else if (parsedMessage.type === SAVE_TYPE) {
             const pathToFile = path.resolve(__dirname, '../..', parsedMessage.file);
@@ -216,7 +216,7 @@ export class DevServer {
 
           if (clientsWatching.length !== 0) {
             DBG.info(`Transmit module to ${clientsWatching.length} clients.`);
-            clientsWatching.forEach(client => DevServer.sendSketch(client, file));
+            clientsWatching.forEach(client => DevServer.sendSketch(client, file, this.rootPath));
           }
         }
       });
