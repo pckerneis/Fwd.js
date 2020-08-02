@@ -2,7 +2,7 @@
     "compilerOptions": {
       "target": "es6",
       "module": "es6",
-      // "lib": ["es2017", "es7", "es6", "dom"],
+      "lib": ["es2017", "es7", "es6", "dom"],
       "moduleResolution": "node",
       "sourceMap": true,
       "emitDecoratorMetadata": true,
@@ -25,7 +25,7 @@
       "exclude": "**/*+(index|.spec|.e2e|.test).ts"
     },
     "include": [
-      "src/**/*"
+      "src/api/**/*"
     ],
     "exclude": [ "node_modules" ]
 }

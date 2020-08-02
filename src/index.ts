@@ -3,7 +3,6 @@ export * from './api/core/FwdScheduler';
 export * from './api/audio/FwdAudio';
 export * from './api/audio/nodes/FwdAudioNode';
 export * from './api/audio/nodes/StandardAudioNodes';
-export * from './api/midi/FwdMidi';
 export * from './api/midi/helpers';
 export * from './utils/decibels';
 export * from './utils/numbers';

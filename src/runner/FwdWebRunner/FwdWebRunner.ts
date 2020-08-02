@@ -7,7 +7,6 @@ import { DevClient } from '../../server/DevClient';
 import { formatTime } from '../../utils/time';
 import debounce from '../../utils/time-filters/debounce';
 import FwdRunner from '../FwdRunner';
-import { ControlBindingManager } from './components/BindableController';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
@@ -126,8 +125,6 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._fwd.scheduler.clearEvents();
 
-    ControlBindingManager.getInstance().clearCurrentControllers();
-
     this._running = true;
 
     this.startAudioContext();
@@ -142,7 +139,6 @@ export default class FwdWebRunner implements FwdRunner {
     this.checkSketchCanBeStarted();
 
     this._fwd.scheduler.clearEvents();
-    ControlBindingManager.getInstance().clearCurrentControllers();
 
     this._running = true;
     const offlineContext = this._audio.startOffline(duration);
