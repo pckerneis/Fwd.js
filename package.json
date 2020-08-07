@@ -8,8 +8,9 @@
     "build-api": "tsc",
     "build-runner": "webpack --config webpack-global.config.js --display-error-details",
     "build-server": "cd src/server && tsc && cd ../..",
+    "build-all": "yarn build-api && yarn build-runner && yarn build-server",
     "fwd-serve": "node src/server/server.js",
-    "start": "yarn build-api && yarn build-runner && yarn build-server && yarn fwd-serve --path ../.."
+    "start": "yarn build-all && yarn fwd-serve --path ../.."
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",
@@ -25,12 +26,14 @@
   },
   "dependencies": {
     "@types/codemirror": "^0.0.95",
+    "@types/jsdom": "^16.2.3",
     "@types/node": "^14.0.27",
     "chalk": "^4.0.0",
     "chokidar": "^3.4.0",
     "codemirror": "^5.54.0",
     "esm": "^3.2.25",
     "express": "^4.17.1",
+    "jsdom": "^16.3.0",
     "minimist": "^1.2.5",
     "opn": "^6.0.0",
     "rollup": "^2.23.0",
