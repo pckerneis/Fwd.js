@@ -1,4 +1,4 @@
-import {getGuiManager} from "./dist/api/api/gui/Gui";
+import {getGuiManager} from "./dist/fwd/gui/Gui";
 
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
