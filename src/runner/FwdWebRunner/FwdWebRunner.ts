@@ -6,6 +6,7 @@ import { clearGuiManagers } from '../../fwd/gui/Gui';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
+import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
@@ -64,12 +65,13 @@ export default class FwdWebRunner implements FwdRunner {
     return this._audio;
   }
 
-  public setSketchCode(newCode: string, transformedSource: string): void {
-    this._transformedSource = transformedSource;
-    this._savedCode = newCode;
+  public setProgram(program: Program): void {
+    this._transformedSource = program.executable;
+    this._savedCode = program.code;
+    this._watchedFile = program.file;
 
     if (this.codeEditor) {
-      this.codeEditor.code = newCode;
+      this.codeEditor.code = program.code;
     }
 
     this.setDirty(false);
@@ -272,19 +274,21 @@ export default class FwdWebRunner implements FwdRunner {
       this._devClient.watchFile(files[0]);
     };
 
-    this._devClient.onServerError = (errors: string[]) => {
+    this._devClient.onServerError = (errors: string[], program: Program) => {
       console.error(...errors);
+      this._footer.print(null, ...errors);
+      console.log(program);
+      this.setProgram(program);
     };
 
-    this._devClient.onFileChange = (file, content, transformedSource) => {
+    this._devClient.onFileChange = (file: string, program: Program) => {
       if (this._watchedFile != file) {
         this.reset();
-        this._watchedFile = file;
         this.setDirty(false);
         this._header.setSyncState('out-of-date');
       }
 
-      this.setSketchCode(content, transformedSource || content);
+      this.setProgram(program);
     };
   }
 

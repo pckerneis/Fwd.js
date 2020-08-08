@@ -1,12 +1,13 @@
-import {midiToFrequency} from "./dist/api/api/midi/helpers";
-import {getGuiManager} from "./dist/api/api/gui/Gui";
+import {midiToFrequency} from "./dist/fwd/midi/helpers";
+import {getGuiManager} from "./dist/fwd/gui/Gui";
 
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
   gui.horizontalSlider('base', { defaultValue: 0, max: 12, style: { width: "200px" } });
+  gui.horizontalSlider('base2', { defaultValue: 0, max: 1, step: 1, style: { width: "30px" } });
   console.log('gui updated', gui.getValue('base'));
-}
+};
 
 gui.changed();
 
@@ -100,7 +101,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
 });
 
 fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
-  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('base')));
+  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('base') * gui.getValue('base2')));
   osc.connect(del);
 
   fwd.scheduler
@@ -111,4 +112,4 @@ fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attac
     .wait(reverbTime)
     .fire(() => osc.tearDown())
     .trigger();
-})
+});

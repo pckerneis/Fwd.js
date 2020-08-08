@@ -1,13 +1,5 @@
 import { Logger, LoggerLevel } from '../fwd/utils/Logger';
-import {
-  CSS_TYPE, ERROR_TYPE,
-  HANDSHAKE_MESSAGE,
-  PING_MESSAGE,
-  PONG_MESSAGE,
-  REFRESH_TYPE, SAVE_TYPE,
-  SKETCH_TYPE, WATCH_TYPE,
-  WELCOME_TYPE,
-} from './DevServer.constants';
+import { HANDSHAKE_MESSAGE, MessageType, PING_MESSAGE, PONG_MESSAGE, ServerMessage } from './DevServer.constants';
 
 const DBG = new Logger('DevServer', null, LoggerLevel.warn);
 
@@ -51,25 +43,35 @@ export class DevServer {
         'utf8');
 
       if (file.endsWith('.mjs')) {
-        DevServer.buildModule(file, textContent)
+        DevServer.buildModule(file)
           .then(transformed => {
-            client.ws.send(JSON.stringify({
-              type: SKETCH_TYPE,
-              file,
-              textContent,
-              transformed,
-            }));
+            this.sendMessage(client.ws, {
+              type: MessageType.SKETCH_TYPE,
+              program: {
+                file,
+                code: textContent,
+                executable: transformed,
+              },
+            });
           })
-          .catch(error => client.ws.send(JSON.stringify({
-            type: ERROR_TYPE,
-            error,
-          })));
+          .catch(error => this.sendMessage(client.ws, {
+            type: MessageType.ERROR_TYPE,
+            error: error.code,
+            program: {
+              file,
+              code: textContent,
+              executable: null,
+            },
+          }));
       } else {
-        client.ws.send(JSON.stringify({
-          type: SKETCH_TYPE,
-          file,
-          textContent,
-        }));
+        this.sendMessage(client.ws, {
+          type: MessageType.SKETCH_TYPE,
+          program: {
+            file,
+            code: textContent,
+            executable: textContent,
+          },
+        });
       }
     } catch (e) {
       DBG.error(e);
@@ -83,19 +85,20 @@ export class DevServer {
       .filter((file: string) => this.isExecutableFile(file))
       .filter((file: string) => ! file.endsWith('.config.js'));
 
-    ws.send(JSON.stringify({
-      type: WELCOME_TYPE,
-      files,
-    }));
+    this.sendMessage(ws, {type: MessageType.WELCOME_TYPE, files});
 
     DBG.debug('Available files: ', files);
+  }
+
+  private static sendMessage(ws: WebSocket, message: ServerMessage): void {
+    ws.send(JSON.stringify(message));
   }
 
   private static isExecutableFile(file: string): boolean {
     return file.endsWith('.js') || file.endsWith('.mjs');
   }
 
-  private static async buildModule(file: string, textContent: string): Promise<string> {
+  private static async buildModule(file: string): Promise<string> {
     const inputOptions = {
       input: file,
     };
@@ -107,7 +110,7 @@ export class DevServer {
 
     const bundle = await rollup.rollup(inputOptions);
     console.log('watchFiles', bundle.watchFiles);
-    const { output } = await bundle.generate(outputOptions);
+    const {output} = await bundle.generate(outputOptions);
 
     for (const chunkOrAsset of output) {
       if (chunkOrAsset.type === 'asset') {
@@ -167,14 +170,15 @@ export class DevServer {
         try {
           const parsedMessage = JSON.parse(message);
 
-          if (parsedMessage.type === WATCH_TYPE) {
+          if (parsedMessage.type === MessageType.WATCH_TYPE) {
             DBG.debug(`Watch file for client #${client.id} : ${parsedMessage.file}`);
 
             if (parsedMessage.file) {
               client.watched = [parsedMessage.file];
               DevServer.sendSketch(client, parsedMessage.file, this.rootPath);
             }
-          } else if (parsedMessage.type === SAVE_TYPE) {
+          } else if (parsedMessage.type === MessageType.SAVE_TYPE) {
+            DBG.debug('Received file', parsedMessage.file);
             const pathToFile = path.resolve(__dirname, '../..', parsedMessage.file);
             DBG.debug('pathToFile', pathToFile);
             fs.writeFileSync(pathToFile, parsedMessage.textContent, 'utf8');
@@ -198,7 +202,7 @@ export class DevServer {
 
           this._clients.forEach((client: Client) => {
             client.ws.send(JSON.stringify({
-              type: CSS_TYPE,
+              type: MessageType.CSS_TYPE,
               file,
               textContent,
             }));
@@ -206,7 +210,7 @@ export class DevServer {
         } else if (DevServer.isLibraryFile(file)) {
           this._clients.forEach((client: Client) => {
             client.ws.send(JSON.stringify({
-              type: REFRESH_TYPE,
+              type: MessageType.REFRESH_TYPE,
             }));
           });
         } else if (DevServer.isExecutableFile(file)) {

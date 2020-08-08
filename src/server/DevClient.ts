@@ -1,12 +1,8 @@
 import { Logger, LoggerLevel } from '../fwd/utils/Logger';
 import {
-  CSS_TYPE, ERROR_TYPE, HANDSHAKE_MESSAGE,
+  HANDSHAKE_MESSAGE, MessageType,
   PING_MESSAGE,
-  PONG_MESSAGE,
-  REFRESH_TYPE, SAVE_TYPE,
-  SKETCH_TYPE,
-  WATCH_TYPE,
-  WELCOME_TYPE,
+  PONG_MESSAGE, Program, ServerMessage,
 } from './DevServer.constants';
 
 const DBG = new Logger('DevClient', null, LoggerLevel.error);
@@ -15,8 +11,8 @@ export class DevClient {
   public readonly _ws: WebSocket;
 
   public onFilesAvailable: (files: string[]) => void;
-  public onFileChange: (file: string, textContent: string, transformedSource: string) => void;
-  public onServerError: (errors: string[]) => void;
+  public onFileChange: (file: string, program: Program) => void;
+  public onServerError: (errors: string[], program: Program) => void;
 
   constructor() {
     this._ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
@@ -26,7 +22,7 @@ export class DevClient {
 
   public watchFile(file: string): void {
     this._ws.send(JSON.stringify({
-      type: WATCH_TYPE,
+      type: MessageType.WATCH_TYPE,
       file,
     }));
   }
@@ -35,7 +31,7 @@ export class DevClient {
     DBG.debug('Save file', file);
 
     this._ws.send(JSON.stringify({
-      type: SAVE_TYPE,
+      type: MessageType.SAVE_TYPE,
       file,
       textContent,
     }));
@@ -50,22 +46,22 @@ export class DevClient {
     }
 
     try {
-      const {type, textContent, files, file, transformed, error} = JSON.parse(msg.data);
-      DBG.debug(type);
+      const message: ServerMessage = JSON.parse(msg.data);
+      DBG.debug(message.type);
 
-      if (type === WELCOME_TYPE) {
+      if (message.type === MessageType.WELCOME_TYPE) {
         DBG.debug('Welcome received.');
 
         if (typeof this.onFilesAvailable === 'function') {
-          this.onFilesAvailable(files);
+          this.onFilesAvailable(message.files);
         }
-      } else if (type === SKETCH_TYPE) {
+      } else if (message.type === MessageType.SKETCH_TYPE) {
         DBG.debug('Sketch received.');
 
         if (typeof this.onFileChange === 'function') {
-          this.onFileChange(file, textContent, transformed);
+          this.onFileChange(message.program.file, message.program);
         }
-      } else if (type === CSS_TYPE) {
+      } else if (message.type === MessageType.CSS_TYPE) {
         DBG.debug('Stylesheet received.');
         Array.from(document.querySelectorAll('link'))
           .forEach(link => {
@@ -73,14 +69,14 @@ export class DevClient {
             DBG.debug('Refresh style sheet', link.href);
           });
 
-      } else if (type === REFRESH_TYPE) {
+      } else if (message.type === MessageType.REFRESH_TYPE) {
         DBG.debug('Refreshing...');
         location.reload();
-      } else if (type === ERROR_TYPE) {
-        DBG.debug('Error', error);
+      } else if (message.type === MessageType.ERROR_TYPE) {
+        DBG.debug('Error', message.error);
 
         if (typeof this.onServerError === 'function') {
-          this.onServerError([error]);
+          this.onServerError([message.error], message.program);
         }
       }
     } catch (e) {

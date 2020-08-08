@@ -1,12 +1,13 @@
 import { FwdAudio } from '../fwd/audio/FwdAudio';
 import { FwdContext } from '../fwd/core/FwdContext';
+import { Program } from '../server/DevServer.constants';
 
 export default interface FwdRunner {
   fwd: FwdContext;
   audio: FwdAudio;
 
   startAudioContext(): void;
-  setSketchCode(newSketch: string, transformedSource: string): void;
+  setProgram(program: Program): void;
   setFiles(files: string[]): void;
   setAutoBuilds(autoBuilds: boolean): void;
 
