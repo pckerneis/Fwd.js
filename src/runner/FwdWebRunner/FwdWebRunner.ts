@@ -14,7 +14,13 @@ import { RunnerHeader } from './components/RunnerHeader';
 import FwdWebImpl from './FwdWebImpl';
 import { injectStyle } from './StyleInjector';
 
-export type RunnerCodeExecutionState = 'up-to-date' | 'out-of-date' | 'code-errors';
+export enum RunnerClientState {
+  disconnected = 'disconnected',
+  connected = 'connected',
+  codeErrors = 'codeErrors',
+  upToDate = 'upToDate',
+  outOfDate = 'outOfDate',
+}
 
 export default class FwdWebRunner implements FwdRunner {
   private readonly _fwd: FwdContext;
@@ -36,6 +42,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _sketchIsDirty: boolean = false;
   private _executedCode: string;
   private _savedCode: string;
+  private _clientState: RunnerClientState;
 
   constructor() {
     this._fwd = new FwdWebImpl(this);
@@ -182,9 +189,9 @@ export default class FwdWebRunner implements FwdRunner {
       }
 
       this._executedCode = this._transformedSource;
-      this._header.setSyncState('up-to-date');
+      this.setClientState(RunnerClientState.upToDate);
     } catch (e) {
-      this._header.setSyncState('code-errors');
+      this.setClientState(RunnerClientState.codeErrors);
       console.error(e);
     }
   }
@@ -277,19 +284,25 @@ export default class FwdWebRunner implements FwdRunner {
     this._devClient.onServerError = (errors: string[], program: Program) => {
       console.error(...errors);
       this._footer.print(null, ...errors);
-      console.log(program);
+
       this.setProgram(program);
+      this.setClientState(RunnerClientState.codeErrors);
     };
 
     this._devClient.onFileChange = (file: string, program: Program) => {
       if (this._watchedFile != file) {
         this.reset();
         this.setDirty(false);
-        this._header.setSyncState('out-of-date');
+        this.setClientState(RunnerClientState.outOfDate);
       }
 
       this.setProgram(program);
     };
+  }
+
+  private setClientState(newState: RunnerClientState): void {
+    this._clientState = newState;
+    this._header.setRunnerClientState(newState);
   }
 
   private setDirty(isDirty: boolean): void {
@@ -349,10 +362,12 @@ export default class FwdWebRunner implements FwdRunner {
     const editor = new RunnerCodeEditor();
 
     editor.codeMirror.on('changes', debounce(() => {
-      if (this.codeEditor.code !== this._executedCode) {
-        this._header.setSyncState('out-of-date');
-      } else {
-        this._header.setSyncState('up-to-date')
+      if (this._clientState !== RunnerClientState.codeErrors) {
+        if (this.codeEditor.code !== this._executedCode) {
+          this.setClientState(RunnerClientState.outOfDate);
+        } else {
+          this.setClientState(RunnerClientState.upToDate);
+        }
       }
 
       this.setDirty(this.codeEditor.code !== this._savedCode);

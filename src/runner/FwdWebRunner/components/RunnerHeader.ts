@@ -1,6 +1,6 @@
 import { DevClient } from '../../../server/DevClient';
 import FwdRunner from '../../FwdRunner';
-import { RunnerCodeExecutionState } from '../FwdWebRunner';
+import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
 import { SyncStateElement } from './SyncState';
@@ -102,10 +102,6 @@ export class RunnerHeader {
     this._timeDisplay.animate();
   }
 
-  public setSyncState(syncState: RunnerCodeExecutionState): void {
-    this._syncStateElem.setSyncState(syncState);
-  }
-
   public setDirty(isDirty: boolean): void {
     const currentFileOption = this._projectSelect.options.item(this._projectSelect.options.selectedIndex);
 
@@ -116,6 +112,10 @@ export class RunnerHeader {
       this._projectSelect.classList.remove('dirty');
       currentFileOption.innerText = currentFileOption.value;
     }
+  }
+
+  public setRunnerClientState(newState: RunnerClientState): void {
+    this._syncStateElem.setSyncState(newState);
   }
 }
 
