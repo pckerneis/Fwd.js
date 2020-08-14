@@ -1,56 +1,46 @@
 import {getGuiManager} from "./dist/fwd/gui/Gui";
 
 const gui = getGuiManager(fwd.editor.root.htmlElement);
-
-console.log(gui);
-
-if (window.programState == null) {
-  window.programState = {
-    min: {value: 0},
-    max: {value: 1},
-    other: {value: 0.3},
-  };
-}
-
-const min = window.programState.min;
-const max = window.programState.max;
+gui.setValue('min', 10);
+gui.setValue('max', 90);
+gui.setValue('other', 45);
 
 gui.update = () => {
+  gui.rootElement.style.display = 'flex';
+  gui.rootElement.style.flexDirection = 'column';
+  gui.rootElement.style.padding = '6px';
+
+  gui.label('Minimum');
   gui.horizontalSlider(
     {
-      provide: () => min.value,
+      provide: () => gui.getValue('min'),
       validate: (newValue) => {
-        min.value = newValue;
-        max.value = Math.max(newValue, max.value);
+        gui.setValue('min', newValue);
+        gui.setValue('max', Math.max(newValue, gui.getValue('max')));
         return newValue;
       }
-    },
-    {
-      style: { width: "200px" }
     });
 
-  if (min.value > 0.5) {
-    gui.horizontalSlider({
-      provide: () => window.programState.other,
-      validate: (v) => v,
-    }, {min: 0, max: 100});
+  if (gui.getValue('min') > 50) {
+  	gui.label('Heey');
+  	gui.label('Some other value');
+    gui.horizontalSlider('other');
   }
 
+  gui.label('Maximum');
   gui.horizontalSlider({
-    provide: () => max.value,
+    provide: () => gui.getValue('max'),
     validate: (newValue) => {
-      max.value = newValue;
-      min.value = Math.min(newValue, min.value);
+      gui.setValue('max', newValue);
+      gui.setValue('min', Math.min(newValue, gui.getValue('min')));
       return newValue;
     }
   });
-  
-  gui.horizontalSlider({
-    provide: () => window.programState.other,
-    validate: (v) => { window.programState.other.value = v; return v; },
-  }, {style:{width:'500px'}});
 
-  console.dir(Object.keys(window.programState).map(key => `${key}: ${window.programState[key].value}`).join(', '));
-}
+  gui.label('Some other value');
+  gui.horizontalSlider('other');
+
+  gui.label(JSON.stringify(gui.getValues()));
+};
 
 gui.changed();

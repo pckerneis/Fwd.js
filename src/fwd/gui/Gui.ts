@@ -9,6 +9,7 @@ export interface ControlModel<T> {
 }
 
 export interface Slider {
+    shouldBeDeleted: boolean;
     readonly htmlElement: HTMLInputElement;
     controlModel: ControlModel<number>;
 }
@@ -31,9 +32,9 @@ const defaultElementOptionsAndStyle: ElementOptionsAndStyle = {
     style: null,
 
     defaultValue: undefined,
-    min: 0,
-    max: 1,
-    step: 0.1,
+    min: undefined,
+    max: undefined,
+    step: undefined,
 };
 
 export class GuiManager {
@@ -46,6 +47,8 @@ export class GuiManager {
 
     private index: number = 0;
 
+    private labels: HTMLElement[] = [];
+
     constructor(public readonly rootElement: HTMLElement) {
     }
 
@@ -55,24 +58,58 @@ export class GuiManager {
         return s;
     }
 
+    private static createLabelElement(): HTMLSpanElement {
+        return document.createElement('span');
+    }
+
     private static setOptionOrDefault(element: HTMLInputElement, options: ElementOptions, key: keyof ElementOptions): any {
         const isOptionDefined = !!options && Object.keys(options).includes(key);
         const value = isOptionDefined ? options[key] : defaultElementOptionsAndStyle[key];
-        element[key] = typeof value === 'string' ? value : value.toString();
+        element[key] = typeof value === 'string' ? value : value?.toString();
     }
 
-    public horizontalSlider(controlId: string | ControlModel<number>, elementOptions?: ElementOptionsAndStyle): void {
-        const controlModel = typeof controlId === 'string' ?
-            (this.controls.get(controlId) || this.createAndAddControlModel(controlId, elementOptions.defaultValue))
-            : controlId;
+    public label(text: string): void {
+        this.createAndAddLabel(text, this.index);
+        this.index++;
+    }
 
-        const slider = this.sliders[this.index] || this.createAndAddSlider();
+    public horizontalSlider(modelOrId: string | ControlModel<number>, elementOptions?: ElementOptionsAndStyle): void {
+        const controlModel = typeof modelOrId === 'string' ?
+            (this.controls.get(modelOrId) || this.createAndAddControlModel(modelOrId, elementOptions?.defaultValue))
+            : modelOrId;
+
+        const unusedSlider = this.sliders.filter(s => !!s && s.shouldBeDeleted)[0];
+        const slider = unusedSlider || this.createSlider();
+        slider.shouldBeDeleted = false;
+
+        // Do add it...
+        const nextElement = this.rootElement.children.item(this.index);
+
+        if (nextElement !== slider.htmlElement) {
+            slider.htmlElement.remove();
+
+            if (!!nextElement) {
+                this.rootElement.insertBefore(slider.htmlElement, nextElement);
+            } else {
+                this.rootElement.append(slider.htmlElement);
+            }
+        }
 
         this.bindToControlModel(slider, controlModel);
         slider.htmlElement.value = controlModel.provide()?.toString();
 
         this.applyElementOptionsAndStyle(slider, elementOptions);
         this.index++;
+    }
+
+    public setValue(controlId: string, newValue: any): void {
+        const control = this.controls.get(controlId);
+
+        if (control == null) {
+            this.createAndAddControlModel(controlId, newValue);
+        } else if(control.provide() !== newValue) {
+            control.validate(newValue);
+        }
     }
 
     public getValue(controlId: string): number {
@@ -88,15 +125,21 @@ export class GuiManager {
         return result;
     }
 
-    private changed(): void {
+    public changed(): void {
         this.index = 0;
+
+        this.clearLabels();
+
+        this.sliders
+          .filter(s => !!s)
+          .forEach(slider => slider.shouldBeDeleted = true);
 
         if (this.update && typeof this.update === 'function') {
             this.update();
         }
 
         // Cleanup (remove excessive controls)
-        this.sliders.filter((s, i) => i >= this.index && !!s)
+        this.sliders.filter(s => s.shouldBeDeleted)
             .forEach((s) => {
                 s.htmlElement.remove();
                 this.sliders[this.sliders.indexOf(s)] = undefined;
@@ -108,14 +151,16 @@ export class GuiManager {
             .forEach(s => s.htmlElement.value = s.controlModel.provide()?.toString());
     }
 
-    private createAndAddSlider(): Slider {
+    private clearLabels(): void {
+        this.labels.forEach(label => label.remove());
+        this.labels = [];
+    }
+
+    private createSlider(): Slider {
         const htmlElement = GuiManager.createSliderElement();
 
-        const slider: Slider = { htmlElement, controlModel: null };
+        const slider: Slider = { htmlElement, controlModel: null, shouldBeDeleted: false };
         this.sliders[this.index] = slider;
-
-        // Do add it...
-        this.rootElement.append(htmlElement);
 
         DBG.info('created slider #' + this.index);
         return slider;
@@ -156,6 +201,23 @@ export class GuiManager {
         this.controls.set(controlId, controlModel);
 
         return controlModel;
+    }
+
+    private createAndAddLabel(text: string, index: number): void {
+        const labelElement = GuiManager.createLabelElement();
+        labelElement.textContent = text;
+
+        this.labels.push(labelElement);
+
+        // Do add it...
+        const nextElement = this.rootElement.children.item(index);
+        if (!!nextElement) {
+            this.rootElement.insertBefore(labelElement, nextElement);
+        } else {
+            this.rootElement.append(labelElement);
+        }
+
+        DBG.info('created label with text "' + text + '"');
     }
 }
 

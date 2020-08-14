@@ -4,8 +4,16 @@ import {getGuiManager} from "./dist/fwd/gui/Gui";
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
-  gui.horizontalSlider('base', { defaultValue: 0, max: 12, style: { width: "200px" } });
-  gui.horizontalSlider('base2', { defaultValue: 0, max: 1, step: 1, style: { width: "30px" } });
+  gui.rootElement.style.display = 'flex';
+  gui.rootElement.style.flexDirection = 'column';
+  gui.label('detune');
+  gui.horizontalSlider('detune', { defaultValue: 0, max: 12 });
+  gui.label('on/off');
+  gui.horizontalSlider('detuneActive', { 
+    defaultValue: 0, max: 1, step: 1, style: { 
+      width: "30px", margin: '0 auto'
+    } 
+  });
   console.log('gui updated', gui.getValue('base'));
 };
 
@@ -101,7 +109,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
 });
 
 fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
-  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('base') * gui.getValue('base2')));
+  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('detune') * gui.getValue('detuneActive')));
   osc.connect(del);
 
   fwd.scheduler
