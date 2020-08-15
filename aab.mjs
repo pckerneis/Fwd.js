@@ -6,8 +6,9 @@ gui.setValue('max', 90);
 gui.setValue('other', 45);
 
 gui.update = () => {
-  gui.rootElement.style.display = 'flex';
-  gui.rootElement.style.flexDirection = 'column';
+  gui.rootElement.style.display = 'grid';
+  gui.rootElement.style.gridTemplateColumns = '1fr 3fr';
+  gui.rootElement.style.gridAutoRows = '20px';
   gui.rootElement.style.padding = '6px';
 
   gui.label('Minimum');
@@ -22,7 +23,7 @@ gui.update = () => {
     });
 
   if (gui.getValue('min') > 50) {
-  	gui.label('Heey');
+  	gui.label('Heey', { style: { gridColumn: '1 / span 2' }});
   	gui.label('Some other value');
     gui.horizontalSlider('other');
   }
@@ -40,7 +41,7 @@ gui.update = () => {
   gui.label('Some other value');
   gui.horizontalSlider('other');
 
-  gui.label(JSON.stringify(gui.getValues()));
+  gui.label(JSON.stringify(gui.getValues()), { style: { gridColumn: '1 / span 2' }});
 };
 
 gui.changed();

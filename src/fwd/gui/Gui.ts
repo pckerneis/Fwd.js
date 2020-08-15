@@ -1,7 +1,10 @@
+import { injectStyle } from '../../runner/FwdWebRunner/StyleInjector';
 import { Logger } from '../utils/Logger';
 import parentLogger from './logger.gui';
 
 const DBG = new Logger('gui', parentLogger);
+
+const LABEL_CLASS = 'fwd-gui-label';
 
 export interface ControlModel<T> {
     provide: () => T;
@@ -16,21 +19,30 @@ export interface Slider {
 
 export interface ElementOptions {
     id: string;
-    className: string;
+    cssClasses: string[];
+}
 
+export interface SliderOptions extends ElementOptions {
     defaultValue: number;
     min: number;
     max: number;
     step: number;
 }
 
-export type ElementOptionsAndStyle = ElementOptions & ElementCSSInlineStyle;
+interface PartialCSSInlineStyle {
+    style: Partial<CSSStyleDeclaration>;
+}
 
-const defaultElementOptionsAndStyle: ElementOptionsAndStyle = {
-    id: '',
-    className: '',
+export type ElementOptionsAndStyle = ElementOptions & PartialCSSInlineStyle;
+export type SliderOptionsAndStyle = SliderOptions & PartialCSSInlineStyle;
+
+type AllOptions = ElementOptions & SliderOptions;
+type AllOptionsAndStyle = AllOptions & PartialCSSInlineStyle;
+
+const defaultElementOptionsAndStyle: AllOptionsAndStyle = {
+    id: undefined,
+    cssClasses: undefined,
     style: null,
-
     defaultValue: undefined,
     min: undefined,
     max: undefined,
@@ -59,23 +71,26 @@ export class GuiManager {
     }
 
     private static createLabelElement(): HTMLSpanElement {
-        return document.createElement('span');
+        const element = document.createElement('span');
+        element.classList.add(LABEL_CLASS);
+        return element;
     }
 
-    private static setOptionOrDefault(element: HTMLInputElement, options: ElementOptions, key: keyof ElementOptions): any {
+    private static setOptionOrDefault(element: HTMLElement, options: Partial<AllOptions>, key: keyof AllOptions): any {
         const isOptionDefined = !!options && Object.keys(options).includes(key);
         const value = isOptionDefined ? options[key] : defaultElementOptionsAndStyle[key];
         element[key] = typeof value === 'string' ? value : value?.toString();
     }
 
-    public label(text: string): void {
-        this.createAndAddLabel(text, this.index);
+    public label(text: string, elementOptions?: ElementOptionsAndStyle): void {
+        const htmlElement = this.createAndAddLabel(text, this.index);
+        this.applyElementOptionsAndStyle(htmlElement, elementOptions);
         this.index++;
     }
 
-    public horizontalSlider(modelOrId: string | ControlModel<number>, elementOptions?: ElementOptionsAndStyle): void {
+    public horizontalSlider(modelOrId: string | ControlModel<number>, sliderOptions?: Partial<SliderOptionsAndStyle>): void {
         const controlModel = typeof modelOrId === 'string' ?
-            (this.controls.get(modelOrId) || this.createAndAddControlModel(modelOrId, elementOptions?.defaultValue))
+            (this.controls.get(modelOrId) || this.createAndAddControlModel(modelOrId, sliderOptions?.defaultValue))
             : modelOrId;
 
         const unusedSlider = this.sliders.filter(s => !!s && s.shouldBeDeleted)[0];
@@ -98,7 +113,14 @@ export class GuiManager {
         this.bindToControlModel(slider, controlModel);
         slider.htmlElement.value = controlModel.provide()?.toString();
 
-        this.applyElementOptionsAndStyle(slider, elementOptions);
+        // Reset style and apply new one
+        slider.htmlElement.removeAttribute('style');
+        this.applyElementOptionsAndStyle(slider.htmlElement, sliderOptions);
+
+        // Slider specific options
+        GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'step');
+        GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'min');
+        GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'max');
         this.index++;
     }
 
@@ -139,7 +161,7 @@ export class GuiManager {
         }
 
         // Cleanup (remove excessive controls)
-        this.sliders.filter(s => s.shouldBeDeleted)
+        this.sliders.filter(s => !!s && s.shouldBeDeleted)
             .forEach((s) => {
                 s.htmlElement.remove();
                 this.sliders[this.sliders.indexOf(s)] = undefined;
@@ -174,18 +196,18 @@ export class GuiManager {
         }
     }
 
-    private applyElementOptionsAndStyle(slider: Slider, elementOptions: ElementOptionsAndStyle): void {
-        slider.htmlElement.id = elementOptions?.id || '';
-        slider.htmlElement.className = elementOptions?.className || '';
-        GuiManager.setOptionOrDefault(slider.htmlElement, elementOptions, 'step');
-        GuiManager.setOptionOrDefault(slider.htmlElement, elementOptions, 'min');
-        GuiManager.setOptionOrDefault(slider.htmlElement, elementOptions, 'max');
+    private applyElementOptionsAndStyle(htmlElement: HTMLElement, elementOptions: Partial<SliderOptionsAndStyle>): void {
+        if (elementOptions?.id != null) {
+            htmlElement.id = elementOptions.id;
+        }
 
-        slider.htmlElement.removeAttribute('style');
+        if (Array.isArray(elementOptions?.cssClasses)) {
+            htmlElement.classList.add(...elementOptions?.cssClasses);
+        }
 
         if (elementOptions?.style) {
             Object.keys(elementOptions.style).forEach((key) => {
-                slider.htmlElement.style[key] = elementOptions.style[key];
+                htmlElement.style[key] = elementOptions.style[key];
             });
         }
     }
@@ -203,7 +225,7 @@ export class GuiManager {
         return controlModel;
     }
 
-    private createAndAddLabel(text: string, index: number): void {
+    private createAndAddLabel(text: string, index: number): HTMLSpanElement {
         const labelElement = GuiManager.createLabelElement();
         labelElement.textContent = text;
 
@@ -218,6 +240,8 @@ export class GuiManager {
         }
 
         DBG.info('created label with text "' + text + '"');
+
+        return labelElement;
     }
 }
 
@@ -241,3 +265,11 @@ export function clearGuiManagers(): void {
     DBG.info('clear gui managers');
     staticMap.clear();
 }
+
+injectStyle('GuiManager', `
+.${LABEL_CLASS} {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;    
+}
+`);

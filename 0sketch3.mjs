@@ -4,17 +4,19 @@ import {getGuiManager} from "./dist/fwd/gui/Gui";
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
-  gui.rootElement.style.display = 'flex';
-  gui.rootElement.style.flexDirection = 'column';
+  gui.rootElement.style.display = 'grid';
+  gui.rootElement.style.gridTemplateColumns = '1fr 2fr';
+  gui.rootElement.style.gridAutoRows = '20px';
+  
   gui.label('detune');
   gui.horizontalSlider('detune', { defaultValue: 0, max: 12 });
+  
   gui.label('on/off');
   gui.horizontalSlider('detuneActive', { 
     defaultValue: 0, max: 1, step: 1, style: { 
       width: "30px", margin: '0 auto'
     } 
   });
-  console.log('gui updated', gui.getValue('base'));
 };
 
 gui.changed();
