@@ -1,4 +1,4 @@
-import {getGuiManager} from "./dist/api/api/gui/Gui";
+import {getGuiManager} from "./dist/fwd/gui/Gui";
 
 const gui = getGuiManager(fwd.editor.root.htmlElement);
 
@@ -36,8 +36,8 @@ gui.update = () => {
   }
 
   gui.horizontalSlider('param', { style: { width: "40px" } });
-  
+
   console.log(JSON.stringify(gui.getValues()));
-}
+};
 
 gui.changed();

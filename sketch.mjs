@@ -1,6 +1,6 @@
-import {TextAreaElement} from "./dist/api/api/editor/elements/TextArea/TextArea";
-import {FlexPanel} from "./dist/api/api/editor/elements/FlexPanel/FlexPanel";
-import {AudioMixerElement} from "./dist/api/api/editor/elements/AudioMixerPanel/AudioMixerElement";
+import {TextAreaElement} from "./dist/fwd/editor/elements/TextArea/TextArea";
+import {FlexPanel} from "./dist/fwd/editor/elements/FlexPanel/FlexPanel";
+import {AudioMixerElement} from "./dist/fwd/editor/elements/AudioMixerPanel/AudioMixerElement";
 
 fwd.onStart = function () {
 
