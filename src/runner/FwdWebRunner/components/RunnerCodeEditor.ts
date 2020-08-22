@@ -1,15 +1,15 @@
 import CodeMirror from 'codemirror';
-import 'codemirror/mode/javascript/javascript';
 import 'codemirror/addon/dialog/dialog';
-import 'codemirror/addon/fold/foldcode';
-import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
-import 'codemirror/addon/search/searchcursor';
-import 'codemirror/addon/search/search';
-import 'codemirror/addon/edit/matchbrackets';
-import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/hint/javascript-hint';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/search/search';
+import 'codemirror/addon/search/searchcursor';
+import 'codemirror/mode/javascript/javascript';
 import { injectStyle } from '../StyleInjector';
 
 export class RunnerCodeEditor {
@@ -39,6 +39,10 @@ export class RunnerCodeEditor {
 
   public get code(): string {
     return this.codeMirror.getValue();
+  }
+
+  public refresh(): void {
+    this.codeMirror.refresh();
   }
 }
 

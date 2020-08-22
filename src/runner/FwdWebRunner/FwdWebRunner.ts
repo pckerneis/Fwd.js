@@ -200,9 +200,14 @@ export default class FwdWebRunner implements FwdRunner {
 
   public toggleCodeEditorVisibility(): void {
     this.setCodeEditorVisibility(! this._isCodeEditorVisible);
+
+    // We need to manually refresh if the code editor was hidden and its content changed
+    if (this._isCodeEditorVisible) {
+      this.codeEditor.refresh();
+    }
   }
 
-  public setCodeEditorVisibility(showing: boolean): void {
+  private setCodeEditorVisibility(showing: boolean): void {
     this.codeEditor.htmlElement.style.display = showing ? '' : 'none';
     this._dragSeparator.htmlElement.style.display = showing ? '' : 'none';
 
