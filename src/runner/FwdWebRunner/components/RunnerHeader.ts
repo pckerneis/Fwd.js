@@ -13,6 +13,7 @@ export class RunnerHeader {
   private readonly _buildButton: IconButton;
   private readonly _playButton: IconButton;
   private readonly _saveButton: IconButton;
+  private readonly _codeEditorButton: IconButton;
   private readonly _projectSelect: HTMLSelectElement;
   private readonly _autoBuildInput: HTMLInputElement;
   private readonly _timeDisplay: TimeDisplay;
@@ -57,12 +58,14 @@ export class RunnerHeader {
     this._buildButton = new IconButton('tools');
     this._playButton = new IconButton('play-button');
     this._saveButton = new IconButton('save');
+    this._codeEditorButton = new IconButton('edit');
     this._syncStateElem = new SyncStateElement();
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
     this._toolbar.append(
       this._projectSelect,
       this._saveButton.htmlElement,
+      this._codeEditorButton.htmlElement,
       spacer(),
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
@@ -76,6 +79,7 @@ export class RunnerHeader {
     this._buildButton.htmlElement.onclick = () => this.runner.build();
     this._playButton.htmlElement.onclick = () => this.runner.start();
     this._saveButton.htmlElement.onclick = () => this.runner.save();
+    this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
   }
 
   public setFiles(files: string[]): void {

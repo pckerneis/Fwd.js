@@ -62,7 +62,7 @@ interface FlexItemOptions {
   flexShrink?: number,
 }
 
-class SeparatorElement implements EditorElement {
+export class SeparatorElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
   private _separatorSize: number = 6;

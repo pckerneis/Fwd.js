@@ -17,4 +17,6 @@ export default interface FwdRunner {
   stop(): void;
   save(): void;
   render(duration: number, fileName: string): void;
+
+  toggleCodeEditorVisibility(): void;
 }

@@ -1,7 +1,7 @@
 import { FwdAudio } from '../../fwd/audio/FwdAudio';
 import { FwdAudioImpl } from '../../fwd/audio/FwdAudioImpl';
 import { FwdContext } from '../../fwd/core/FwdContext';
-import { FlexPanel } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
+import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { clearGuiManagers } from '../../fwd/gui/Gui';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
@@ -43,6 +43,8 @@ export default class FwdWebRunner implements FwdRunner {
   private _executedCode: string;
   private _savedCode: string;
   private _clientState: RunnerClientState;
+  private _dragSeparator: SeparatorElement;
+  private _isCodeEditorVisible: boolean = true;
 
   constructor() {
     this._fwd = new FwdWebImpl(this);
@@ -196,6 +198,17 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
+  public toggleCodeEditorVisibility(): void {
+    this.setCodeEditorVisibility(! this._isCodeEditorVisible);
+  }
+
+  public setCodeEditorVisibility(showing: boolean): void {
+    this.codeEditor.htmlElement.style.display = showing ? '' : 'none';
+    this._dragSeparator.htmlElement.style.display = showing ? '' : 'none';
+
+    this._isCodeEditorVisible = showing;
+  }
+
   //==================================================================
 
   private buildEditor(): void {
@@ -205,7 +218,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private prepareConsoleWrappers(): void {
-    const useWebConsole = false;
+    const useWebConsole = true;
 
     const methodNames = ['log', 'error', 'warn', 'info'];
 
@@ -344,9 +357,9 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     if (useCodeEditor && useEditorApi) {
-      const separator = flexPanel.addSeparator(0, true);
-      separator.separatorSize = 10;
-      separator.htmlElement.classList.add('fwd-runner-large-separator');
+      this._dragSeparator = flexPanel.addSeparator(0, true);
+      this._dragSeparator.separatorSize = 10;
+      this._dragSeparator.htmlElement.classList.add('fwd-runner-large-separator');
     }
 
     if (useEditorApi) {
