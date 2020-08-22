@@ -60,6 +60,8 @@ interface FlexItemOptions {
   width?: number,
   flexGrow?: number,
   flexShrink?: number,
+  display?: string,
+  flexDirection?: string,
 }
 
 export class SeparatorElement implements EditorElement {
@@ -136,7 +138,7 @@ export class FlexPanel extends ContainerPanel {
       };
 
       ['height', 'width', 'minHeight', 'maxHeight', 'minWidth', 'maxWidth'].forEach(key => affectIfNotNull(key, 'px'));
-      ['flexGrow', 'flexShrink'].forEach(key => affectIfNotNull(key));
+      ['flexGrow', 'flexShrink', 'display', 'flexDirection'].forEach(key => affectIfNotNull(key));
     }
 
     this._elementStack.push({

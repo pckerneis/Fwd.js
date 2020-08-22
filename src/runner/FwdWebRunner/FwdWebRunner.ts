@@ -35,7 +35,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _audioReady: boolean;
   private _sketchWasInitialized: boolean;
   private _running: boolean;
-  private _autoBuilds: boolean;
+  private _autoSave: boolean;
 
   private _devClient: DevClient;
   private _watchedFile: string;
@@ -75,20 +75,27 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public setProgram(program: Program): void {
+    const fileChanged = program.file !== this._watchedFile;
+
     this._transformedSource = program.executable;
     this._savedCode = program.code;
     this._watchedFile = program.file;
 
-    if (this.codeEditor) {
-      this.codeEditor.code = program.code;
-    }
+    const cursor = this.codeEditor.codeMirror.getDoc().getCursor();
+    this.codeEditor.code = program.code;
 
     this.setDirty(false);
 
-    if (this._sketchWasInitialized && this._autoBuilds) {
-      this.build();
+    if (fileChanged) {
+      this.codeEditor.codeMirror.getDoc().clearHistory();
     } else {
+      this.codeEditor.codeMirror.getDoc().setCursor(cursor);
+    }
+
+    if (! this._sketchWasInitialized) {
       this.initializeSketchIfReady();
+    } else {
+      this.build();
     }
   }
 
@@ -96,8 +103,8 @@ export default class FwdWebRunner implements FwdRunner {
     this._header.setFiles(files);
   }
 
-  public setAutoBuilds(autoBuilds: boolean): void {
-    this._autoBuilds = autoBuilds;
+  public setAutoSave(autoSave: boolean): void {
+    this._autoSave = autoSave;
   }
 
   public startAudioContext(): void {
@@ -190,7 +197,7 @@ export default class FwdWebRunner implements FwdRunner {
         this._sketchWasInitialized = true;
       }
 
-      this._executedCode = this._transformedSource;
+      this._executedCode = this._savedCode;
       this.setClientState(RunnerClientState.upToDate);
     } catch (e) {
       this.setClientState(RunnerClientState.codeErrors);
@@ -310,7 +317,6 @@ export default class FwdWebRunner implements FwdRunner {
     this._devClient.onFileChange = (file: string, program: Program) => {
       if (this._watchedFile != file) {
         this.reset();
-        this.setDirty(false);
         this.setClientState(RunnerClientState.outOfDate);
       }
 
@@ -343,55 +349,47 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private buildMainSection(): void {
-    const useCodeEditor = true;
-    const useEditorApi = true;
-
     const flexPanel = new FlexPanel();
     document.getElementById('fwd-runner-container').append(flexPanel.htmlElement);
 
-    if (useCodeEditor) {
-      this.codeEditor = this.buildCodeEditor();
+    this.codeEditor = this.buildCodeEditor();
 
-      flexPanel.addFlexItem('left', this.codeEditor, {
-        minWidth: 100,
-        maxWidth: 5000,
-        width: 600,
-        flexShrink: 0,
-        flexGrow: useEditorApi ? undefined : 1,
-      });
-    }
+    flexPanel.addFlexItem('left', this.codeEditor, {
+      minWidth: 100,
+      maxWidth: 5000,
+      width: 600,
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+    });
 
-    if (useCodeEditor && useEditorApi) {
-      this._dragSeparator = flexPanel.addSeparator(0, true);
-      this._dragSeparator.separatorSize = 10;
-      this._dragSeparator.htmlElement.classList.add('fwd-runner-large-separator');
-    }
+    this._dragSeparator = flexPanel.addSeparator(0, true);
+    this._dragSeparator.separatorSize = 10;
+    this._dragSeparator.htmlElement.classList.add('fwd-runner-large-separator');
 
-    if (useEditorApi) {
-      flexPanel.addFlexItem('right', this._fwd.editor.root, {
-        flexGrow: 1,
-        minWidth: 100,
-        maxWidth: 5000,
-      });
-    }
+    flexPanel.addFlexItem('right', this._fwd.editor.root, {
+      flexGrow: 1,
+      minWidth: 100,
+      maxWidth: 5000,
+    });
   }
 
   private buildCodeEditor(): RunnerCodeEditor {
-    const editor = new RunnerCodeEditor();
+    const editor = new RunnerCodeEditor(this);
 
     editor.codeMirror.on('changes', debounce(() => {
+      const codeChanged = this.codeEditor.code !== this._savedCode;
+
       if (this._clientState !== RunnerClientState.codeErrors) {
-        if (this.codeEditor.code !== this._executedCode) {
-          this.setClientState(RunnerClientState.outOfDate);
-        } else {
-          this.setClientState(RunnerClientState.upToDate);
+        if (codeChanged) {
+          this.setClientState(codeChanged ? RunnerClientState.outOfDate : RunnerClientState.upToDate);
         }
       }
 
-      this.setDirty(this.codeEditor.code !== this._savedCode);
+      this.setDirty(codeChanged);
 
-      if (this._autoBuilds) {
-        this.build();
+      if (this._autoSave && this.codeEditor.code !== this._executedCode) {
+        this.save();
       }
     }, 200));
 

@@ -9,7 +9,7 @@ export default interface FwdRunner {
   startAudioContext(): void;
   setProgram(program: Program): void;
   setFiles(files: string[]): void;
-  setAutoBuilds(autoBuilds: boolean): void;
+  setAutoSave(autoBuilds: boolean): void;
 
   reset(): void;
   build(): void;
