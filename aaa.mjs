@@ -11,7 +11,7 @@ if (typeof window.__max !== 'number') {
 }
 
 gui.update = () => {
-  gui.horizontalSlider({
+  gui.slider({
     provide: () => window.__min,
     validate: (v) => {
       window.__max = Math.max(window.__max, v);
@@ -20,7 +20,7 @@ gui.update = () => {
     },
   });
 
-  gui.horizontalSlider({
+  gui.slider({
     provide: () => window.__max,
     validate: (v) => {
       window.__min = Math.min(window.__min, v);
@@ -29,13 +29,13 @@ gui.update = () => {
     },
   });
 
-  gui.horizontalSlider('param', { style: { width: "200px" } });
+  gui.slider('param', { style: { width: "200px" } });
 
   if (gui.getValue('param') > 0.5) {
-    gui.horizontalSlider('other', {min: 0, max: 100});
+    gui.slider('other', {min: 0, max: 100});
   }
 
-  gui.horizontalSlider('param', { style: { width: "40px" } });
+  gui.slider('param', { style: { width: "40px" } });
 
   console.log(JSON.stringify(gui.getValues()));
 };

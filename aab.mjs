@@ -12,7 +12,7 @@ gui.update = () => {
   gui.rootElement.style.padding = '6px';
 
   gui.label('Minimum');
-  gui.horizontalSlider(
+  gui.slider(
     {
       provide: () => gui.getValue('min'),
       validate: (newValue) => {
@@ -25,11 +25,11 @@ gui.update = () => {
   if (gui.getValue('min') > 50) {
   	gui.label('Heey', { style: { gridColumn: '1 / span 2' }});
   	gui.label('Some other value');
-    gui.horizontalSlider('other');
+    gui.slider('other');
   }
 
   gui.label('Maximum');
-  gui.horizontalSlider({
+  gui.slider({
     provide: () => gui.getValue('max'),
     validate: (newValue) => {
       gui.setValue('max', newValue);
@@ -39,7 +39,7 @@ gui.update = () => {
   });
 
   gui.label('Some other value');
-  gui.horizontalSlider('other');
+  gui.slider('other');
 
   gui.label(JSON.stringify(gui.getValues()), { style: { gridColumn: '1 / span 2' }});
 };

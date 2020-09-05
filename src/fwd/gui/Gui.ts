@@ -27,6 +27,8 @@ export interface SliderOptions extends ElementOptions {
     min: number;
     max: number;
     step: number;
+
+    type: 'range' | 'number';
 }
 
 interface PartialCSSInlineStyle {
@@ -47,6 +49,7 @@ const defaultElementOptionsAndStyle: AllOptionsAndStyle = {
     min: undefined,
     max: undefined,
     step: undefined,
+    type: 'range',
 };
 
 export class GuiManager {
@@ -88,7 +91,7 @@ export class GuiManager {
         this.index++;
     }
 
-    public horizontalSlider(modelOrId: string | ControlModel<number>, sliderOptions?: Partial<SliderOptionsAndStyle>): void {
+    public slider(modelOrId: string | ControlModel<number>, sliderOptions?: Partial<SliderOptionsAndStyle>): void {
         const controlModel = typeof modelOrId === 'string' ?
             (this.controls.get(modelOrId) || this.createAndAddControlModel(modelOrId, sliderOptions?.defaultValue))
             : modelOrId;
@@ -118,6 +121,7 @@ export class GuiManager {
         this.applyElementOptionsAndStyle(slider.htmlElement, sliderOptions);
 
         // Slider specific options
+        GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'type');
         GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'step');
         GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'min');
         GuiManager.setOptionOrDefault(slider.htmlElement, sliderOptions, 'max');
