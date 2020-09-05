@@ -4,6 +4,7 @@ import { Logger, LoggerLevel } from '../utils/Logger';
 import { FwdAudio } from './FwdAudio';
 import parentLogger from './logger.audio';
 import {
+  FwdBufferNode,
   FwdCompressorNode,
   FwdDelayLineNode,
   FwdDistortionNode,
@@ -116,6 +117,11 @@ export class FwdAudioImpl implements FwdAudio {
   public reverb(reverbTime?: number, preDelayTime?: number): FwdReverbNode {
     this.assertInit();
     return new FwdReverbNode(this);
+  }
+
+  public bufferNode(buffer: AudioBuffer): FwdBufferNode {
+    this.assertInit();
+    return new FwdBufferNode(this, buffer);
   }
 
   //=========================================================================

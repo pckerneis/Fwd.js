@@ -10,6 +10,7 @@ import {
   FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode,
   FwdStereoDelayNode,
+  FwdBufferNode,
 } from './nodes/StandardAudioNodes';
 
 export interface FwdAudio {
@@ -33,6 +34,7 @@ export interface FwdAudio {
   distortion(amount: number): FwdDistortionNode;
   compressor(): FwdCompressorNode;
   reverb(reverbTime?: number, preDelayTime?: number): FwdReverbNode;
+  bufferNode(buffer: AudioBuffer): FwdBufferNode;
   // convolver
   // filters
   // - highPass

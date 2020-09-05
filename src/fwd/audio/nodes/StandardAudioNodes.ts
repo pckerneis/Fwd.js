@@ -232,18 +232,45 @@ export class FwdSamplerNode extends FwdAudioNode {
 
 //===============================================================
 
-export class FwdNoiseNode extends FwdAudioNode {
-  private _output: AudioBufferSourceNode;
+export class FwdBufferNode extends FwdAudioNode {
+  protected _output: AudioBufferSourceNode;
 
-  constructor(public readonly fwdAudio: FwdAudio) {
+  constructor(public readonly fwdAudio: FwdAudio, public readonly audioBuffer: AudioBuffer) {
     super();
 
     this._output = fwdAudio.context.createBufferSource();
-    this._output.loop = true;
-    this._output.buffer = FwdNoiseNode.generateWhiteNoise(this.fwdAudio.context);
-    this._output.start(fwdAudio.now());
+    this._output.buffer = this.audioBuffer;
   }
 
+  public get inputNode(): AudioNode { return null; }
+  public get outputNode(): AudioNode { return this._output; }
+
+  public get loop(): boolean { return this._output.loop; }
+  public set loop(shouldLoop: boolean) { this._output.loop = shouldLoop; }
+
+  public start(offset: Time, duration: Time): void {
+    this._output.start(this.fwdAudio.now(), offset, duration);
+  }
+
+  public stop(): void {
+    this._output.stop(this.fwdAudio.now());
+  }
+
+  protected doTearDown(when: Time): void {
+    tearDownNativeNode(this._output, when).then(() => {
+      this._output = null;
+    });
+  }
+}
+//===============================================================
+
+export class FwdNoiseNode extends FwdBufferNode {
+  constructor(fwdAudio: FwdAudio) {
+    super(fwdAudio, FwdNoiseNode.generateWhiteNoise(fwdAudio.context));
+
+    this.loop = true;
+    this._output.start(fwdAudio.now());
+  }
   public static generateWhiteNoise(context: BaseAudioContext, lengthInSeconds: number = 1): AudioBuffer {
     const sampleRate = context.sampleRate;
     const buffer = context.createBuffer(1, lengthInSeconds * sampleRate, sampleRate);
@@ -255,16 +282,9 @@ export class FwdNoiseNode extends FwdAudioNode {
 
     return buffer;
   }
-
-  public get inputNode(): AudioNode { return null; }
-  public get outputNode(): AudioNode { return this._output; }
-
-  protected doTearDown(when: Time): void {
-    tearDownNativeNode(this._output, when).then(() => {
-      this._output = null;
-    });
-  }
 }
+
+//===============================================================
 
 export async function tearDownNativeNode(nativeNode: AudioNode, when: Time): Promise<void> {
   return new Promise(resolve => {
