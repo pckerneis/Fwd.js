@@ -58,6 +58,7 @@ injectStyle('SyncStateElement', `
   background: #ffe52a;
 }
 
+.fwd-runner-sync-state.disconnected,
 .fwd-runner-sync-state.codeErrors {
   background: #ff4242;
 }

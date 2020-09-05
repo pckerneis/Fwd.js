@@ -322,6 +322,12 @@ export default class FwdWebRunner implements FwdRunner {
 
       this.setProgram(program);
     };
+
+    this._devClient.onServerLost = () => {
+      console.error('Connection with server lost');
+      this._footer.print(null, 'Connection with server lost');
+      this.setClientState(RunnerClientState.disconnected);
+    };
   }
 
   private setClientState(newState: RunnerClientState): void {

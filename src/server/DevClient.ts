@@ -13,11 +13,14 @@ export class DevClient {
   public onFilesAvailable: (files: string[]) => void;
   public onFileChange: (file: string, program: Program) => void;
   public onServerError: (errors: string[], program: Program) => void;
+  public onServerLost: () => void;
 
   constructor() {
     this._ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
     this._ws.onmessage = msg => this.handleMessage(msg);
     this._ws.onopen = () => this._ws.send(HANDSHAKE_MESSAGE);
+
+    this.checkStatusPeriodically();
   }
 
   public watchFile(file: string): void {
@@ -82,5 +85,16 @@ export class DevClient {
     } catch (e) {
       DBG.error(e);
     }
+  }
+
+  private checkStatusPeriodically(): void {
+    const itv = setInterval(() => {
+      if (this._ws.readyState !== 1) {
+        if (typeof this.onServerError === 'function') {
+          this.onServerLost();
+        }
+        clearInterval(itv);
+      }
+    }, 3000);
   }
 }
