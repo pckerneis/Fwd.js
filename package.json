@@ -5,7 +5,7 @@
   "scripts": {
     "doc": "typedoc",
     "test": "jest --coverage",
-    "build-runner": "webpack --config webpack-global.config.js --display-error-details",
+    "build-runner": "webpack --config webpack.config.js --display-error-details",
     "build-server": "cd src/server && tsc && cd ../..",
     "build-all": "yarn build-runner && yarn build-server",
     "fwd-serve": "node src/server/server.js",

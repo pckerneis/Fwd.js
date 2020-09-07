@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/runner/global-runner.ts',
+  entry: './src/runner/runner.ts',
   devtool: 'source-map',
   mode: 'development',
   optimization: {
