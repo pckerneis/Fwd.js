@@ -13,6 +13,7 @@ export class Editor {
 
   public reset(): void {
     this.root.htmlElement.innerHTML = '';
+    this.root.htmlElement.setAttribute('style', '');
     this.root.elements.clear();
   }
 }
