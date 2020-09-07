@@ -75,11 +75,7 @@ fwd.onStart = () => {
 // Counter for the filename
 let counter = 0;
 
-fwd.scheduler.defineAction('glitch', () => {
-  console.log('glitch');
-  console.log(fwd);
-  
-  
+fwd.scheduler.defineAction('glitch', () => {  
   const numSamples = Math.floor(44100 * gui.getValue('duration'));
   const sr = 44100;
   
