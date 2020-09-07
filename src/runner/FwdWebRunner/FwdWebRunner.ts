@@ -219,7 +219,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private setCodeEditorVisibility(showing: boolean): void {
-    this.codeEditor.htmlElement.style.display = showing ? '' : 'none';
+    this.codeEditor.htmlElement.style.display = showing ? 'flex' : 'none';
     this._dragSeparator.htmlElement.style.display = showing ? '' : 'none';
 
     this._isCodeEditorVisible = showing;
