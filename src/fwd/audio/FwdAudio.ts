@@ -50,6 +50,7 @@ export interface FwdAudio {
 export interface FwdAudioUtils {
   decibelsToGain(decibels: number): number;
   gainToDecibels(gain: number): number;
+
   bufferToWave(audioBuffer: AudioBuffer, offset?: number, length?: number): Blob;
   downloadFile(blob: Blob, fileName: string): void;
 }

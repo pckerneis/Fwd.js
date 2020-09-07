@@ -2,6 +2,7 @@ import { FwdAudio } from '../../fwd/audio/FwdAudio';
 import { FwdEditor } from '../../fwd/editor/FwdEditor';
 import { Fwd, FwdUtils } from '../../fwd/Fwd';
 import { FwdGui, fwdGui } from '../../fwd/gui/Gui';
+import { fwdMidi, FwdMidi } from '../../fwd/midi/FwdMidi';
 import { FwdScheduler } from '../../fwd/scheduler/FwdScheduler';
 import { clamp, map, parseNumber, random, simplex } from '../../fwd/utils/numbers';
 import FwdRunner from '../FwdRunner';
@@ -38,5 +39,9 @@ export default class FwdWebImpl implements Fwd {
 
   public get gui(): FwdGui {
     return fwdGui;
+  }
+
+  public get midi(): FwdMidi {
+    return fwdMidi;
   }
 }

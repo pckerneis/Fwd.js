@@ -32,7 +32,6 @@ export default class FwdWebRunner implements FwdRunner {
 
   private codeEditor: RunnerCodeEditor;
 
-  private _transformedSource: string;
   private _audioReady: boolean;
   private _sketchWasInitialized: boolean;
   private _running: boolean;
@@ -78,7 +77,6 @@ export default class FwdWebRunner implements FwdRunner {
   public setProgram(program: Program): void {
     const fileChanged = program.file !== this._watchedFile;
 
-    this._transformedSource = program.executable;
     this._savedCode = program.code;
     this._watchedFile = program.file;
 
@@ -124,7 +122,6 @@ export default class FwdWebRunner implements FwdRunner {
     this._fwd.onStart = null;
     this._fwd.onStop = null;
     this._fwd.editor.reset();
-    this._transformedSource = null;
     this._sketchWasInitialized = false;
     this._fwd.globals = {};
     this._fwd.scheduler.resetActions();
@@ -179,12 +176,8 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public build(): void {
-    if (this._transformedSource == null) {
-      throw new Error('The sketch could not be executed');
-    }
-
     try {
-      new Function(this._transformedSource)(window);
+      new Function(this._savedCode)(window);
 
       if (! this._sketchWasInitialized) {
         if (typeof this._fwd.onInit === 'function') {
@@ -293,7 +286,7 @@ export default class FwdWebRunner implements FwdRunner {
 
   private initializeSketchIfReady(): void {
     if (! this._sketchWasInitialized
-      && this._transformedSource != null
+      && this._savedCode != null
       && this._audioReady) {
       this.build();
     }

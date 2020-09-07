@@ -1,7 +1,4 @@
-import {midiToFrequency} from "./dist/fwd/midi/helpers";
-import {getGuiManager} from "./dist/fwd/gui/Gui";
-
-const gui = getGuiManager(fwd.editor.root.htmlElement);
+const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
   gui.rootElement.style.display = 'grid';
@@ -111,7 +108,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
 });
 
 fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
-  const osc = fwd.audio.osc(midiToFrequency(noteNumber + gui.getValue('detune') * gui.getValue('detuneActive')));
+  const osc = fwd.audio.osc(fwd.midi.noteToFrequency(noteNumber + gui.getValue('detune') * gui.getValue('detuneActive')));
   osc.connect(del);
 
   fwd.scheduler

@@ -5,10 +5,9 @@
   "scripts": {
     "doc": "typedoc",
     "test": "jest --coverage",
-    "build-api": "tsc",
     "build-runner": "webpack --config webpack-global.config.js --display-error-details",
     "build-server": "cd src/server && tsc && cd ../..",
-    "build-all": "yarn build-api && yarn build-runner && yarn build-server",
+    "build-all": "yarn build-runner && yarn build-server",
     "fwd-serve": "node src/server/server.js",
     "start": "yarn build-all && yarn fwd-serve --path ../.."
   },
@@ -36,7 +35,6 @@
     "jsdom": "^16.3.0",
     "minimist": "^1.2.5",
     "opn": "^6.0.0",
-    "rollup": "^2.23.0",
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "simplex-noise": "^2.4.0",

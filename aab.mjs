@@ -1,6 +1,5 @@
-import {getGuiManager} from "./dist/fwd/gui/Gui";
+const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 
-const gui = getGuiManager(fwd.editor.root.htmlElement);
 gui.setValue('min', 10);
 gui.setValue('max', 90);
 gui.setValue('other', 45);

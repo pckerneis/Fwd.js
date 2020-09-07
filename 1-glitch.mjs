@@ -3,7 +3,7 @@ const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 gui.update = () => {
   gui.rootElement.style.display = 'grid';
   gui.rootElement.style.gridTemplateColumns = '1fr 3fr 1fr';
-  gui.rootElement.style.gridAutoRows = '20px';
+  gui.rootElement.style.gridAutoRows = '22px';
   gui.rootElement.style.padding = '6px';
 
   labeledSwitch(gui, 'save', 0);

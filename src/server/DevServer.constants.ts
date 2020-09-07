@@ -16,7 +16,6 @@ export enum MessageType {
 export interface Program {
   file: string,
   code: string,
-  executable: string,
 }
 
 export interface ServerMessage {

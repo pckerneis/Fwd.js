@@ -8,7 +8,6 @@ const chokidar = require('chokidar');
 const SocketServer = require('ws').Server;
 const fs = require('fs');
 const path = require('path');
-const rollup = require('rollup');
 
 export interface Client {
   id: number;
@@ -42,37 +41,13 @@ export class DevServer {
         path.resolve(pathToProgram, file),
         'utf8');
 
-      if (file.endsWith('.mjs')) {
-        DevServer.buildModule(file)
-          .then(transformed => {
-            this.sendMessage(client.ws, {
-              type: MessageType.SKETCH_TYPE,
-              program: {
-                file,
-                code: textContent,
-                executable: transformed,
-              },
-            });
-          })
-          .catch(error => this.sendMessage(client.ws, {
-            type: MessageType.ERROR_TYPE,
-            error: error.code,
-            program: {
-              file,
-              code: textContent,
-              executable: null,
-            },
-          }));
-      } else {
-        this.sendMessage(client.ws, {
-          type: MessageType.SKETCH_TYPE,
-          program: {
-            file,
-            code: textContent,
-            executable: textContent,
-          },
-        });
-      }
+      this.sendMessage(client.ws, {
+        type: MessageType.SKETCH_TYPE,
+        program: {
+          file,
+          code: textContent,
+        },
+      });
     } catch (e) {
       DBG.error(e);
     }
@@ -96,31 +71,6 @@ export class DevServer {
 
   private static isExecutableFile(file: string): boolean {
     return file.endsWith('.js') || file.endsWith('.mjs');
-  }
-
-  private static async buildModule(file: string): Promise<string> {
-    const inputOptions = {
-      input: file,
-    };
-
-    const outputOptions = {
-      format: 'iife',
-      name: 'fwdProgram',
-    };
-
-    const bundle = await rollup.rollup(inputOptions);
-    console.log('watchFiles', bundle.watchFiles);
-    const {output} = await bundle.generate(outputOptions);
-
-    for (const chunkOrAsset of output) {
-      if (chunkOrAsset.type === 'asset') {
-        // Nothing to do for now...
-      } else {
-        return chunkOrAsset.code;
-      }
-    }
-
-    return '';
   }
 
   private addClient(ws: WebSocket): void {

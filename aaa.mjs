@@ -1,6 +1,4 @@
-import {getGuiManager} from "./dist/fwd/gui/Gui";
-
-const gui = getGuiManager(fwd.editor.root.htmlElement);
+const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 
 if (typeof window.__min !== 'number') {
   window.__min = 0;

@@ -1,5 +1,3 @@
-import {midiToFrequency} from "./dist/fwd/midi/helpers";
-
 const scale = [0, 2, 3, 5, 7, 9, 10];
 // const scale = [0, 2, 4, 5, 7, 9, 11];
 const base = 40;
@@ -36,7 +34,7 @@ fwd.scheduler.defineAction('playNote', (noteNumber) => {
   const attack = 0.01;
   const release = 3.8;
 
-  const targetFq = midiToFrequency(noteNumber);
+  const targetFq = fwd.midi.noteToFrequency(noteNumber);
   const startFq = targetFq * 2;
 
   const fx = fwd.audio.stereoDelay(2.0);
