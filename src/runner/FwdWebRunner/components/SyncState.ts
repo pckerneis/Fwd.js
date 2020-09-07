@@ -1,39 +1,41 @@
-import { RunnerCodeExecutionState } from '../FwdWebRunner';
+import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 
 export class SyncStateElement {
   public readonly htmlElement: HTMLElement;
 
-  private _syncState: RunnerCodeExecutionState;
+  private _runnerClientState: RunnerClientState;
 
   constructor() {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-runner-sync-state');
   }
 
-  private static getStateDisplayString(state: RunnerCodeExecutionState): string {
+  private static getStateDisplayString(state: RunnerClientState): string {
     switch (state) {
-      case 'code-errors':   return 'Code has error(s)';
-      case 'up-to-date':    return 'Up to date';
-      case 'out-of-date':   return 'Out of date';
-      default:              return '';
+      case RunnerClientState.codeErrors:    return 'Code has error(s)';
+      case RunnerClientState.upToDate:      return 'Up to date';
+      case RunnerClientState.outOfDate:     return 'Out of date';
+      case RunnerClientState.disconnected:  return 'Disconnected';
+      case RunnerClientState.connected:     return 'Connected';
+      default:                              return '';
 
     }
   }
 
-  public setSyncState(newState: RunnerCodeExecutionState): void {
-    if (newState === this._syncState) {
+  public setSyncState(newState: RunnerClientState): void {
+    if (newState === this._runnerClientState) {
       return;
     }
 
-    if (this._syncState) {
-      this.htmlElement.classList.replace(this._syncState, newState);
+    if (this._runnerClientState) {
+      this.htmlElement.classList.replace(this._runnerClientState, newState);
     }
 
     this.htmlElement.classList.add(newState);
     this.htmlElement.title = SyncStateElement.getStateDisplayString(newState);
 
-    this._syncState = newState;
+    this._runnerClientState = newState;
   }
 }
 
@@ -47,15 +49,17 @@ injectStyle('SyncStateElement', `
   border: 1px solid #00000069;
 }
 
-.fwd-runner-sync-state.up-to-date {
+.fwd-runner-sync-state.upToDate {
   background: #15f765;
 }
 
-.fwd-runner-sync-state.out-of-date {
+.fwd-runner-sync-state.outOfDate,
+.fwd-runner-sync-state.connected {
   background: #ffe52a;
 }
 
-.fwd-runner-sync-state.code-errors {
+.fwd-runner-sync-state.disconnected,
+.fwd-runner-sync-state.codeErrors {
   background: #ff4242;
 }
 `);

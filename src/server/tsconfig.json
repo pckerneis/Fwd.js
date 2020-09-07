@@ -2,6 +2,7 @@
     "compilerOptions": {
       "target": "es2015",
       "module": "commonjs",
+      "lib": ["es2017", "es7", "es6", "dom"],
       "moduleResolution": "node",
       "sourceMap": false,
       "emitDecoratorMetadata": false,
@@ -10,7 +11,9 @@
       "noImplicitAny": true,
       "suppressImplicitAnyIndexErrors": true,
       "esModuleInterop": true,
-      "declaration": true
+      "declaration": true,
+      "types": [ "node" ],
+      "typeRoots": [ "../node_modules/@types" ]
     },
     "include": [ "server.ts" ],
     "exclude": [ "node_modules" ]

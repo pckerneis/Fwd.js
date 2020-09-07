@@ -1,14 +1,15 @@
-import { FwdAudio } from '../api/audio/FwdAudio';
-import { FwdContext } from '../api/core/FwdContext';
+import { FwdAudio } from '../fwd/audio/FwdAudio';
+import { Fwd } from '../fwd/Fwd';
+import { Program } from '../server/DevServer.constants';
 
 export default interface FwdRunner {
-  fwd: FwdContext;
+  fwd: Fwd;
   audio: FwdAudio;
 
   startAudioContext(): void;
-  setSketchCode(newSketch: string): void;
+  setProgram(program: Program): void;
   setFiles(files: string[]): void;
-  setAutoBuilds(autoBuilds: boolean): void;
+  setAutoSave(autoBuilds: boolean): void;
 
   reset(): void;
   build(): void;
@@ -16,4 +17,6 @@ export default interface FwdRunner {
   stop(): void;
   save(): void;
   render(duration: number, fileName: string): void;
+
+  toggleCodeEditorVisibility(): void;
 }

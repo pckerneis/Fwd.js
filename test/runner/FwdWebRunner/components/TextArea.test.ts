@@ -1,4 +1,4 @@
-import { TextAreaElement } from '../../../../src/api/editor/elements/TextArea/TextArea';
+import { TextAreaElement } from '../../../../src/fwd/editor/elements/TextArea/TextArea';
 
 describe('TextArea', () => {
   it('can be created', () => {

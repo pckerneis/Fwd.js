@@ -1,6 +1,6 @@
 import { DevClient } from '../../../server/DevClient';
 import FwdRunner from '../../FwdRunner';
-import { RunnerCodeExecutionState } from '../FwdWebRunner';
+import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
 import { SyncStateElement } from './SyncState';
@@ -10,11 +10,9 @@ export class RunnerHeader {
   public readonly htmlElement: HTMLDivElement;
 
   private readonly _toolbar: HTMLElement;
-  private readonly _buildButton: IconButton;
   private readonly _playButton: IconButton;
-  private readonly _saveButton: IconButton;
+  private readonly _codeEditorButton: IconButton;
   private readonly _projectSelect: HTMLSelectElement;
-  private readonly _autoBuildInput: HTMLInputElement;
   private readonly _timeDisplay: TimeDisplay;
   private readonly _syncStateElem: SyncStateElement;
 
@@ -46,36 +44,23 @@ export class RunnerHeader {
       return elem;
     };
 
-    this._autoBuildInput = document.createElement('input');
-    this._autoBuildInput.type = 'checkbox';
-
-    const autoBuildLabel = document.createElement('label');
-    autoBuildLabel.classList.add('fwd-runner-auto-build-label');
-    autoBuildLabel.innerText = 'Auto-build';
-    autoBuildLabel.append(this._autoBuildInput);
-
-    this._buildButton = new IconButton('tools');
     this._playButton = new IconButton('play-button');
-    this._saveButton = new IconButton('save');
+    this._codeEditorButton = new IconButton('edit');
     this._syncStateElem = new SyncStateElement();
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
     this._toolbar.append(
       this._projectSelect,
-      this._saveButton.htmlElement,
+      this._codeEditorButton.htmlElement,
       spacer(),
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
       spacer(),
-      autoBuildLabel,
-      this._buildButton.htmlElement,
       this._syncStateElem.htmlElement,
     );
 
-    this._autoBuildInput.oninput = () => this.runner.setAutoBuilds(this._autoBuildInput.checked);
-    this._buildButton.htmlElement.onclick = () => this.runner.build();
     this._playButton.htmlElement.onclick = () => this.runner.start();
-    this._saveButton.htmlElement.onclick = () => this.runner.save();
+    this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
   }
 
   public setFiles(files: string[]): void {
@@ -102,10 +87,6 @@ export class RunnerHeader {
     this._timeDisplay.animate();
   }
 
-  public setSyncState(syncState: RunnerCodeExecutionState): void {
-    this._syncStateElem.setSyncState(syncState);
-  }
-
   public setDirty(isDirty: boolean): void {
     const currentFileOption = this._projectSelect.options.item(this._projectSelect.options.selectedIndex);
 
@@ -116,6 +97,10 @@ export class RunnerHeader {
       this._projectSelect.classList.remove('dirty');
       currentFileOption.innerText = currentFileOption.value;
     }
+  }
+
+  public setRunnerClientState(newState: RunnerClientState): void {
+    this._syncStateElem.setSyncState(newState);
   }
 }
 

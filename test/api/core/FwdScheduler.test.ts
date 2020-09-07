@@ -1,6 +1,6 @@
-import { FwdScheduler } from "../../../src/api/core/FwdScheduler";
-import { SchedulerImpl } from "../../../src/api/core/Scheduler/SchedulerImpl";
-import { Logger, LoggerLevel } from "../../../src/utils/Logger";
+import { FwdScheduler } from "../../../src/fwd/scheduler/FwdScheduler";
+import { SchedulerImpl } from "../../../src/fwd/scheduler/Scheduler/SchedulerImpl";
+import { Logger, LoggerLevel } from "../../../src/fwd/utils/Logger";
 import { waitSeconds } from "../../test-utils";
 
 Logger.runtimeLevel = LoggerLevel.none;

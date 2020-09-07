@@ -1,4 +1,4 @@
-import { AudioMeterElement } from '../../../../src/api/editor/elements/AudioMeter/AudioMeter';
+import { AudioMeterElement } from '../../../../src/fwd/editor/elements/AudioMeter/AudioMeter';
 
 describe('AudioMeter', () => {
   it('can be created', () => {

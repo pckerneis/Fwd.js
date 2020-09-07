@@ -1,4 +1,4 @@
-import { FwdAudioImpl } from '../../../src/api/audio/FwdAudioImpl';
+import { FwdAudioImpl } from '../../../src/fwd/audio/FwdAudioImpl';
 import { mockFwd, mockScheduler } from '../../mocks/Fwd.mock';
 import { mockAudioContext, mockAudioParam } from '../../mocks/WebAudio.mock';
 

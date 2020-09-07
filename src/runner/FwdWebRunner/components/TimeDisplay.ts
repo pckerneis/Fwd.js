@@ -1,5 +1,5 @@
-import { FwdScheduler } from '../../../api/core/FwdScheduler';
-import { formatTime } from '../../../utils/time';
+import { FwdScheduler } from '../../../fwd/scheduler/FwdScheduler';
+import { formatTime } from '../../../fwd/utils/time';
 import { injectStyle } from '../StyleInjector';
 
 export class TimeDisplay {

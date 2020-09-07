@@ -1,4 +1,4 @@
-import { clamp } from "../../../utils/numbers";
+import { clamp } from "../../../fwd/utils/numbers";
 import { injectStyle } from "../StyleInjector";
 
 export class VerticalSlider {

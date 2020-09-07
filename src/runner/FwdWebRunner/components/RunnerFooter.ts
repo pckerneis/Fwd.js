@@ -1,6 +1,6 @@
-import { parseNumber } from '../../../utils/numbers';
-import { formatTime } from '../../../utils/time';
-import audit from '../../../utils/time-filters/audit';
+import { parseNumber } from '../../../fwd/utils/numbers';
+import { formatTime } from '../../../fwd/utils/time';
+import audit from '../../../fwd/utils/time-filters/audit';
 import FwdRunner from '../../FwdRunner';
 import { injectStyle } from '../StyleInjector';
 import { FwdWebConsole } from './Console';

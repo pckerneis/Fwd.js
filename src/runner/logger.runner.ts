@@ -1,3 +1,3 @@
-import { Logger } from "../utils/Logger";
+import { Logger } from "../fwd/utils/Logger";
 
 export default new Logger('runner');
