@@ -114,13 +114,15 @@ fwd.scheduler.defineAction('burst', (rvb) => {
   const audioBuffer = new AudioContext().createBuffer(numChannels, attack + release, sr);
   const randomArray = [...Array(bufferSize)].map(() => fwd.utils.random(-1, 1));
   
+  const burstPeak = fwd.utils.random(0.5, 1.1);
+  
   for (let c = 0; c < numChannels; c++) {
     const channelData = audioBuffer.getChannelData(c);
     
     // white noise
     for (let i = 0; i < numSamples; i++) {
-      const env = i < attack ? fwd.utils.map(i, 0, attack, 0, 1)
-      	: fwd.utils.map(i - attack, 0, release, 1, 0);
+      const env = i < attack ? fwd.utils.map(i, 0, attack, 0, burstPeak)
+      	: fwd.utils.map(i - attack, 0, release, burstPeak, 0);
 
       const gain = fwd.audio.utils.decibelsToGain(fwd.utils.map(env, 0, 1, -80, 0));
       
