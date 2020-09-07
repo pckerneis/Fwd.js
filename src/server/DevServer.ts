@@ -70,7 +70,7 @@ export class DevServer {
   }
 
   private static isExecutableFile(file: string): boolean {
-    return file.endsWith('.js') || file.endsWith('.mjs');
+    return file.endsWith('.js');
   }
 
   private addClient(ws: WebSocket): void {
