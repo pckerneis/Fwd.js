@@ -1,3 +1,5 @@
+import SimplexNoise from 'simplex-noise';
+
 /**
  * Map a value from a source range to a target range.
  *
@@ -68,4 +70,15 @@ export function random(a?: number, b?: number): number {
   }
 
   return a + ((b - a) * Math.random());
+}
+
+const simplexNoise = new SimplexNoise();
+
+export function simplex(x: number, y: number, z?: number, w?: number): number {
+  if (w != null)
+    return simplexNoise.noise4D(x, y, z, w);
+  else if (z != null)
+    return simplexNoise.noise3D(x, y, z);
+
+  return simplexNoise.noise2D(x, y);
 }

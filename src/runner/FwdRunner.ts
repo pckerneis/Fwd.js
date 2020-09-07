@@ -1,9 +1,9 @@
 import { FwdAudio } from '../fwd/audio/FwdAudio';
-import { FwdContext } from '../fwd/core/FwdContext';
+import { Fwd } from '../fwd/Fwd';
 import { Program } from '../server/DevServer.constants';
 
 export default interface FwdRunner {
-  fwd: FwdContext;
+  fwd: Fwd;
   audio: FwdAudio;
 
   startAudioContext(): void;

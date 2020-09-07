@@ -4,7 +4,7 @@ export interface EditorElement {
   htmlElement?: HTMLElement;
 }
 
-export class Editor {
+export class FwdEditor {
   public readonly root: ContainerPanel;
 
   constructor() {

@@ -1,10 +1,4 @@
-import {random} from "./dist/fwd/utils/numbers";
-import {getGuiManager} from "./dist/fwd/gui/Gui";
-import {bufferToWave, downloadFile} from "./dist/fwd/audio/utils";
-
-let counter = 0;
-
-const gui = getGuiManager(fwd.editor.root.htmlElement);
+const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
   gui.rootElement.style.display = 'grid';
@@ -12,7 +6,7 @@ gui.update = () => {
   gui.rootElement.style.gridAutoRows = '20px';
   gui.rootElement.style.padding = '6px';
 
-  labeledSwitch(gui, 'save to file', 0);
+  labeledSwitch(gui, 'save', 0);
 
   header('Global');
   labeledSlider(gui, 'duration', { defaultValue: 0.5, min: 0.01, max: 2, step: 0.01 });
@@ -45,7 +39,10 @@ gui.update = () => {
   function labeledSlider(gui, name, options) {
     gui.label(name);
     gui.slider(name, options);
-    gui.slider(name, {type: 'number', style: { maxWidth: '100px', margin: '1px 4px' } });
+    gui.slider(name, {
+      ...options,
+      type: 'number', style: { maxWidth: '100px', margin: '1px 4px' } 
+    });
   }
   
   function labeledSwitch(gui, name, defaultValue) {
@@ -64,6 +61,8 @@ gui.update = () => {
 gui.changed();
 
 fwd.onStart = () => {
+  console.log('start');
+  
   const chain = fwd.scheduler
     .fire('glitch')
     .wait(3)
@@ -73,7 +72,14 @@ fwd.onStart = () => {
   chain.trigger();
 };
 
+// Counter for the filename
+let counter = 0;
+
 fwd.scheduler.defineAction('glitch', () => {
+  console.log('glitch');
+  console.log(fwd);
+  
+  
   const numSamples = Math.floor(44100 * gui.getValue('duration'));
   const sr = 44100;
   
@@ -93,26 +99,26 @@ fwd.scheduler.defineAction('glitch', () => {
     const changeProb = gui.getValue('changeProb');
 
     let t = 0;
-    let fq = random(30, 2000);
+    let fq = fwd.utils.random(30, 2000);
 
 
     for (let i = 0; i < numSamples; i++) {
       channelData[i] = Math.sin(t + incr(fq) * i);
 
-      if (random() < changeProb) {
-        fq = random(30, 2000);
+      if (fwd.utils.random() < changeProb) {
+        fq = fwd.utils.random(30, 2000);
       }
     }
 
     // Add white noise
-    let noiseAmp = random(0, 1);
+    let noiseAmp = fwd.utils.random(0, 1);
     const noiseAmount = gui.getValue('noiseAmount');
     
     for (let i = 0; i < numSamples; i++) {
-      channelData[i] = channelData[i] + noiseAmount * noiseAmp * (Math.random() * 2 - 1);
+      channelData[i] = channelData[i] + noiseAmount * noiseAmp * fwd.utils.random(-1, 1);
 
-      if (random() < changeProb) {
-        fq = noiseAmp = random(0, 1);
+      if (fwd.utils.random() < changeProb) {
+        fq = noiseAmp = fwd.utils.random(0, 1);
       }
     }
 
@@ -125,9 +131,9 @@ fwd.scheduler.defineAction('glitch', () => {
       const maxCutLength = 	gui.getValue('maxCutLength');
 
       for (let i = numCuts; --i >= 0;) {
-        const start = Math.floor(random(0, numSamples - maxCutLength));
-        const numRepeat = Math.floor(random(minRepeat, maxRepeat));
-        const length = Math.floor(random(minCutLength, maxCutLength));
+        const start = Math.floor(fwd.utils.random(0, numSamples - maxCutLength));
+        const numRepeat = Math.floor(fwd.utils.random(minRepeat, maxRepeat));
+        const length = Math.floor(fwd.utils.random(minCutLength, maxCutLength));
 
         for (let r = 1; r < numRepeat; ++r) {
           for (let s = 0; s < length; ++s) {
@@ -142,8 +148,10 @@ fwd.scheduler.defineAction('glitch', () => {
     }
   }
 
+  
   if (gui.getValue('save')) {
-  	downloadFile(bufferToWave(audioBuffer), 'glitch' + (counter++));
+  	fwd.audio.utils.downloadFile(
+      fwd.audio.utils.bufferToWave(audioBuffer), 'glitch' + (counter++));
   }
 
   const bufferNode = fwd.audio.bufferNode(audioBuffer);

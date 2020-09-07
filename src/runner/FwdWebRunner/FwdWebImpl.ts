@@ -1,21 +1,27 @@
 import { FwdAudio } from '../../fwd/audio/FwdAudio';
-import { FwdContext } from '../../fwd/core/FwdContext';
-import { FwdScheduler } from '../../fwd/core/FwdScheduler';
-import { Editor } from '../../fwd/editor/Editor';
+import { FwdEditor } from '../../fwd/editor/FwdEditor';
+import { Fwd, FwdUtils } from '../../fwd/Fwd';
+import { FwdGui, fwdGui } from '../../fwd/gui/Gui';
+import { FwdScheduler } from '../../fwd/scheduler/FwdScheduler';
+import { clamp, map, parseNumber, random, simplex } from '../../fwd/utils/numbers';
 import FwdRunner from '../FwdRunner';
 
-export default class FwdWebImpl implements FwdContext {
+export default class FwdWebImpl implements Fwd {
 
   public readonly globals: any = {};
-
+  
+  public readonly utils: FwdUtils = {
+    clamp, map, parseNumber, random, simplex,
+  };
+  
   private readonly _scheduler: FwdScheduler;
 
-  private readonly _editor: Editor;
+  private readonly _editor: FwdEditor;
 
   constructor(private _runner: FwdRunner) {
     this._scheduler = new FwdScheduler();
 
-    this._editor = new Editor();
+    this._editor = new FwdEditor();
   }
 
   public get scheduler(): FwdScheduler {
@@ -26,8 +32,11 @@ export default class FwdWebImpl implements FwdContext {
     return this._runner.audio;
   }
 
-  public get editor(): Editor {
+  public get editor(): FwdEditor {
     return this._editor;
   }
 
+  public get gui(): FwdGui {
+    return fwdGui;
+  }
 }

@@ -277,3 +277,13 @@ injectStyle('GuiManager', `
     white-space: nowrap;    
 }
 `);
+
+export interface FwdGui {
+    getGuiManager(root: HTMLElement): GuiManager;
+    clearGuiManagers(): void;
+}
+
+export const fwdGui = {
+    getGuiManager,
+    clearGuiManagers,
+};

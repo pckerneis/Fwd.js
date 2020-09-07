@@ -1,5 +1,5 @@
-import { EventQueueImpl } from '../../../../src/fwd/core/EventQueue/EventQueueImpl';
-import { Action } from "../../../../src/fwd/core/Scheduler/Scheduler";
+import { EventQueueImpl } from '../../../../src/fwd/scheduler/EventQueue/EventQueueImpl';
+import { Action } from "../../../../src/fwd/scheduler/Scheduler/Scheduler";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 
 class DummyEvent implements Action {

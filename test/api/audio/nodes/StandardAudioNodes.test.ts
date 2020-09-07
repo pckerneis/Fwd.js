@@ -10,7 +10,7 @@ import {
   FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
 } from '../../../../src/fwd/audio/nodes/StandardAudioNodes';
-import { Time } from '../../../../src/fwd/core/EventQueue/EventQueue';
+import { Time } from '../../../../src/fwd/scheduler/EventQueue/EventQueue';
 import { Logger, LoggerLevel } from '../../../../src/fwd/utils/Logger';
 import { mockFwd } from '../../../mocks/Fwd.mock';
 import { mockFwdAudio } from '../../../mocks/FwdAudio.mock';

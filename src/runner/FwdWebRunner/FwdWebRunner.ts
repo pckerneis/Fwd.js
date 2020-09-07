@@ -1,15 +1,14 @@
 import { FwdAudio } from '../../fwd/audio/FwdAudio';
 import { FwdAudioImpl } from '../../fwd/audio/FwdAudioImpl';
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
-import { FwdContext } from '../../fwd/core/FwdContext';
 import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
+import { Fwd } from '../../fwd/Fwd';
 import { clearGuiManagers } from '../../fwd/gui/Gui';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
-import { CodeAnalysis } from './CodeAnalysis';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
@@ -25,7 +24,7 @@ export enum RunnerClientState {
 }
 
 export default class FwdWebRunner implements FwdRunner {
-  private readonly _fwd: FwdContext;
+  private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
 
   private readonly _header: RunnerHeader;
@@ -68,7 +67,7 @@ export default class FwdWebRunner implements FwdRunner {
     this.prepareConsoleWrappers();
   }
 
-  public get fwd(): FwdContext {
+  public get fwd(): Fwd {
     return this._fwd;
   }
 
@@ -77,8 +76,6 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public setProgram(program: Program): void {
-    console.log(CodeAnalysis.read(program.code, ''));
-
     const fileChanged = program.file !== this._watchedFile;
 
     this._transformedSource = program.executable;

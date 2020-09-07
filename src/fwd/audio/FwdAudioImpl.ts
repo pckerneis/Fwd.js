@@ -1,7 +1,8 @@
-import { Time } from '../core/EventQueue/EventQueue';
-import { FwdScheduler } from '../core/FwdScheduler';
+import { Time } from '../scheduler/EventQueue/EventQueue';
+import { FwdScheduler } from '../scheduler/FwdScheduler';
+import { decibelsToGain, gainToDecibels } from '../utils/decibels';
 import { Logger, LoggerLevel } from '../utils/Logger';
-import { FwdAudio } from './FwdAudio';
+import { FwdAudio, FwdAudioUtils } from './FwdAudio';
 import parentLogger from './logger.audio';
 import {
   FwdBufferNode,
@@ -15,10 +16,18 @@ import {
   FwdSamplerNode,
   FwdStereoDelayNode,
 } from './nodes/StandardAudioNodes';
+import { bufferToWave, downloadFile } from './utils';
 
 const DBG = new Logger('FwdAudioImpl', parentLogger, LoggerLevel.none);
 
 export class FwdAudioImpl implements FwdAudio {
+
+  public readonly utils: FwdAudioUtils = {
+    decibelsToGain,
+    gainToDecibels,
+    bufferToWave,
+    downloadFile,
+  };
 
   private _ctx: AudioContext | OfflineAudioContext;
 

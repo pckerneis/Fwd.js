@@ -1,23 +1,26 @@
-import { Time } from "../core/EventQueue/EventQueue";
-import { FwdScheduler } from '../core/FwdScheduler';
+import { Time } from "../scheduler/EventQueue/EventQueue";
+import { FwdScheduler } from '../scheduler/FwdScheduler';
+// TODO break circular dependency
 import {
+  FwdBufferNode,
   FwdCompressorNode,
   FwdDelayLineNode,
   FwdDistortionNode,
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
-  FwdOscillatorNode, FwdReverbNode,
+  FwdOscillatorNode,
+  FwdReverbNode,
   FwdSamplerNode,
   FwdStereoDelayNode,
-  FwdBufferNode,
 } from './nodes/StandardAudioNodes';
 
 export interface FwdAudio {
-  readonly isContextReady: boolean;
   context: AudioContext | OfflineAudioContext;
+  readonly isContextReady: boolean;
   readonly master: GainNode;
   readonly fwdScheduler: FwdScheduler;
+  readonly utils: FwdAudioUtils;
 
   start(): void;
   now(): Time;
@@ -41,4 +44,12 @@ export interface FwdAudio {
   // - lowPass
   // - bandPass
   // - allPass
+
+}
+
+export interface FwdAudioUtils {
+  decibelsToGain(decibels: number): number;
+  gainToDecibels(gain: number): number;
+  bufferToWave(audioBuffer: AudioBuffer, offset?: number, length?: number): Blob;
+  downloadFile(blob: Blob, fileName: string): void;
 }

@@ -1,4 +1,4 @@
-import { Time } from '../../core/EventQueue/EventQueue';
+import { Time } from '../../scheduler/EventQueue/EventQueue';
 import { Logger } from '../../utils/Logger';
 import { FwdAudio } from '../FwdAudio';
 import parentLogger from '../logger.audio';

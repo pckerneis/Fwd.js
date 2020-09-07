@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/dialog/dialog';
+import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
@@ -7,9 +8,13 @@ import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/hint/javascript-hint';
 import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/scroll/annotatescrollbar';
+import 'codemirror/addon/search/match-highlighter';
+import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/mode/javascript/javascript';
+
 import FwdWebRunner from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
@@ -32,6 +37,8 @@ export class RunnerCodeEditor {
       foldGutter: true,
       gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       matchBrackets: true,
+      autoCloseBrackets: true,
+      highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
     });
 
     this.htmlElement.children[0].classList.add('fwd-code-editor-cm');

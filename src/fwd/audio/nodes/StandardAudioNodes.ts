@@ -1,4 +1,4 @@
-import { Time } from "../../core/EventQueue/EventQueue";
+import { Time } from "../../scheduler/EventQueue/EventQueue";
 import { Logger, LoggerLevel } from "../../utils/Logger";
 import { clamp } from "../../utils/numbers";
 import { FwdAudio } from "../FwdAudio";
@@ -455,7 +455,7 @@ export class FwdReverbNode extends FwdAudioNode {
 
   constructor(public fwdAudio: FwdAudio,
               public reverbTime: number = 1.0,
-              public preDelay: number = 0.5) {
+              public preDelay: number = 0.005) {
     super();
 
     this._input = fwdAudio.context.createGain();
@@ -489,6 +489,9 @@ export class FwdReverbNode extends FwdAudioNode {
 
   public get inputNode(): AudioNode { return this._input; }
   public get outputNode(): AudioNode { return this._output; }
+
+  public get dryGain(): GainNode { return this._dryGain; }
+  public get wetGain(): GainNode { return this._wetGain; }
 
   protected doTearDown(when: Time): void {
     tearDownNativeNode(this._input, when).then(() => this._input = null);
@@ -525,11 +528,12 @@ export class FwdReverbNode extends FwdAudioNode {
       .connect(offlineAudioContext.destination);
 
     gain.gain.setValueAtTime(1, 0);
-    gain.gain.linearRampToValueAtTime(0, this.reverbTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.reverbTime);
 
     setTimeout(() => {
       offlineAudioContext.startRendering().then((buffer) => {
         this._convolver.buffer = buffer;
+
         noise.stop(0);
         noise.disconnect();
         gain.disconnect();

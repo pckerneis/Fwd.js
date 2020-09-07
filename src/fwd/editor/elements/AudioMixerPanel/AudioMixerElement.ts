@@ -1,6 +1,6 @@
 import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/Logger";
-import { EditorElement } from "../../Editor";
+import { EditorElement } from "../../FwdEditor";
 import parentLogger from "../logger.components";
 import { AudioMixerTrackGraph, AudioTrackElement } from "./AudioTrackElement";
 import { FwdSoloGroup } from "./FwdSoloGroup";

@@ -1,4 +1,4 @@
-import { SchedulerImpl } from "../../../../src/fwd/core/Scheduler/SchedulerImpl";
+import { SchedulerImpl } from "../../../../src/fwd/scheduler/Scheduler/SchedulerImpl";
 import { Logger, LoggerLevel } from "../../../../src/fwd/utils/Logger";
 import { waitSeconds } from "../../../test-utils";
 

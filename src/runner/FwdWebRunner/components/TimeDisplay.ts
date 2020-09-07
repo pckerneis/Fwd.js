@@ -1,4 +1,4 @@
-import { FwdScheduler } from '../../../fwd/core/FwdScheduler';
+import { FwdScheduler } from '../../../fwd/scheduler/FwdScheduler';
 import { formatTime } from '../../../fwd/utils/time';
 import { injectStyle } from '../StyleInjector';
 
