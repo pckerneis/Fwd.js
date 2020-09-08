@@ -8,9 +8,11 @@ import FwdWebRunner from './FwdWebRunner/FwdWebRunner';
 const DBG = new Logger('global-runner', rootLogger, LoggerLevel.error);
 
 document.addEventListener('DOMContentLoaded', () => {
-  const runner: FwdRunner = new FwdWebRunner({
+  const runner: FwdRunner = new FwdWebRunner(FwdRuntime.getContext(''), {
     writeToFile: true,
     useCodeEditor: true,
+    useConsoleRedirection: false,
+    useConsoleTimePrefix: true,
   });
 
   (window as any).fwd = runner.fwd;

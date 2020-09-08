@@ -164,21 +164,29 @@ export default class FwdWebRunner implements FwdRunner {
     this.buildMainSection();
   }
 
-  private prepareConsoleWrappers(): void {
-    const useWebConsole = true;
+  private reportError(error: string): void {
+    if (this.config.useConsoleRedirection) {
+      console.error(error);
+    } else {
+      console.error(error);
+      this._footer.print(null, error);
+    }
+  }
 
+  private prepareConsoleWrappers(): void {
     const methodNames = ['log', 'error', 'warn', 'info'];
 
     const handler = {
       get: (target: any, key: any) => {
         if (methodNames.includes(key)) {
-          const time = this._running ? this._fwd.scheduler.now() : null;
+          const time = this.isSchedulerRunning() ? this.fwd.scheduler.now() : null;
+          const shouldShowTime = this.config.useConsoleTimePrefix && time != null;
 
-          if (useWebConsole) {
+          if (this.config.useConsoleRedirection) {
             return (...messages: any[]) => {
               this._footer.print(time, ...messages);
 
-              if (time === null) {
+              if (! shouldShowTime) {
                 Reflect.get(target, key)(...messages);
               } else {
                 const timeStr = formatTime(time);
@@ -192,7 +200,7 @@ export default class FwdWebRunner implements FwdRunner {
             }
           }
 
-          if (time != null) {
+          if (shouldShowTime) {
             return Function.prototype.bind.call(
               Reflect.get(target, key),   // Original method
               target,                     // ... on original console
