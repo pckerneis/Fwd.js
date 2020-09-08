@@ -57,6 +57,7 @@ export class DevServer {
 
   private static sendWelcomePacket(ws: WebSocket, rootPath: string): void {
     DBG.debug('Scan directory : ' + path.resolve(rootPath));
+
     const files = fs.readdirSync(rootPath)
       .filter((file: string) => this.isExecutableFile(file))
       .filter((file: string) => ! file.endsWith('.config.js'));
@@ -111,7 +112,7 @@ export class DevServer {
     ws.onmessage = ev => {
       const message = ev.data;
 
-      const fullPathToPrograms = this.rootPath + '/' + this.pathToPrograms;
+      const fullPathToPrograms = this.getFullPathToPrograms();
 
       DBG.debug(`Received from client #${client.id}`, message.substr(0, 128));
 
@@ -144,11 +145,15 @@ export class DevServer {
   }
 
   private watchFiles(): void {
+    const fullPathToPrograms = this.getFullPathToPrograms();
+
     chokidar
-      .watch('.', {ignored: /src|.idea|node_modules|.config.js|\.git|[\/\\]\./})
+      .watch(fullPathToPrograms, {ignored: /src|.idea|node_modules|.config.js|\.git|[\/\\]\./})
       .on('change', (file: string) => {
         const textContent = fs.readFileSync(file, 'utf8');
-        file = file.replace(__dirname, '');
+        file = path.basename(file);
+
+        DBG.debug('changed: ' + file);
 
         if (file.includes('.css')) {
           DBG.debug('CSS changes detected...');
@@ -173,7 +178,7 @@ export class DevServer {
 
           if (clientsWatching.length !== 0) {
             DBG.info(`Transmit module to ${clientsWatching.length} clients.`);
-            clientsWatching.forEach(client => DevServer.sendSketch(client, file, this.rootPath + '/' + this.pathToPrograms));
+            clientsWatching.forEach(client => DevServer.sendSketch(client, file, fullPathToPrograms));
           }
         }
       });
@@ -181,5 +186,9 @@ export class DevServer {
 
   private removeClient(client: Client): void {
     this._clients = this._clients.filter(c => c !== client);
+  }
+
+  private getFullPathToPrograms(): string {
+    return path.resolve(this.rootPath, this.pathToPrograms);
   }
 }
