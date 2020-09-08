@@ -56,8 +56,8 @@ export class RunnerFooter {
 
   public applyMasterValue(): void {
     const masterSlider = this.masterSlider.slider;
-    const masterGain = this.runner.audio.master.gain;
-    const now = this.runner.audio.context.currentTime;
+    const masterGain = this.runner.fwd.audio.master.gain;
+    const now = this.runner.fwd.audio.context.currentTime;
     const value = parseNumber(masterSlider.value) / 100;
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }

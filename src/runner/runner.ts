@@ -1,3 +1,4 @@
+import * as FwdRuntime from '../fwd/FwdRuntime';
 import rootLogger from '../fwd/logger.fwd';
 import { Logger, LoggerLevel } from "../fwd/utils/Logger";
 import FwdRunner from './FwdRunner';
@@ -35,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   overlay.onclose = () => {
     DBG.info('Starting audio context.');
-    runner.startAudioContext();
+    runner.fwd.audio.start();
+    runner.runCode();
     document.removeEventListener('keydown', closeListener);
   };
 

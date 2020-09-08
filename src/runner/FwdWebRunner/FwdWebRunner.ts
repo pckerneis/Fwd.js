@@ -1,9 +1,7 @@
-import { FwdAudio } from '../../fwd/audio/FwdAudio';
-import { FwdAudioImpl } from '../../fwd/audio/FwdAudioImpl';
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
 import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { Fwd } from '../../fwd/Fwd';
-import { clearGuiManagers } from '../../fwd/gui/Gui';
+import * as FwdRuntime from '../../fwd/FwdRuntime';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
@@ -13,7 +11,6 @@ import { RunnerConfig } from '../RunnerConfig';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
-import FwdWebImpl from './FwdWebImpl';
 import { injectStyle } from './StyleInjector';
 
 export enum RunnerClientState {
@@ -25,8 +22,6 @@ export enum RunnerClientState {
 }
 
 export default class FwdWebRunner implements FwdRunner {
-  private readonly _fwd: Fwd;
-  private readonly _audio: FwdAudio;
   private _devClient: DevClient;
 
   private readonly _header: RunnerHeader;
@@ -35,30 +30,20 @@ export default class FwdWebRunner implements FwdRunner {
   private _clientState: RunnerClientState;
   private _dragSeparator: SeparatorElement;
 
-  private _audioReady: boolean;
-  private _sketchWasInitialized: boolean;
-  private _running: boolean;
-  private _autoSave: boolean;
-  private _watchedFile: string;
-  private _savedCode: string;
+  private _program: Program;
   private _executedCode: string;
   private _sketchIsDirty: boolean = false;
   private _isCodeEditorVisible: boolean = true;
   private _codeHasErrors: boolean;
 
-  constructor(public readonly config: RunnerConfig) {
-    this._fwd = new FwdWebImpl(this);
-
-    this._audio = new FwdAudioImpl(this._fwd.scheduler);
-
+  constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
 
     this._header = new RunnerHeader(this, this._devClient);
     this._footer = new RunnerFooter(this);
 
-    this._fwd.scheduler.onEnded = () => {
+    this.fwd.scheduler.onEnded = () => {
       this._header.onRunnerStop();
-      this._running = false;
     };
 
     this.buildRunner();
@@ -66,19 +51,10 @@ export default class FwdWebRunner implements FwdRunner {
     this.prepareConsoleWrappers();
   }
 
-  public get fwd(): Fwd {
-    return this._fwd;
-  }
-
-  public get audio(): FwdAudio {
-    return this._audio;
-  }
-
   public setProgram(program: Program): void {
-    const fileChanged = program.file !== this._watchedFile;
+    const fileChanged = program.file !== this._program?.file;
 
-    this._savedCode = program.code;
-    this._watchedFile = program.file;
+    this._program = program;
 
     if (this.config.useCodeEditor) {
       this.codeEditor.setCode(program.code, fileChanged);
@@ -89,9 +65,7 @@ export default class FwdWebRunner implements FwdRunner {
       this.setDirty(false);
     }
 
-    if (! this._sketchWasInitialized) {
-      this.initializeSketchIfReady();
-    } else {
+    if (this.isAudioReady()) {
       this.runCode();
     }
   }
@@ -100,30 +74,13 @@ export default class FwdWebRunner implements FwdRunner {
     this._header.setFiles(files);
   }
 
-  public setAutoSave(autoSave: boolean): void {
-    this._autoSave = autoSave;
-  }
-
-  public startAudioContext(): void {
-    this._audio.start();
-    this._audioReady = true;
-    this.initializeSketchIfReady();
-    this._footer.masterSlider.meter.audioSource = this._audio.master;
-  }
-
   public reset(): void {
-    if (this._running) {
+    if (this.isSchedulerRunning()) {
       this.stop();
     }
 
-    this._fwd.onInit = null;
-    this._fwd.onStart = null;
-    this._fwd.onStop = null;
-    this._fwd.editor.reset();
-    this._sketchWasInitialized = false;
-    this._fwd.globals = {};
-    this._fwd.scheduler.resetActions();
-    clearGuiManagers();
+    FwdRuntime.resetContext(this.fwd);
+    this._executedCode = null;
   }
 
   public submit(): void {
@@ -132,9 +89,9 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     if (this.config.writeToFile) {
-      this._devClient.saveFile(this._watchedFile, this.codeEditor.code);
+      this._devClient.saveFile(this._program.file, this.codeEditor.code);
     } else {
-      this._savedCode = this.codeEditor.code;
+      this._program.code = this.codeEditor.code;
       this.runCode();
     }
   }
@@ -142,65 +99,40 @@ export default class FwdWebRunner implements FwdRunner {
   public start(): void {
     this.checkSketchCanBeStarted();
 
-    this._fwd.scheduler.clearEvents();
-
-    this._running = true;
-
-    this.startAudioContext();
-    this.fwd.onStart();
-    this._fwd.scheduler.start();
+    FwdRuntime.startContext(this.fwd);
 
     this._header.onRunnerStart();
+    this._footer.masterSlider.meter.audioSource = this.fwd.audio.master;
     this._footer.applyMasterValue();
   }
 
   public render(duration: number, fileName: string = 'audio.wav'): void {
     this.checkSketchCanBeStarted();
 
-    this._fwd.scheduler.clearEvents();
-
-    this._running = true;
-    const offlineContext = this._audio.startOffline(duration);
-    this.fwd.onStart();
-    this._fwd.scheduler.runSync(duration);
-    offlineContext.startRendering().then((renderedBuffer: AudioBuffer) => {
-      downloadFile(
-        bufferToWave(renderedBuffer, 0, 44100 * 90),
-        fileName);
-    }).catch((err) => {
+    FwdRuntime.renderOffline(this.fwd, duration)
+      .then((renderedBuffer: AudioBuffer) => {
+        downloadFile(
+          bufferToWave(renderedBuffer, 0, 44100 * 90),
+          fileName);
+      }).catch((err) => {
       console.error(err);
     });
   }
 
   public stop(): void {
-    if (this._fwd != null) {
-      this._fwd.scheduler.stop();
-    }
+    FwdRuntime.stopContext(this.fwd);
   }
 
   public runCode(): void {
     try {
-      new Function(this._savedCode)(window);
-
-      if (! this._sketchWasInitialized) {
-        if (typeof this._fwd.onInit === 'function') {
-          try {
-            this._fwd.onInit();
-          } catch (e) {
-            console.error(e);
-          }
-        }
-
-        this._sketchWasInitialized = true;
-      }
-
-      this._executedCode = this._savedCode;
+      new Function(this._program.code)(window);
       this._codeHasErrors = false;
-      this.refreshState();
     } catch (e) {
       this._codeHasErrors = true;
-      this.refreshState();
       console.error(e);
+    } finally {
+      this._executedCode = this._program.code;
+      this.refreshState();
     }
   }
 
@@ -213,14 +145,18 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
+  //==================================================================
+
+  private isAudioReady(): boolean {
+    return this.fwd.audio.context != null;
+  }
+
   private setCodeEditorVisibility(showing: boolean): void {
     this.codeEditor.htmlElement.style.display = showing ? 'flex' : 'none';
     this._dragSeparator.htmlElement.style.display = showing ? '' : 'none';
 
     this._isCodeEditorVisible = showing;
   }
-
-  //==================================================================
 
   private buildRunner(): void {
     this.prepareHeader();
@@ -289,14 +225,6 @@ export default class FwdWebRunner implements FwdRunner {
     document.body.prepend(this._header.htmlElement)
   }
 
-  private initializeSketchIfReady(): void {
-    if (! this._sketchWasInitialized
-      && this._savedCode != null
-      && this._audioReady) {
-      this.runCode();
-    }
-  }
-
   private initDevClient(): void {
     this._devClient = new DevClient();
 
@@ -341,12 +269,8 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private checkSketchCanBeStarted(): void {
-    if (! this._sketchWasInitialized) {
+    if (this._executedCode == null) {
       throw new Error('The sketch was not initialized');
-    }
-
-    if (typeof this.fwd.onStart !== 'function') {
-      throw new Error(`Nothing to start.`);
     }
   }
 
@@ -371,7 +295,7 @@ export default class FwdWebRunner implements FwdRunner {
       this._dragSeparator.htmlElement.classList.add('fwd-runner-large-separator');
     }
 
-    flexPanel.addFlexItem('right', this._fwd.editor.root, {
+    flexPanel.addFlexItem('right', this.fwd.editor.root, {
       flexGrow: 1,
       minWidth: 100,
       maxWidth: 5000,
@@ -382,10 +306,10 @@ export default class FwdWebRunner implements FwdRunner {
     const editor = new RunnerCodeEditor(this);
 
     editor.onchanges = debounce(() => {
-      const codeChanged = ! areStringsEqualIgnoreNonSignificantWhitespaces(this._savedCode, this.codeEditor.code);
+      const codeChanged = ! areStringsEqualIgnoreNonSignificantWhitespaces(this._program.code, this.codeEditor.code);
       this.setDirty(codeChanged);
 
-      if (this._autoSave && this.codeEditor.code !== this._executedCode) {
+      if (editor.autoSaves && this.codeEditor.code !== this._executedCode) {
         this.submit();
       }
     }, 200);
@@ -396,6 +320,10 @@ export default class FwdWebRunner implements FwdRunner {
   private refreshState(): void {
     this.setClientState(this._sketchIsDirty ? RunnerClientState.outOfDate :
       (this._codeHasErrors ? RunnerClientState.codeErrors : RunnerClientState.upToDate))
+  }
+
+  private isSchedulerRunning(): boolean {
+    return this.fwd.scheduler.state === 'running';
   }
 }
 

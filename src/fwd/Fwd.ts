@@ -45,11 +45,6 @@ export interface Fwd {
   globals: any;
 
   /**
-   * Life cycle hook for the program initialization.
-   */
-  onInit?: Function;
-
-  /**
    * Start life cycle hook. A program may be started more than once.
    */
   onStart?: Function;

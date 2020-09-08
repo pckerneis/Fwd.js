@@ -64,6 +64,10 @@ export class RunnerCodeEditor {
     return this.codeMirror.getValue();
   }
 
+  public get autoSaves(): boolean {
+    return this._autoBuildInput.checked;
+  }
+
   public refresh(): void {
     this.codeMirror.refresh();
   }
@@ -104,7 +108,6 @@ export class RunnerCodeEditor {
       this._saveButton.htmlElement,
     );
 
-    this._autoBuildInput.oninput = () => this.runner.setAutoSave(this._autoBuildInput.checked);
     this._saveButton.htmlElement.onclick = () => this.submit();
 
     return toolbar;
