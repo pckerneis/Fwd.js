@@ -82,21 +82,12 @@ export default class FwdWebRunner implements FwdRunner {
     this._watchedFile = program.file;
 
     if (this.config.useCodeEditor) {
-      // TODO: Put in codeEditor... hide codeMirror !
-      const cursor = this.codeEditor.codeMirror.getDoc().getCursor();
-      this.codeEditor.code = program.code;
-
-      this.setDirty(false);
-
-      if (fileChanged) {
-        this.codeEditor.codeMirror.getDoc().clearHistory();
-      } else {
-        this.codeEditor.codeMirror.getDoc().setCursor(cursor);
-      }
+      this.codeEditor.setCode(program.code, fileChanged);
     }
 
     if (fileChanged) {
       this.reset();
+      this.setDirty(false);
     }
 
     if (! this._sketchWasInitialized) {
@@ -387,21 +378,14 @@ export default class FwdWebRunner implements FwdRunner {
   private buildCodeEditor(): RunnerCodeEditor {
     const editor = new RunnerCodeEditor(this);
 
-    editor.codeMirror.on('changes', debounce(() => {
-      const codeChanged = this.codeEditor.code !== this._savedCode;
-
-      if (this._clientState !== RunnerClientState.codeErrors) {
-        if (codeChanged) {
-          this.setClientState(codeChanged ? RunnerClientState.outOfDate : RunnerClientState.upToDate);
-        }
-      }
-
+    editor.onchanges = debounce(() => {
+      const codeChanged = ! areStringsEqualIgnoreNonSignificantWhitespaces(this._savedCode, this.codeEditor.code);
       this.setDirty(codeChanged);
 
       if (this._autoSave && this.codeEditor.code !== this._executedCode) {
         this.submit();
       }
-    }, 200));
+    }, 200);
 
     return editor;
   }

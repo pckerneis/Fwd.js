@@ -21,9 +21,10 @@ import { IconButton } from './IconButton';
 
 export class RunnerCodeEditor {
   public readonly htmlElement: HTMLElement;
-  public readonly codeMirror: CodeMirror.Editor;
+  
+  public onchanges: (...args: any) => any;
+  private readonly codeMirror: CodeMirror.Editor;
 
-  private _buildButton: IconButton;
   private _autoBuildInput: HTMLInputElement;
   private _saveButton: IconButton;
 
@@ -51,10 +52,12 @@ export class RunnerCodeEditor {
     this.htmlElement.prepend(
       this.buildToolbar(),
     );
-  }
 
-  public set code(newCode: string) {
-    this.codeMirror.setValue(newCode);
+    this.codeMirror.on('changes', () => {
+      if (typeof this.onchanges === 'function') {
+        this.onchanges();
+      }
+    });
   }
 
   public get code(): string {
@@ -63,6 +66,18 @@ export class RunnerCodeEditor {
 
   public refresh(): void {
     this.codeMirror.refresh();
+  }
+
+  public setCode(newCode: string, resetHistoryAndScroll: boolean): void {
+    const cursor = this.codeMirror.getDoc().getCursor();
+    this.codeMirror.setValue(newCode);
+
+    if (resetHistoryAndScroll) {
+      this.codeMirror.getDoc().clearHistory();
+      this.codeMirror.scrollTo(0, 0);
+    } else {
+      this.codeMirror.getDoc().setCursor(cursor);
+    }
   }
 
   private buildToolbar(): HTMLElement {
