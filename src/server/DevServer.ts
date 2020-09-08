@@ -37,10 +37,10 @@ export class DevServer {
     return filePath.includes('fwd-runner') && filePath.endsWith('.js');
   }
 
-  private static sendSketch(client: Client, file: string, pathToProgram: string): void {
+  private static sendSketch(client: Client, file: string, pathToPrograms: string): void {
     try {
       const textContent = fs.readFileSync(
-        path.resolve(pathToProgram, file),
+        path.resolve(pathToPrograms, file),
         'utf8');
 
       this.sendMessage(client.ws, {
@@ -132,7 +132,7 @@ export class DevServer {
             }
           } else if (parsedMessage.type === MessageType.SAVE_TYPE) {
             DBG.debug('Received file', parsedMessage.file);
-            const pathToFile = path.resolve(__dirname, '../..', parsedMessage.file);
+            const pathToFile = path.resolve(fullPathToPrograms, parsedMessage.file);
             DBG.debug('pathToFile', pathToFile);
             fs.writeFileSync(pathToFile, parsedMessage.textContent, 'utf8');
           }
@@ -173,7 +173,7 @@ export class DevServer {
 
           if (clientsWatching.length !== 0) {
             DBG.info(`Transmit module to ${clientsWatching.length} clients.`);
-            clientsWatching.forEach(client => DevServer.sendSketch(client, file, this.rootPath));
+            clientsWatching.forEach(client => DevServer.sendSketch(client, file, this.rootPath + '/' + this.pathToPrograms));
           }
         }
       });

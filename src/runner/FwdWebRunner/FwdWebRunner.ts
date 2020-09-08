@@ -9,6 +9,7 @@ import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
+import { RunnerConfig } from '../RunnerConfig';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
@@ -46,7 +47,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _dragSeparator: SeparatorElement;
   private _isCodeEditorVisible: boolean = true;
 
-  constructor() {
+  constructor(private config: RunnerConfig) {
     this._fwd = new FwdWebImpl(this);
 
     this._audio = new FwdAudioImpl(this._fwd.scheduler);
@@ -128,12 +129,17 @@ export default class FwdWebRunner implements FwdRunner {
     clearGuiManagers();
   }
 
-  public save(): void {
+  public submit(): void {
     if (! this.codeEditor) {
       throw new Error('Cannot save when code editor is not used.');
     }
 
-    this._devClient.saveFile(this._watchedFile, this.codeEditor.code);
+    if (this.config.saveChanges) {
+      this._devClient.saveFile(this._watchedFile, this.codeEditor.code);
+    } else {
+      this._savedCode = this.codeEditor.code;
+      this.build();
+    }
   }
 
   public start(): void {
@@ -389,7 +395,7 @@ export default class FwdWebRunner implements FwdRunner {
       this.setDirty(codeChanged);
 
       if (this._autoSave && this.codeEditor.code !== this._executedCode) {
-        this.save();
+        this.submit();
       }
     }, 200));
 

@@ -24,6 +24,6 @@ module.exports = {
   },
   output: {
     filename: 'fwd-runner.js',
-    path: path.resolve(__dirname, './static'),
+    path: path.resolve(__dirname, './static/lib'),
   },
 };

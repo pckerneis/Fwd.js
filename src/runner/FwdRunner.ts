@@ -15,7 +15,7 @@ export default interface FwdRunner {
   build(): void;
   start(): void;
   stop(): void;
-  save(): void;
+  submit(): void;
   render(duration: number, fileName: string): void;
 
   toggleCodeEditorVisibility(): void;

@@ -29,6 +29,7 @@ export class RunnerCodeEditor {
 
   constructor(public readonly runner: FwdWebRunner) {
     this.htmlElement = document.createElement('div');
+    this.htmlElement.classList.add('fwd-code-editor-container');
 
     this.codeMirror = CodeMirror(this.htmlElement, {
       lineNumbers: true,
@@ -41,13 +42,16 @@ export class RunnerCodeEditor {
       highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
     });
 
+    // Add extra css class to CM root
     this.htmlElement.children[0].classList.add('fwd-code-editor-cm');
+
+    // Define 'save' command
+    CodeMirror.commands['save'] = () => this.submit();
 
     this.htmlElement.prepend(
       this.buildToolbar(),
     );
   }
-
 
   public set code(newCode: string) {
     this.codeMirror.setValue(newCode);
@@ -70,13 +74,14 @@ export class RunnerCodeEditor {
 
     const autoBuildLabel = document.createElement('label');
     autoBuildLabel.classList.add('fwd-runner-auto-build-label');
-    autoBuildLabel.innerText = 'Auto-save';
+    autoBuildLabel.innerText = 'Auto-run';
     autoBuildLabel.append(this._autoBuildInput);
 
     const spacer = document.createElement('span');
     spacer.style.flexGrow = '1';
 
-    this._saveButton = new IconButton('save');
+    this._saveButton = new IconButton('enter');
+    this._saveButton.htmlElement.title = 'Run';
     this._buildButton = new IconButton('tools');
 
     toolbar.append(
@@ -88,9 +93,13 @@ export class RunnerCodeEditor {
 
     this._autoBuildInput.oninput = () => this.runner.setAutoSave(this._autoBuildInput.checked);
     this._buildButton.htmlElement.onclick = () => this.runner.build();
-    this._saveButton.htmlElement.onclick = () => this.runner.save();
+    this._saveButton.htmlElement.onclick = () => this.submit();
 
     return toolbar;
+  }
+
+  private submit(): void {
+    this.runner.submit();
   }
 }
 
@@ -103,6 +112,14 @@ injectStyle('RunnerCodeEditor', `
   border-bottom: solid 1px #00000020;
   user-select: none;
   flex-shrink: 0;
+}
+
+.fwd-code-editor-container:focus-within {
+  border: 1px solid #2388ff;
+}
+
+.fwd-code-editor-container {
+  border: 1px solid #fff;
 }
 
 .fwd-code-editor-cm {
