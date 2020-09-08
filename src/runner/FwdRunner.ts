@@ -15,7 +15,7 @@ export default interface FwdRunner {
   setAutoSave(autoBuilds: boolean): void;
 
   reset(): void;
-  build(): void;
+  runCode(): void;
   start(): void;
   stop(): void;
   submit(): void;

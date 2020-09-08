@@ -27,25 +27,24 @@ export enum RunnerClientState {
 export default class FwdWebRunner implements FwdRunner {
   private readonly _fwd: Fwd;
   private readonly _audio: FwdAudio;
+  private _devClient: DevClient;
 
   private readonly _header: RunnerHeader;
   private readonly _footer: RunnerFooter;
-
   private codeEditor: RunnerCodeEditor;
+  private _clientState: RunnerClientState;
+  private _dragSeparator: SeparatorElement;
 
   private _audioReady: boolean;
   private _sketchWasInitialized: boolean;
   private _running: boolean;
   private _autoSave: boolean;
-
-  private _devClient: DevClient;
   private _watchedFile: string;
-  private _sketchIsDirty: boolean = false;
-  private _executedCode: string;
   private _savedCode: string;
-  private _clientState: RunnerClientState;
-  private _dragSeparator: SeparatorElement;
+  private _executedCode: string;
+  private _sketchIsDirty: boolean = false;
   private _isCodeEditorVisible: boolean = true;
+  private _codeHasErrors: boolean;
 
   constructor(public readonly config: RunnerConfig) {
     this._fwd = new FwdWebImpl(this);
@@ -62,7 +61,7 @@ export default class FwdWebRunner implements FwdRunner {
       this._running = false;
     };
 
-    this.buildEditor();
+    this.buildRunner();
 
     this.prepareConsoleWrappers();
   }
@@ -93,7 +92,7 @@ export default class FwdWebRunner implements FwdRunner {
     if (! this._sketchWasInitialized) {
       this.initializeSketchIfReady();
     } else {
-      this.build();
+      this.runCode();
     }
   }
 
@@ -136,7 +135,7 @@ export default class FwdWebRunner implements FwdRunner {
       this._devClient.saveFile(this._watchedFile, this.codeEditor.code);
     } else {
       this._savedCode = this.codeEditor.code;
-      this.build();
+      this.runCode();
     }
   }
 
@@ -179,7 +178,7 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  public build(): void {
+  public runCode(): void {
     try {
       new Function(this._savedCode)(window);
 
@@ -196,9 +195,11 @@ export default class FwdWebRunner implements FwdRunner {
       }
 
       this._executedCode = this._savedCode;
-      this.setClientState(RunnerClientState.upToDate);
+      this._codeHasErrors = false;
+      this.refreshState();
     } catch (e) {
-      this.setClientState(RunnerClientState.codeErrors);
+      this._codeHasErrors = true;
+      this.refreshState();
       console.error(e);
     }
   }
@@ -221,7 +222,7 @@ export default class FwdWebRunner implements FwdRunner {
 
   //==================================================================
 
-  private buildEditor(): void {
+  private buildRunner(): void {
     this.prepareHeader();
     this.prepareFooter();
     this.buildMainSection();
@@ -292,7 +293,7 @@ export default class FwdWebRunner implements FwdRunner {
     if (! this._sketchWasInitialized
       && this._savedCode != null
       && this._audioReady) {
-      this.build();
+      this.runCode();
     }
   }
 
@@ -335,6 +336,8 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._sketchIsDirty = isDirty;
     this._header.setDirty(isDirty);
+
+    this.refreshState();
   }
 
   private checkSketchCanBeStarted(): void {
@@ -389,6 +392,11 @@ export default class FwdWebRunner implements FwdRunner {
 
     return editor;
   }
+
+  private refreshState(): void {
+    this.setClientState(this._sketchIsDirty ? RunnerClientState.outOfDate :
+      (this._codeHasErrors ? RunnerClientState.codeErrors : RunnerClientState.upToDate))
+  }
 }
 
 injectStyle('FwdWebRunner', `
@@ -405,3 +413,11 @@ injectStyle('FwdWebRunner', `
   border-right: solid 1px #00000015;
 }
 `);
+
+function areStringsEqualIgnoreNonSignificantWhitespaces(a: string, b: string): boolean {
+  const escape = (s: string) => s
+    .replace(/\s*/gm, ' ')
+    .replace(/^\s*[\r\n]*/gm, '\n');
+
+  return escape(a) === escape(b);
+}
