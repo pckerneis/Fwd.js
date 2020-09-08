@@ -45,14 +45,14 @@ export class RunnerHeader {
     };
 
     this._playButton = new IconButton('play-button');
-    this._codeEditorButton = new IconButton('edit');
     this._syncStateElem = new SyncStateElement();
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
+    const firstSpacer = spacer();
+
     this._toolbar.append(
       this._projectSelect,
-      this._codeEditorButton.htmlElement,
-      spacer(),
+      firstSpacer,
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
       spacer(),
@@ -60,7 +60,12 @@ export class RunnerHeader {
     );
 
     this._playButton.htmlElement.onclick = () => this.runner.start();
-    this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
+
+    if (this.runner.config.useCodeEditor) {
+      this._codeEditorButton = new IconButton('edit');
+      this._toolbar.insertBefore(this._codeEditorButton.htmlElement, firstSpacer);
+      this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
+    }
   }
 
   public setFiles(files: string[]): void {

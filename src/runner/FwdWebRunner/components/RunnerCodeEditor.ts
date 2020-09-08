@@ -80,19 +80,16 @@ export class RunnerCodeEditor {
     const spacer = document.createElement('span');
     spacer.style.flexGrow = '1';
 
-    this._saveButton = new IconButton('enter');
-    this._saveButton.htmlElement.title = 'Run';
-    this._buildButton = new IconButton('tools');
+    this._saveButton = new IconButton(this.runner.config.writeToFile ? 'save' : 'enter');
+    this._saveButton.htmlElement.title = this.runner.config.writeToFile ? 'Save' : 'Run';
 
     toolbar.append(
       spacer,
       autoBuildLabel,
       this._saveButton.htmlElement,
-      // this._buildButton.htmlElement,
     );
 
     this._autoBuildInput.oninput = () => this.runner.setAutoSave(this._autoBuildInput.checked);
-    this._buildButton.htmlElement.onclick = () => this.runner.build();
     this._saveButton.htmlElement.onclick = () => this.submit();
 
     return toolbar;

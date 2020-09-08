@@ -8,10 +8,10 @@ const DBG = new Logger('global-runner', rootLogger, LoggerLevel.error);
 
 document.addEventListener('DOMContentLoaded', () => {
   const runner: FwdRunner = new FwdWebRunner({
-    saveChanges: true,
-    showCodeEditor: true,
-    showScene: true,
+    writeToFile: true,
+    useCodeEditor: true,
   });
+
   (window as any).fwd = runner.fwd;
 
   // Add audio gesture overlay

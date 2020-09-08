@@ -1,8 +1,11 @@
 import { FwdAudio } from '../fwd/audio/FwdAudio';
 import { Fwd } from '../fwd/Fwd';
 import { Program } from '../server/DevServer.constants';
+import { RunnerConfig } from './RunnerConfig';
 
 export default interface FwdRunner {
+  config: RunnerConfig;
+
   fwd: Fwd;
   audio: FwdAudio;
 

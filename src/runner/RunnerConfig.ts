@@ -1,5 +1,4 @@
 export interface RunnerConfig {
-  showCodeEditor: boolean,
-  showScene: boolean,
-  saveChanges: boolean,
+  useCodeEditor: boolean;
+  writeToFile: boolean,
 }
