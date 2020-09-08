@@ -164,12 +164,12 @@ export default class FwdWebRunner implements FwdRunner {
     this.buildMainSection();
   }
 
-  private reportError(error: string): void {
+  private reportErrors(...errors: string[]): void {
     if (this.config.useConsoleRedirection) {
-      console.error(error);
+      console.error(...errors);
     } else {
-      console.error(error);
-      this._footer.print(null, error);
+      console.error(...errors);
+      this._footer.print(null, ...errors);
     }
   }
 
@@ -242,8 +242,7 @@ export default class FwdWebRunner implements FwdRunner {
     };
 
     this._devClient.onServerError = (errors: string[], program: Program) => {
-      console.error(...errors);
-      this._footer.print(null, ...errors);
+      this.reportErrors(...errors);
 
       this.setProgram(program);
       this.setClientState(RunnerClientState.codeErrors);
@@ -254,8 +253,7 @@ export default class FwdWebRunner implements FwdRunner {
     };
 
     this._devClient.onServerLost = () => {
-      console.error('Connection with server lost');
-      this._footer.print(null, 'Connection with server lost');
+      this.reportErrors('Connection with server lost');
       this.setClientState(RunnerClientState.disconnected);
     };
   }
