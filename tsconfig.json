@@ -12,7 +12,8 @@
       "suppressImplicitAnyIndexErrors": true,
       "esModuleInterop": true,
       "declaration": true,
-      "outDir": "dist/"
+      "outDir": "dist/",
+      "typeRoots": ["./typings"]
     },
     "typedocOptions": {
       "inputFiles": ["./src/public-api.ts"],
