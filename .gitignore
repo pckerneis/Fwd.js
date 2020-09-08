@@ -4,6 +4,7 @@ yarn.lock
 .idea/
 /coverage/
 dist/
+doc/
 lib/
 src/fwd/**/*.d.ts
 src/fwd/**/*.js

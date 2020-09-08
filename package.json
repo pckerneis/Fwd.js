@@ -9,7 +9,7 @@
     "build-server": "cd src/server && tsc && cd ../..",
     "build-all": "yarn build-runner && yarn build-server",
     "fwd-serve": "node src/server/server.js",
-    "start": "yarn build-all && yarn fwd-serve --path ../.."
+    "start": "yarn build-all && yarn fwd-serve --path ../../static"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",

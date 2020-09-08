@@ -6,6 +6,7 @@ export const mockAudioParam = jest.fn().mockImplementation(() => {
     setValueAtTime: jest.fn(),
     cancelAndHoldAtTime: jest.fn(),
     linearRampToValueAtTime: jest.fn(),
+    exponentialRampToValueAtTime: jest.fn(),
   };
 });
 

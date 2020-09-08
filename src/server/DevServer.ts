@@ -21,7 +21,9 @@ export class DevServer {
 
   private latestId: number = 0;
 
-  constructor(server: any, public readonly rootPath: string) {
+  constructor(server: any,
+              public readonly rootPath: string,
+              public readonly pathToPrograms: string = 'programs') {
     this._wss = new SocketServer({server});
 
     this._wss.on('connection', (ws: WebSocket) => {
@@ -55,8 +57,7 @@ export class DevServer {
 
   private static sendWelcomePacket(ws: WebSocket, rootPath: string): void {
     DBG.debug('Scan directory : ' + path.resolve(rootPath));
-
-    const files = fs.readdirSync(path.resolve(__dirname, '../../'))
+    const files = fs.readdirSync(rootPath)
       .filter((file: string) => this.isExecutableFile(file))
       .filter((file: string) => ! file.endsWith('.config.js'));
 
@@ -110,10 +111,12 @@ export class DevServer {
     ws.onmessage = ev => {
       const message = ev.data;
 
+      const fullPathToPrograms = this.rootPath + '/' + this.pathToPrograms;
+
       DBG.debug(`Received from client #${client.id}`, message.substr(0, 128));
 
       if (message === HANDSHAKE_MESSAGE) {
-        DevServer.sendWelcomePacket(ws, this.rootPath);
+        DevServer.sendWelcomePacket(ws, fullPathToPrograms);
       } else if (message == PONG_MESSAGE) {
         pong();
       } else {
@@ -125,7 +128,7 @@ export class DevServer {
 
             if (parsedMessage.file) {
               client.watched = [parsedMessage.file];
-              DevServer.sendSketch(client, parsedMessage.file, this.rootPath);
+              DevServer.sendSketch(client, parsedMessage.file, fullPathToPrograms);
             }
           } else if (parsedMessage.type === MessageType.SAVE_TYPE) {
             DBG.debug('Received file', parsedMessage.file);
