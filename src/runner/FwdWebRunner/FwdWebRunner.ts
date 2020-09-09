@@ -8,6 +8,7 @@ import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import { RunnerConfig } from '../RunnerConfig';
+import { darkTheme } from '../style.constants';
 import { ExportPanel } from './components/ExportPanel';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
@@ -39,6 +40,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _codeHasErrors: boolean;
   private _isCodeEditorVisible: boolean = true;
   private _isExportPanelVisible: boolean = false;
+  private _isDarkMode: boolean = false;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -53,6 +55,10 @@ export default class FwdWebRunner implements FwdRunner {
     this.buildRunner();
 
     this.prepareConsoleWrappers();
+
+    if (config.darkMode) {
+      this.setDarkMode(true);
+    }
   }
 
   public setProgram(program: Program): void {
@@ -156,6 +162,24 @@ export default class FwdWebRunner implements FwdRunner {
 
   public toggleExportPanelVisibility(): void {
     this.setExportPanelVisibility(! this._isExportPanelVisible);
+  }
+
+  public setDarkMode(darkMode: boolean): void {
+    if (!! this.codeEditor) {
+      this.codeEditor.setDarkMode(darkMode);
+    }
+
+    if (darkMode) {
+      document.body.classList.add('fwd-runner-dark-mode');
+    } else {
+      document.body.classList.remove('fwd-runner-dark-mode');
+    }
+
+    this._isDarkMode = darkMode;
+  }
+
+  public toggleDarkMode(): void {
+    this.setDarkMode(! this._isDarkMode);
   }
 
   private isAudioReady(): boolean {
@@ -397,6 +421,36 @@ injectStyle('FwdWebRunner', `
 .fwd-runner-large-separator {
   border-left: solid 1px #00000015;
   border-right: solid 1px #00000015;
+}
+`);
+
+injectStyle('FwdWebRunner - Dark mode', `
+.fwd-runner-dark-mode {
+  background: ${darkTheme.bgPrimary};
+  color: ${darkTheme.textColor};
+}
+
+.fwd-runner-dark-mode .fwd-flex-panel-separator {
+  background: ${darkTheme.bgSecondary};
+}
+
+.fwd-runner-dark-mode .fwd-flex-panel-separator.draggable:hover {
+  background: ${darkTheme.bgSecondary};
+}
+
+.fwd-runner-dark-mode .fwd-icon-button {
+  filter: invert(100%);
+}
+
+.fwd-runner-dark-mode input {
+  background: ${darkTheme.bgPrimary};
+  color: ${darkTheme.textColor};
+  border: 1px solid ${darkTheme.textColor};
+  border-radius: 2px;
+}
+
+.fwd-runner-dark-mode select option {
+    background: ${darkTheme.bgPrimary};
 }
 `);
 

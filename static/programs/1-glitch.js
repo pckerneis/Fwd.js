@@ -31,7 +31,7 @@ gui.update = () => {
     gui.label(text, { style: { 
       gridColumn: '1 / span 3',
       fontWeight: 'bold',
-      background: '#efefef',
+      background: '#88888820',
     	padding: '2px',
     }});
   }

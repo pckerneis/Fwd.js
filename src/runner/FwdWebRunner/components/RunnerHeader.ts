@@ -1,5 +1,6 @@
 import { DevClient } from '../../../server/DevClient';
 import FwdRunner from '../../FwdRunner';
+import { darkTheme, defaultTheme } from '../../style.constants';
 import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
@@ -70,6 +71,10 @@ export class RunnerHeader {
     const exportButton = new IconButton('export');
     this._toolbar.insertBefore(exportButton.htmlElement, firstSpacer);
     exportButton.htmlElement.onclick = () => this.runner.toggleExportPanelVisibility();
+
+    const darkModeButton = new IconButton('moon');
+    this._toolbar.insertBefore(darkModeButton.htmlElement, firstSpacer);
+    darkModeButton.htmlElement.onclick = () => this.runner.toggleDarkMode();
   }
 
   public setFiles(files: string[]): void {
@@ -124,7 +129,7 @@ export class RunnerHeader {
 injectStyle('RunnerHeader', `
 .fwd-runner-header {
   height: 27px;
-  background: rgb(247, 248, 249);
+  background: ${defaultTheme.bgPrimary};
   border-bottom: solid 1px #00000020;
   display: flex;
   user-select: none;
@@ -137,6 +142,7 @@ injectStyle('RunnerHeader', `
 }
 
 .fwd-runner-toolbar .fwd-file-select {
+  color: inherit;
   border: none;
   background: none;
   min-width: 120px;
@@ -150,5 +156,9 @@ injectStyle('RunnerHeader', `
 
 .fwd-file-select.dirty {
   font-style: italic;
+}
+
+.fwd-runner-dark-mode .fwd-runner-header {
+  background: ${darkTheme.bgSecondary};
 }
 `);

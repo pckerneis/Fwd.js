@@ -14,6 +14,7 @@ import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/mode/javascript/javascript';
+import { darkTheme, defaultTheme } from '../../style.constants';
 
 import FwdWebRunner from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
@@ -95,6 +96,10 @@ export class RunnerCodeEditor {
     }
   }
 
+  public setDarkMode(darkMode: boolean): void {
+    this.codeMirror.setOption('theme', darkMode ? 'darcula' : 'default');
+  }
+
   private buildToolbar(): HTMLElement {
     const toolbar = document.createElement('div');
     toolbar.classList.add('fwd-code-editor-toolbar');
@@ -134,18 +139,14 @@ injectStyle('RunnerCodeEditor', `
   display: flex;
   width: 100%;
   height: 27px;
-  background: rgb(247, 248, 249);
+  background: ${defaultTheme.bgSecondary};
   border-bottom: solid 1px #00000020;
   user-select: none;
   flex-shrink: 0;
 }
 
-.fwd-code-editor-container:focus-within {
-  border: 1px solid #2388ff;
-}
-
-.fwd-code-editor-container {
-  border: 1px solid #fff;
+.fwd-runner-dark-mode .fwd-code-editor-toolbar {
+  background: ${darkTheme.bgSecondary};
 }
 
 .fwd-code-editor-cm {
@@ -167,5 +168,9 @@ injectStyle('RunnerCodeEditor', `
   box-shadow: 0px 1px 4px 0px #00000045;
   width: 100%;
   padding: 2px 4px;
+}
+
+.CodeMirror-scrollbar-filler {
+  background-color: transparent;
 }
 `);

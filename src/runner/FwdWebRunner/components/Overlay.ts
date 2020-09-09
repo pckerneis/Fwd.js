@@ -1,3 +1,4 @@
+import { darkTheme, defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
 
 export class Overlay {
@@ -82,12 +83,16 @@ injectStyle('Overlay', `
 }
 
 .overlay-container {
-  background: rgb(229, 230, 231);
+  background: ${defaultTheme.bgSecondary};
   min-width: 100px;
   min-height: 100px;
   position: relative;
   margin: auto;
   border-radius: 2px;
+}
+
+.fwd-runner-dark-mode .overlay-container {
+  background: ${darkTheme.bgSecondary};
 }
 
 .overlay-shadow-element {

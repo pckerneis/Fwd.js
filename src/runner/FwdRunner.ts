@@ -20,4 +20,6 @@ export default interface FwdRunner {
 
   toggleCodeEditorVisibility(): void;
   toggleExportPanelVisibility(): void;
+  toggleDarkMode(): void;
+  setDarkMode(darkMode: boolean): void;
 }
