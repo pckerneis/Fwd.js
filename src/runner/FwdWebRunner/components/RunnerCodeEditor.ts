@@ -73,7 +73,15 @@ export class RunnerCodeEditor {
   }
 
   public setCode(newCode: string, resetHistoryAndScroll: boolean): void {
-    const cursor = this.codeMirror.getDoc().getCursor();
+    const doc = this.codeMirror.getDoc();
+    const cursor = doc.getCursor();
+    const scroll = this.codeMirror.getScrollInfo();
+    const marks = doc.getAllMarks()
+      .filter(mark => mark.collapsed && mark['type'] === 'range')
+      .reverse()
+      .map(mark => mark.find().from);
+    const selections = doc.listSelections();
+
     this.codeMirror.setValue(newCode);
 
     if (resetHistoryAndScroll) {
@@ -81,6 +89,9 @@ export class RunnerCodeEditor {
       this.codeMirror.scrollTo(0, 0);
     } else {
       this.codeMirror.getDoc().setCursor(cursor);
+      selections.forEach(selection => doc.setSelection(selection.anchor, selection.head));
+      marks.forEach(mark => this.codeMirror['foldCode'](mark));
+      this.codeMirror.scrollTo(scroll.left, scroll.top);
     }
   }
 
