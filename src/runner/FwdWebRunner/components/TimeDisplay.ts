@@ -31,7 +31,6 @@ export class TimeDisplay {
 
 injectStyle('TimeDisplay', `
 .fwd-time-display {
-    color: #525252;
     font-family: monospace;
     border: 1px solid #00000026;
     padding: 0px 10px;

@@ -2,6 +2,7 @@ import { parseNumber } from '../../../fwd/utils/numbers';
 import { formatTime } from '../../../fwd/utils/time';
 import audit from '../../../fwd/utils/time-filters/audit';
 import FwdRunner from '../../FwdRunner';
+import { darkTheme, defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
 import { FwdWebConsole } from './Console';
 import { IconButton } from './IconButton';
@@ -76,7 +77,7 @@ export class RunnerFooter {
 injectStyle('RunnerFooter', `
 .fwd-runner-footer {
   height: 26px;
-  background: rgb(247, 248, 249);
+  background: ${defaultTheme.bgSecondary};
   border-top: solid 1px #00000020;
   display: flex;
   user-select: none;
@@ -84,8 +85,13 @@ injectStyle('RunnerFooter', `
 }
 
 .fwd-runner-terminal-drawer {
-  background: rgb(247, 248, 249);
+  background: ${defaultTheme.bgSecondary};
   border-top: solid 1px #00000020;
   display: flex;
+}
+
+.fwd-runner-dark-mode .fwd-runner-footer,
+.fwd-runner-dark-mode .fwd-runner-terminal-drawer {
+  background: ${darkTheme.bgSecondary};
 }
 `);

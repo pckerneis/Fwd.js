@@ -1,5 +1,6 @@
 import { clamp } from "../../../fwd/utils/numbers";
 import { formatTime } from '../../../fwd/utils/time';
+import { darkTheme, defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from "./IconButton";
 
@@ -142,18 +143,26 @@ export class FwdWebConsole {
 injectStyle('WebConsole', `
 .web-console {
   flex-grow: 1;
-  background: rgb(247, 248, 249);
+  background: ${defaultTheme.bgSecondary};
   overflow: hidden;
   display: flex;
   flex-direction: column;
   height: ${defaultHeight}px;
 }
 
+.fwd-runner-dark-mode .web-console {
+  background: ${darkTheme.bgSecondary};
+}
+
 .web-console pre {
-  background: rgba(0, 0, 0, 0.02);
+  background: ${defaultTheme.bgPrimary};
   flex-grow: 1;
   overflow: auto;
   margin: 0;
+}
+
+.fwd-runner-dark-mode .web-console pre {
+  background: ${darkTheme.bgPrimary};
 }
 
 .web-console code {

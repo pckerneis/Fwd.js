@@ -3,4 +3,5 @@ export interface RunnerConfig {
   useCodeEditor: boolean;
   writeToFile: boolean,
   useConsoleTimePrefix: boolean;
+  darkMode: boolean;
 }
