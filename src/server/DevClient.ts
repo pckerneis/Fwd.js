@@ -8,19 +8,22 @@ import {
 const DBG = new Logger('DevClient', null, LoggerLevel.error);
 
 export class DevClient {
-  public readonly _ws: WebSocket;
 
   public onFilesAvailable: (files: string[]) => void;
   public onFileChange: (file: string, program: Program) => void;
   public onServerError: (errors: string[], program: Program) => void;
   public onServerLost: () => void;
 
-  constructor() {
+  private _ws: WebSocket;
+
+  constructor() {}
+  
+  public connect(): void {
     this._ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
     this._ws.onmessage = msg => this.handleMessage(msg);
     this._ws.onopen = () => this._ws.send(HANDSHAKE_MESSAGE);
 
-    this.checkStatusPeriodically();
+    this.checkStatusPeriodically();    
   }
 
   public watchFile(file: string): void {
