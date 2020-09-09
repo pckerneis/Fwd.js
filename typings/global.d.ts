@@ -6,8 +6,6 @@ import { Fwd } from '../src/fwd/Fwd';
  * in a typescript-enabled environment. It may make 'fwd' visible from everywhere
  * but it shouldn't be used from within the API, of course...
  */
-declare namespace NodeJS {
-  interface Global {
-    fwd: Fwd;
-  }
+interface Window {
+  fwd: Fwd;
 }

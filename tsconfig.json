@@ -13,7 +13,7 @@
       "esModuleInterop": true,
       "declaration": true,
       "outDir": "dist/",
-      "typeRoots": ["./typings"]
+      "typeRoots": ["./typings", "./node_modules/@types"]
     },
     "typedocOptions": {
       "inputFiles": ["./src/public-api.ts"],
