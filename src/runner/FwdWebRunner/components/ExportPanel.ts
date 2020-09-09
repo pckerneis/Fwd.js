@@ -37,9 +37,9 @@ export class ExportPanel {
     };
 
     this.htmlElement.append(
+      renderAudioTitle,
       fileNameLabel,
       fileNameInput,
-      renderAudioTitle,
       durationLabel,
       durationInput,
       srLabel,
