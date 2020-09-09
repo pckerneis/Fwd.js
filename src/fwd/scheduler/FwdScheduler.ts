@@ -365,7 +365,9 @@ export class FwdScheduler {
       throw new Error(`runOffline can only be called when state is 'ready'`);
     }
 
+    this._state = 'running';
     this._scheduler.runSync(0, duration);
+    this._state = 'stopped';
   }
 
   public getAction(name: string): any {

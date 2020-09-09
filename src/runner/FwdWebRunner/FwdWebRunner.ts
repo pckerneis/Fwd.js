@@ -1,5 +1,5 @@
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
-import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
+import { ContainerPanel, FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
 import { formatTime } from '../../fwd/utils/time';
@@ -8,6 +8,7 @@ import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import { RunnerConfig } from '../RunnerConfig';
+import { ExportPanel } from './components/ExportPanel';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
@@ -29,13 +30,15 @@ export default class FwdWebRunner implements FwdRunner {
   private readonly _footer: RunnerFooter;
   private codeEditor: RunnerCodeEditor;
   private _clientState: RunnerClientState;
-  private _dragSeparator: SeparatorElement;
+  private _codeEditorSeparator: SeparatorElement;
+  private _exportPanel: ExportPanel;
 
   private _program: Program;
   private _executedCode: string;
   private _sketchIsDirty: boolean = false;
-  private _isCodeEditorVisible: boolean = true;
   private _codeHasErrors: boolean;
+  private _isCodeEditorVisible: boolean = true;
+  private _isExportPanelVisible: boolean = false;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -108,13 +111,13 @@ export default class FwdWebRunner implements FwdRunner {
     this._footer.applyMasterValue();
   }
 
-  public render(duration: number, fileName: string = 'audio.wav'): void {
+  public render(duration: number, sampleRate: number, fileName: string): void {
     this.checkSketchCanBeStarted();
 
-    FwdRuntime.renderOffline(this.fwd, duration)
+    FwdRuntime.renderOffline(this.fwd, duration, sampleRate)
       .then((renderedBuffer: AudioBuffer) => {
         downloadFile(
-          bufferToWave(renderedBuffer, 0, 44100 * 90),
+          bufferToWave(renderedBuffer, 0, sampleRate * duration),
           fileName);
       }).catch((err) => {
       console.error(err);
@@ -151,7 +154,9 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  //==================================================================
+  public toggleExportPanelVisibility(): void {
+    this.setExportPanelVisibility(! this._isExportPanelVisible);
+  }
 
   private isAudioReady(): boolean {
     return this.fwd.audio.context != null;
@@ -159,9 +164,14 @@ export default class FwdWebRunner implements FwdRunner {
 
   private setCodeEditorVisibility(showing: boolean): void {
     this.codeEditor.htmlElement.style.display = showing ? 'flex' : 'none';
-    this._dragSeparator.htmlElement.style.display = showing ? '' : 'none';
+    this._codeEditorSeparator.htmlElement.style.display = showing ? '' : 'none';
 
     this._isCodeEditorVisible = showing;
+  }
+
+  private setExportPanelVisibility(showing: boolean): void {
+    this._exportPanel.htmlElement.style.display = showing ? 'flex' : 'none';
+    this._isExportPanelVisible = showing;
   }
 
   private buildRunner(): void {
@@ -314,6 +324,7 @@ export default class FwdWebRunner implements FwdRunner {
   private buildMainSection(): void {
     const flexPanel = new FlexPanel();
     document.getElementById('fwd-runner-container').append(flexPanel.htmlElement);
+    flexPanel.htmlElement.style.overflow = 'auto';
 
     if (this.config.useCodeEditor) {
       this.codeEditor = this.buildCodeEditor();
@@ -323,20 +334,30 @@ export default class FwdWebRunner implements FwdRunner {
         maxWidth: 5000,
         width: 600,
         flexShrink: 0,
+        flexGrow: 0,
         display: 'flex',
         flexDirection: 'column',
       });
 
-      this._dragSeparator = flexPanel.addSeparator(0, true);
-      this._dragSeparator.separatorSize = 10;
-      this._dragSeparator.htmlElement.classList.add('fwd-runner-large-separator');
+      this._codeEditorSeparator = flexPanel.addSeparator(0, true);
+      this._codeEditorSeparator.separatorSize = 10;
+      this._codeEditorSeparator.htmlElement.classList.add('fwd-runner-large-separator');
     }
 
-    flexPanel.addFlexItem('right', this.fwd.editor.root, {
-      flexGrow: 1,
+    const containerPanel = new ContainerPanel();
+    containerPanel.htmlElement.append(this.fwd.editor.root.htmlElement);
+
+    flexPanel.addFlexItem('center', containerPanel, {
+      flexShrink: 1,
+      flexGrow: 0,
       minWidth: 100,
       maxWidth: 5000,
+      display: 'flex',
     });
+
+    this._exportPanel = new ExportPanel(this);
+    this._exportPanel.htmlElement.style.display = 'none';
+    document.getElementById('fwd-runner-container').append(this._exportPanel.htmlElement);
   }
 
   private buildCodeEditor(): RunnerCodeEditor {

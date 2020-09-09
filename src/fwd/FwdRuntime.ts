@@ -49,12 +49,12 @@ export function startContext(fwd: Fwd): void {
   fwd.scheduler.start();
 }
 
-export function renderOffline(fwd: Fwd, duration: number): Promise<AudioBuffer> {
-  this.fwd.scheduler.clearEvents();
+export function renderOffline(fwd: Fwd, duration: number, sampleRate: number): Promise<AudioBuffer> {
+  fwd.scheduler.clearEvents();
 
-  const offlineContext = this.fwd.audio.startOffline(duration);
-  this.fwd.onStart();
-  this.fwd.scheduler.runSync(duration);
+  const offlineContext = fwd.audio.startOffline(duration, sampleRate);
+  fwd.onStart();
+  fwd.scheduler.runSync(duration);
 
   return offlineContext.startRendering();
 }
