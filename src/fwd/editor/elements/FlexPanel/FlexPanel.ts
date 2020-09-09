@@ -127,7 +127,7 @@ export class FlexPanel extends ContainerPanel {
     }
 
     // Default values
-    element.htmlElement.style.overflow = 'hidden';
+    element.htmlElement.style.overflow = 'auto';
     element.htmlElement.style.position = 'relative';
 
     if (flexItemOptions) {

@@ -66,6 +66,10 @@ export class RunnerHeader {
       this._toolbar.insertBefore(this._codeEditorButton.htmlElement, firstSpacer);
       this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
     }
+
+    const exportButton = new IconButton('export');
+    this._toolbar.insertBefore(exportButton.htmlElement, firstSpacer);
+    exportButton.htmlElement.onclick = () => this.runner.toggleExportPanelVisibility();
   }
 
   public setFiles(files: string[]): void {

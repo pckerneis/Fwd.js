@@ -16,7 +16,8 @@ export default interface FwdRunner {
   start(): void;
   stop(): void;
   submit(): void;
-  render(duration: number, fileName: string): void;
+  render(duration: number, sampleRate: number, fileName: string): void;
 
   toggleCodeEditorVisibility(): void;
+  toggleExportPanelVisibility(): void;
 }
