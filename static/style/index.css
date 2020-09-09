@@ -48,7 +48,7 @@ input[type=range].slider::-webkit-slider-runnable-track {
   height: 8px;
   cursor: pointer;
   box-shadow: 1px 1px 4px #0000002c inset;
-  background: #00000005;
+  background: #00000030;
   border-radius: 0;
   border: 0;
 }
@@ -62,7 +62,7 @@ input[type=range].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
 }
 input[type=range].slider:focus::-webkit-slider-runnable-track {
-  background: #00000015;
+  background: #00000040;
 }
 input[type=range].slider:focus::-webkit-slider-thumb {
   border: 1px solid #00000080;

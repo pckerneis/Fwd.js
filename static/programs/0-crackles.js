@@ -48,7 +48,7 @@ gui.update = () => {
     gui.slider(name, options);
     gui.slider(name, {
       ...options,
-      type: 'number', style: { maxWidth: '100px', margin: '1px 4px' } 
+      type: 'number', style: { maxWidth: '50px', margin: '1px 4px' } 
     });
   }
   
@@ -61,7 +61,7 @@ gui.update = () => {
       step: 1,
       style: { maxWidth: '50px', margin: 'auto' } });
         
-    gui.slider(name, {type: 'number', style: { maxWidth: '100px', margin: '1px 4px' } });
+    gui.slider(name, {type: 'number', style: { maxWidth: '50px', margin: '1px 4px' } });
   }
 }
 

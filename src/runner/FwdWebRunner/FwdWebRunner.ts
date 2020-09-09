@@ -373,7 +373,7 @@ export default class FwdWebRunner implements FwdRunner {
 
     flexPanel.addFlexItem('center', containerPanel, {
       flexShrink: 1,
-      flexGrow: 0,
+      flexGrow: 1,
       minWidth: 100,
       maxWidth: 5000,
       display: 'flex',
@@ -424,7 +424,7 @@ injectStyle('FwdWebRunner', `
 }
 `);
 
-injectStyle('FwdWebRunner - Dark mode', `
+injectStyle('FwdWebRunner_DarkMode', `
 .fwd-runner-dark-mode {
   background: ${darkTheme.bgPrimary};
   color: ${darkTheme.textColor};
@@ -442,7 +442,8 @@ injectStyle('FwdWebRunner - Dark mode', `
   filter: invert(100%);
 }
 
-.fwd-runner-dark-mode input {
+.fwd-runner-dark-mode input[type="number"],
+.fwd-runner-dark-mode input[type="text"] {
   background: ${darkTheme.bgPrimary};
   color: ${darkTheme.textColor};
   border: 1px solid ${darkTheme.textColor};
