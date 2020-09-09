@@ -12,6 +12,7 @@ const args = require('minimist')(process.argv.slice(2));
 
 let PORT = args.port || 3989;
 const directoryToServe = path.resolve(__dirname, args.path || '.');
+const openBrowser = args.open;
 
 // Prepare server
 const server = express()
@@ -20,7 +21,10 @@ const server = express()
   .listen(PORT)
   .on('listening', () => {
     console.log('%s Serving ' + directoryToServe + ' at http://localhost:' + PORT, chalk.green.bold('READY'));
-    opn('http://localhost:' + PORT);
+
+    if (openBrowser) {
+      opn('http://localhost:' + PORT);
+    }
   });
 
 process.on('uncaughtException', (err => {

@@ -23,6 +23,7 @@ export enum RunnerClientState {
 
 export default class FwdWebRunner implements FwdRunner {
   private _devClient: DevClient;
+  private _reconnectionTimeout: number = 5000;
 
   private readonly _header: RunnerHeader;
   private readonly _footer: RunnerFooter;
@@ -63,6 +64,7 @@ export default class FwdWebRunner implements FwdRunner {
     if (fileChanged) {
       this.reset();
       this.setDirty(false);
+      this._header.setSelectedFile(program.file);
     }
 
     if (this.isAudioReady()) {
@@ -124,6 +126,10 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public runCode(): void {
+    if (this._program?.code == null) {
+      throw new Error('There\'s no program to run.');
+    }
+
     try {
       new Function(this._program.code)(window);
       this._codeHasErrors = false;
@@ -162,6 +168,15 @@ export default class FwdWebRunner implements FwdRunner {
     this.prepareHeader();
     this.prepareFooter();
     this.buildMainSection();
+  }
+
+  private reportInfos(...infos: string[]): void {
+    if (this.config.useConsoleRedirection) {
+      console.info(...infos);
+    } else {
+      console.info(...infos);
+      this._footer.print(null, ...infos);
+    }
   }
 
   private reportErrors(...errors: string[]): void {
@@ -234,11 +249,23 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private initDevClient(): void {
+    let retryCounter = 0;
+
     this._devClient = new DevClient();
 
     this._devClient.onFilesAvailable = (files) => {
+      this.reportInfos(`Successfully connected to dev server.`);
+
+      retryCounter = 0;
+
       this.setFiles(files);
-      this._devClient.watchFile(files[0]);
+
+      if (this._program == null) {
+        this._devClient.watchFile(files[0]);
+      } else {
+        this._devClient.watchFile(this._program.file);
+        this._header.setSelectedFile(this._program.file);
+      }
     };
 
     this._devClient.onServerError = (errors: string[], program: Program) => {
@@ -253,9 +280,13 @@ export default class FwdWebRunner implements FwdRunner {
     };
 
     this._devClient.onServerLost = () => {
-      this.reportErrors('Connection with server lost');
+      this.reportErrors(`Cannot reach server. Retrying in ${this._reconnectionTimeout / 1000} seconds (attempt ${++retryCounter}).`);
       this.setClientState(RunnerClientState.disconnected);
+
+      setTimeout(() => this._devClient.connect(), this._reconnectionTimeout);
     };
+
+    this._devClient.connect();
   }
 
   private setClientState(newState: RunnerClientState): void {

@@ -69,6 +69,8 @@ export class RunnerHeader {
   }
 
   public setFiles(files: string[]): void {
+    this._projectSelect.innerHTML = '';
+
     files
       .map(label => {
         const option = document.createElement('option');
@@ -78,6 +80,12 @@ export class RunnerHeader {
       }).forEach(option => {
       this._projectSelect.append(option);
     });
+  }
+
+  public setSelectedFile(file: string): void {
+    for (let i = 0; i < this._projectSelect.options.length; ++i) {
+      this._projectSelect.options.item(i).selected = this._projectSelect.options.item(i).value === file;
+    }
   }
 
   public onRunnerStop(): void {
