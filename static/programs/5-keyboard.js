@@ -11,7 +11,7 @@ const releaseTime = 0.3;
 fwd.scheduler.defineAction('noteOn', (pitch) => {
   const freq = mtof(pitch);
   const osc = fwd.audio.osc(freq);
-  const distorsion = fwd.audio.distortion(30);
+  const distorsion = fwd.audio.distortion(10);
   osc.connect(distorsion).connect(fwd.audio.master);
 
   fwd.scheduler
@@ -26,6 +26,8 @@ fwd.onStart = () => {
   fwd.globals.notes = [];
 
   fwd.editor.root.htmlElement.tabIndex = 0;
+  fwd.editor.root.htmlElement.style.width = '100%';
+  fwd.editor.root.htmlElement.style.height = '100%';
 
   fwd.editor.root.htmlElement.onkeydown = (event) => {
     const key = event.key.toLowerCase();

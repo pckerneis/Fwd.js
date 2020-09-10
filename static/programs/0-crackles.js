@@ -4,9 +4,10 @@ const gui = fwd.gui.getGuiManager(fwd.editor.root.htmlElement);
 
 gui.update = () => {
   gui.rootElement.style.display = 'grid';
-  gui.rootElement.style.gridTemplateColumns = '1fr 3fr 1fr';
+  gui.rootElement.style.gridTemplateColumns = '2fr 2fr 1fr';
   gui.rootElement.style.gridAutoRows = '1.5rem';
   gui.rootElement.style.padding = '6px';
+  gui.rootElement.style.width = '100%';
 
   labeledSwitch(gui, 'save', 0);
 
@@ -33,37 +34,7 @@ gui.update = () => {
   header('Reverb');
   labeledSlider(gui, 'dryGain', { defaultValue: 1, min: 0, max: 2, step: 0.001 });
   labeledSlider(gui, 'wetGain', { defaultValue: 1, min: 0, max: 2, step: 0.001 });
-  
-  function header(text) {
-    gui.label(text, { style: { 
-      gridColumn: '1 / span 3',
-      fontWeight: 'bold',
-      background: '#88888820',
-    	padding: '2px',
-    }});
-  }
-
-  function labeledSlider(gui, name, options) {
-    gui.label(name);
-    gui.slider(name, options);
-    gui.slider(name, {
-      ...options,
-      type: 'number', style: { maxWidth: '50px', margin: '1px 4px' } 
-    });
-  }
-  
-  function labeledSwitch(gui, name, defaultValue) {
-    gui.label(name);
-    gui.slider(name, { 
-      defaultValue,
-      min: 0,
-      max: 1,
-      step: 1,
-      style: { maxWidth: '50px', margin: 'auto' } });
-        
-    gui.slider(name, {type: 'number', style: { maxWidth: '50px', margin: '1px 4px' } });
-  }
-}
+};
 
 gui.changed();
 
@@ -148,3 +119,41 @@ fwd.scheduler.defineAction('burst', (rvb) => {
   bufferNode.connect(gain);
   gain.connect(rvb);
 });
+
+function header(text) {
+  gui.label(text, { style: { 
+    gridColumn: '1 / span 3',
+    fontWeight: 'bold',
+    background: '#88888820',
+    padding: '2px',
+  }});
+}
+
+function labeledSlider(gui, name, options) {
+  gui.label(name);
+
+  gui.slider(name, { 
+    ...options,
+    cssClasses: ["slider"],
+  });
+
+  gui.slider(name, {
+    ...options,
+    type: 'number', 
+    style: { maxWidth: '80px', margin: '1px 4px' },
+  });
+}
+
+function labeledSwitch(gui, name, defaultValue) {
+  gui.label(name);
+  gui.slider(name, { 
+    defaultValue,
+    min: 0,
+    max: 1,
+    step: 1,
+    style: { maxWidth: '50px', margin: 'auto' },
+    cssClasses: ['slider']
+  });
+
+  gui.slider(name, {type: 'number', style: { maxWidth: '80px', margin: '1px 4px' } });
+}
