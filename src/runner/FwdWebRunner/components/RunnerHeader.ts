@@ -62,12 +62,6 @@ export class RunnerHeader {
       spacer(),
       drawerButton.htmlElement,
     );
-
-    if (this.runner.config.useCodeEditor) {
-      this._codeEditorButton = new IconButton('edit');
-      this._toolbar.insertBefore(this._codeEditorButton.htmlElement, firstSpacer);
-      this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
-    }
   }
 
   public setFiles(files: string[]): void {

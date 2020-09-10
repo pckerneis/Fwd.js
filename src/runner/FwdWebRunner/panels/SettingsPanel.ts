@@ -18,6 +18,13 @@ export class SettingsPanel extends PropertyPanel {
     fontSizeInput.oninput = () => {
       document.documentElement.style.fontSize = fontSizeInput.value + 'px';
     };
+
+    if (this.runner.config.useCodeEditor) {
+      this.addLabel('Show code editor');
+      this.addYesNoSelector(true, (yes: boolean) => {
+        this.runner.setCodeEditorVisible(yes);
+      });
+    }
   }
 
   private addThemeSelector(): void {
@@ -31,12 +38,29 @@ export class SettingsPanel extends PropertyPanel {
     themeSelect.oninput = () => {
       const darkMode = themeSelect.selectedIndex === 1;
       this.runner.setDarkMode(darkMode);
-    }
+    };
 
     this.htmlElement.append(themeSelect);
 
     if (this.runner.isDarkMode()) {
       themeSelect.value = 'dark';
     }
+  }
+
+  private addYesNoSelector(defaultValue: boolean, changeHandler: Function): void {
+    const select = document.createElement('select');
+
+    select.innerHTML = `
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    `;
+
+    select.value = defaultValue ? 'yes' : 'no';
+
+    select.oninput = () => {
+      changeHandler(select.selectedIndex === 0);
+    };
+
+    this.htmlElement.append(select);
   }
 }

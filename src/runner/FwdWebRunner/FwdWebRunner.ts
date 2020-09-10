@@ -41,7 +41,7 @@ export default class FwdWebRunner implements FwdRunner {
   private _sketchIsDirty: boolean = false;
   private _codeHasErrors: boolean;
   private _isCodeEditorVisible: boolean = true;
-  private _isExportPanelVisible: boolean = false;
+  private _isRightDrawerVisible: boolean = false;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -127,7 +127,7 @@ export default class FwdWebRunner implements FwdRunner {
           bufferToWave(renderedBuffer, 0, sampleRate * duration),
           fileName);
       }).catch((err) => {
-      console.error(err);
+      this.reportErrors(err);
     });
   }
 
@@ -145,15 +145,19 @@ export default class FwdWebRunner implements FwdRunner {
       this._codeHasErrors = false;
     } catch (e) {
       this._codeHasErrors = true;
-      console.error(e);
+      this.reportErrors(e);
     } finally {
       this._executedCode = this._program.code;
       this.refreshState();
     }
   }
 
+  public isCodeEditorVisible(): boolean {
+    return this._isRightDrawerVisible;
+  }
+
   public toggleCodeEditorVisibility(): void {
-    this.setCodeEditorVisibility(! this._isCodeEditorVisible);
+    this.setCodeEditorVisible(! this._isCodeEditorVisible);
 
     // We need to manually refresh if the code editor was hidden and its content changed
     if (this._isCodeEditorVisible) {
@@ -161,8 +165,12 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
+  public isRightDrawerVisible(): boolean {
+    return this._isRightDrawerVisible;
+  }
+
   public toggleRightDrawerVisibility(): void {
-    this.setRightDrawerVisibility(! this._isExportPanelVisible);
+    this.setRightDrawerVisible(! this._isRightDrawerVisible);
   }
 
   public isDarkMode(): boolean {
@@ -187,20 +195,20 @@ export default class FwdWebRunner implements FwdRunner {
     this.setDarkMode(! this.config.darkMode);
   }
 
-  private isAudioReady(): boolean {
-    return this.fwd.audio.context != null;
-  }
-
-  private setCodeEditorVisibility(showing: boolean): void {
+  public setCodeEditorVisible(showing: boolean): void {
     this.codeEditor.htmlElement.style.display = showing ? 'flex' : 'none';
     this._codeEditorSeparator.htmlElement.style.display = showing ? '' : 'none';
 
     this._isCodeEditorVisible = showing;
   }
 
-  private setRightDrawerVisibility(showing: boolean): void {
+  public setRightDrawerVisible(showing: boolean): void {
     this._tabbedPanel.htmlElement.style.display = showing ? 'flex' : 'none';
-    this._isExportPanelVisible = showing;
+    this._isRightDrawerVisible = showing;
+  }
+
+  private isAudioReady(): boolean {
+    return this.fwd.audio.context != null;
   }
 
   private buildRunner(): void {
