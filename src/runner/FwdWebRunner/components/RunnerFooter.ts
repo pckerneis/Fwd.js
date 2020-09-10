@@ -96,7 +96,6 @@ injectStyle('RunnerFooter', `
   display: flex;
   user-select: none;
   flex-shrink: 0;
-  font-size: smaller;
   height: 2rem;
 }
 

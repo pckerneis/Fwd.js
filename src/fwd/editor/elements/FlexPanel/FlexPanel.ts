@@ -114,8 +114,7 @@ export class FlexPanel extends ContainerPanel {
     super();
 
     this.htmlElement.style.display = 'flex';
-    // this.htmlElement.style.width = '100%';
-    // this.htmlElement.style.height = '100%';
+    this.htmlElement.style.overflow = 'hidden';
     this.htmlElement.style.flexDirection = _direction;
   }
 
@@ -127,8 +126,16 @@ export class FlexPanel extends ContainerPanel {
     }
 
     // Default values
-    element.htmlElement.style.overflow = 'auto';
+    // element.htmlElement.style.overflow = 'hidden';
     element.htmlElement.style.position = 'relative';
+
+    if (this.isVerticalAlignment()) {
+      element.htmlElement.style.overflowX = 'auto';
+      element.htmlElement.style.overflowY = 'hidden';
+    } else {
+      element.htmlElement.style.overflowX = 'hidden';
+      element.htmlElement.style.overflowY = 'auto';
+    }
 
     if (flexItemOptions) {
       const affectIfNotNull = (property: string, suffix: string = '') => {
@@ -141,10 +148,21 @@ export class FlexPanel extends ContainerPanel {
       ['flexGrow', 'flexShrink', 'display', 'flexDirection'].forEach(key => affectIfNotNull(key));
     }
 
-    this._elementStack.push({
+    const newItem = {
       element,
       flexItemOptions,
-    });
+    };
+
+    this._elementStack.push(newItem);
+
+    const desiredSize = this.isVerticalAlignment() ?
+      (flexItemOptions.height || flexItemOptions.minHeight || element.htmlElement.getBoundingClientRect().height) :
+      (flexItemOptions.width || flexItemOptions.minWidth || element.htmlElement.getBoundingClientRect().width);
+
+    for (const e of this._elementStack) {
+      this.setDesiredSize(e, e === newItem ? desiredSize :
+        e.element.htmlElement.getBoundingClientRect()[this.isVerticalAlignment() ? 'height' : 'width']);
+    }
 
     return element;
   }
@@ -183,11 +201,11 @@ export class FlexPanel extends ContainerPanel {
 
     const vertical = this.isVerticalAlignment();
     const mouseDownPos = vertical ? event.clientY : event.clientX;
-    const { flexItemOptions, element } = this._elementStack[separator.index];
+    const item = this._elementStack[separator.index];
 
     const sizeAtMouseDown = vertical ?
-      element.htmlElement.getBoundingClientRect().height
-      : element.htmlElement.getBoundingClientRect().width;
+      item.element.htmlElement.getBoundingClientRect().height
+      : item.element.htmlElement.getBoundingClientRect().width;
 
     const containerPosAtMouseDown = vertical ?
       this.htmlElement.getBoundingClientRect().top
@@ -208,21 +226,10 @@ export class FlexPanel extends ContainerPanel {
         : this.htmlElement.getBoundingClientRect().left;
 
       const containerOffset = Math.min(0, containerPos - containerPosAtMouseDown);
-
       const diff = mouseDownPos - (vertical ? evt.clientY : evt.clientX) + containerOffset;
-      let newSize = clamp(sizeAtMouseDown - diff,
-        vertical ? flexItemOptions.minHeight : flexItemOptions.minWidth,
-        vertical ? flexItemOptions.maxHeight : flexItemOptions.maxWidth);
+      const desiredSize = sizeAtMouseDown - diff;
 
-      if (vertical) {
-        element.htmlElement.style.height = newSize + 'px';
-        newSize = Math.max(element.htmlElement.getBoundingClientRect().height, newSize);
-        element.htmlElement.style.height = newSize + 'px';
-      } else {
-        element.htmlElement.style.width = newSize + 'px';
-        newSize = Math.max(element.htmlElement.getBoundingClientRect().width, newSize);
-        element.htmlElement.style.width = newSize + 'px';
-      }
+      this.setDesiredSize(item, desiredSize);
     });
 
     const mouseUpHandler = () => {
@@ -241,6 +248,37 @@ export class FlexPanel extends ContainerPanel {
   private getSeparatorWithIndex(index: number): SeparatorElement {
     const results = this._separators.filter(sep => sep.index === index);
     return results[0];
+  }
+
+  private setDesiredSize(item: FlexItem, desiredSize: number): void {
+    const vertical = this.isVerticalAlignment();
+
+    // Determine max size based on space left available by other elements
+    const otherMinSize = this._elementStack
+      .map((item) => item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'])
+      .reduce((prev, curr) => prev + curr, 0) - item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'];
+
+    const separatorsSize = this._separators
+      .map(sep => sep.htmlElement.getBoundingClientRect()[vertical ? 'height' : 'width'])
+      .reduce((pre, curr) => pre + curr, 0);
+
+    const computedMaxSize = this.htmlElement.getBoundingClientRect()[vertical ? 'height' : 'width']
+      - otherMinSize
+      - separatorsSize;
+
+    let newSize = clamp(desiredSize,
+      vertical ? item.flexItemOptions.minHeight : item.flexItemOptions.minWidth,
+      vertical ? item.flexItemOptions.maxHeight : item.flexItemOptions.maxWidth);
+
+    if (vertical) {
+      newSize = clamp(newSize, item.flexItemOptions.minHeight, item.flexItemOptions.maxHeight);
+      newSize = Math.min(newSize, computedMaxSize);
+      item.element.htmlElement.style.height = newSize + 'px';
+    } else {
+      newSize = clamp(newSize, item.flexItemOptions.minWidth, item.flexItemOptions.maxWidth);
+      newSize = Math.min(newSize, computedMaxSize);
+      item.element.htmlElement.style.width = newSize + 'px';
+    }
   }
 }
 

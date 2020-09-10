@@ -100,10 +100,12 @@ injectStyle('TabbedPanel', `
   padding: 2px 5px;
   cursor: pointer;
   user-select: none;
+  font-size: smaller;
 }
 
 .fwd-tabbed-panel-button.current-tab {
   border-bottom: none;
+  font-weight: bold;
 }
 
 .fwd-tabbed-panel-button:not(.current-tab) {

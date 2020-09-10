@@ -60,9 +60,6 @@ export default class FwdWebRunner implements FwdRunner {
     if (config.darkMode) {
       this.setDarkMode(true);
     }
-
-    // TEST
-    this.toggleRightDrawerVisibility();
   }
 
   public setProgram(program: Program): void {
@@ -355,28 +352,28 @@ export default class FwdWebRunner implements FwdRunner {
 
   private buildMainSection(): void {
     const parentFlexPanel = new FlexPanel();
+    parentFlexPanel.htmlElement.style.justifyContent = 'flex-end';
     document.getElementById('fwd-runner-container').append(parentFlexPanel.htmlElement);
-    parentFlexPanel.htmlElement.style.overflow = 'auto';
 
     const flexPanel = new FlexPanel();
-    flexPanel.htmlElement.style.overflow = 'auto';
 
     parentFlexPanel.addFlexItem('main', flexPanel, {
-      flexGrow: 0,
-      flexShrink: 0,
-      minWidth: 100,
+      flexGrow: 1,
+      flexShrink: 1,
+      width: 1000,
+      minWidth: 200,
       maxWidth: 5000,
     });
 
-    const sep = parentFlexPanel.addSeparator(0, true);
-    sep.separatorSize = 5;
-    sep.htmlElement.classList.add('fwd-runner-large-separator');
+    // const sep = parentFlexPanel.addSeparator(0, true);
+    // sep.separatorSize = 5;
+    // sep.htmlElement.classList.add('fwd-runner-large-separator');
 
     if (this.config.useCodeEditor) {
       this.codeEditor = this.buildCodeEditor();
 
       flexPanel.addFlexItem('left', this.codeEditor, {
-        minWidth: 100,
+        minWidth: 200,
         maxWidth: 5000,
         width: 600,
         flexShrink: 0,
@@ -396,7 +393,8 @@ export default class FwdWebRunner implements FwdRunner {
     flexPanel.addFlexItem('center', containerPanel, {
       flexShrink: 1,
       flexGrow: 1,
-      minWidth: 100,
+      width: 600,
+      minWidth: 200,
       maxWidth: 5000,
       display: 'flex',
     });
@@ -406,9 +404,9 @@ export default class FwdWebRunner implements FwdRunner {
     this._tabbedPanel.htmlElement.style.display = 'none';
 
     parentFlexPanel.addFlexItem('right', this._tabbedPanel, {
-      flexGrow: 1,
+      flexGrow: 0,
       flexShrink: 0,
-      minWidth: 250,
+      minWidth: 280,
       maxWidth: 5000,
     });
 

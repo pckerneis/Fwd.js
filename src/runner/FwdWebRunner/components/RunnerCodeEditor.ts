@@ -142,6 +142,11 @@ injectStyle('RunnerCodeEditor', `
   border-bottom: solid 1px #00000020;
   user-select: none;
   flex-shrink: 0;
+  align-items: center;
+}
+
+.fwd-runner-auto-build-label {
+  font-size: smaller;
 }
 
 .fwd-runner-dark-mode .fwd-code-editor-toolbar {

@@ -1,52 +1,28 @@
 import FwdRunner from '../../FwdRunner';
 import { darkTheme, defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
+import { PropertyPanel } from './PropertyPanel';
 
-export class ExportPanel {
+export class ExportPanel extends PropertyPanel {
   public readonly htmlElement: HTMLDivElement;
 
   constructor(private readonly runner: FwdRunner) {
-    this.htmlElement = document.createElement('div');
-    this.htmlElement.classList.add('fwd-export-panel');
-    this.htmlElement.style.display = 'flex';
-    this.htmlElement.style.flexDirection = 'column';
+    super();
 
-    const renderAudioTitle = document.createElement('h3');
-    renderAudioTitle.innerText = 'Render audio offline';
+    this.addTitle('Render audio offline');
 
-    const durationLabel = document.createElement('b');
-    durationLabel.innerText = 'Duration (seconds) :';
-    const durationInput = document.createElement('input');
-    durationInput.type = 'number';
-    durationInput.value = '30';
+    this.addLabel('Duration (secs)');
+    const durationInput = this.addNumberInput(30, 0);
 
-    const srLabel = document.createElement('b');
-    srLabel.innerText = 'Sample rate :';
-    const srInput = document.createElement('input');
-    srInput.type = 'number';
-    srInput.value = '44100';
+    this.addLabel('Sample rate');
+    const srInput = this.addNumberInput(44100, 3000, 384000);
 
-    const fileNameLabel = document.createElement('b');
-    fileNameLabel.innerText = 'File name :';
-    const fileNameInput = document.createElement('input');
-    fileNameInput.value = 'audio.wav';
+    this.addLabel('File name');
+    const fileNameInput = this.addTextInput('audio.wav');
 
-    const renderButton = document.createElement('button');
-    renderButton.classList.add('text-button');
-    renderButton.innerText = 'Render';
-    renderButton.onclick = () => {
+    this.addTextButton('Render', () => {
       this.runner.render(parseFloat(durationInput.value), parseFloat(srInput.value), fileNameInput.value);
-    };
-
-    this.htmlElement.append(
-      renderAudioTitle,
-      fileNameLabel,
-      fileNameInput,
-      durationLabel,
-      durationInput,
-      srLabel,
-      srInput,
-      renderButton);
+    });
   }
 }
 
@@ -54,6 +30,13 @@ injectStyle('ExportPanel', `
 .fwd-export-panel {
   padding: 8px;
   background: ${defaultTheme.bgSecondary};
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1.8rem;
+}
+
+.fwd-export-panel input {
   width: 100%;
 }
 
