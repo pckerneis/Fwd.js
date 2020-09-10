@@ -74,10 +74,13 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
   duration = duration || fwd.globals.dur;
 
   const notes = chord.map(n => n + 12 * 4);
-  const reverbTime = 2;
+  const reverbTime = 10;
   const del = fwd.audio.stereoDelay();
   const rvb = fwd.audio.reverb(reverbTime);
-  del.connect(rvb).connect(fwd.audio.master);
+  rvb.dryGain.gain.value = 1.0;
+  rvb.wetGain.gain.value = 1.0;
+  del.connect(rvb);
+  rvb.connect(fwd.audio.master);
 
   const attack = 0.01;
   const release = 0.18;
@@ -96,10 +99,10 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
   }
 
   // Tear down audio nodes when not needed anymore
-  const totalTime = timeBetweenNotes * fwd.globals.steps
-    + reverbTime
-    + attack
-    + release;
+  const totalTime = timeBetweenNotes * fwd.globals.steps + 
+        reverbTime + 
+        attack + 
+        release;
 
   fwd.scheduler.schedule(totalTime, () => {
     del.tearDown();

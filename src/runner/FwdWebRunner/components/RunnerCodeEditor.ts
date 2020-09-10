@@ -8,11 +8,14 @@ import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/hint/javascript-hint';
 import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/lint/javascript-lint';
+import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/scroll/annotatescrollbar';
 import 'codemirror/addon/search/match-highlighter';
 import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
+import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/javascript/javascript';
 import { darkTheme, defaultTheme } from '../../style.constants';
 
@@ -33,12 +36,17 @@ export class RunnerCodeEditor {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-code-editor-container');
 
+    // @ts-ignore
     this.codeMirror = CodeMirror(this.htmlElement, {
       lineNumbers: true,
       mode: 'javascript',
       tabSize: 2,
       foldGutter: true,
-      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
+      lint: {
+        "esversion": 9,
+        "globals": ['fwd'],
+      },
       matchBrackets: true,
       autoCloseBrackets: true,
       highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
