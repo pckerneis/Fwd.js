@@ -60,6 +60,8 @@ export default class FwdWebRunner implements FwdRunner {
     if (config.darkMode) {
       this.setDarkMode(true);
     }
+
+    this.setRightDrawerVisible(false);
   }
 
   public setProgram(program: Program): void {
@@ -205,6 +207,7 @@ export default class FwdWebRunner implements FwdRunner {
   public setRightDrawerVisible(showing: boolean): void {
     this._tabbedPanel.htmlElement.style.display = showing ? 'flex' : 'none';
     this._isRightDrawerVisible = showing;
+    this._header.rightDrawerToggle.htmlElement.style.opacity = showing ? '1' : '0.5';
   }
 
   private isAudioReady(): boolean {

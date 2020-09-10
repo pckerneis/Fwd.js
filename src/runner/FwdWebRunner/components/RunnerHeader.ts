@@ -9,10 +9,10 @@ import { TimeDisplay } from './TimeDisplay';
 
 export class RunnerHeader {
   public readonly htmlElement: HTMLDivElement;
+  public readonly rightDrawerToggle: IconButton;
 
   private readonly _toolbar: HTMLElement;
   private readonly _playButton: IconButton;
-  private readonly _codeEditorButton: IconButton;
   private readonly _projectSelect: HTMLSelectElement;
   private readonly _timeDisplay: TimeDisplay;
 
@@ -51,8 +51,8 @@ export class RunnerHeader {
 
     const firstSpacer = spacer();
 
-    const drawerButton = new IconButton('tools');
-    drawerButton.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
+    this.rightDrawerToggle = new IconButton('tools');
+    this.rightDrawerToggle.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
 
     this._toolbar.append(
       this._projectSelect,
@@ -60,7 +60,7 @@ export class RunnerHeader {
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
       spacer(),
-      drawerButton.htmlElement,
+      this.rightDrawerToggle.htmlElement,
     );
   }
 
