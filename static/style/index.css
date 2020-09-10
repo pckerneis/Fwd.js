@@ -2,6 +2,7 @@
 
 html {
   height: 100%;
+  font-size: 16px;
 }
 
 * {
@@ -15,7 +16,10 @@ body {
   flex-direction: column;
   height: 100%;
   font-family: 'Roboto';
-  font-size: 13px;
+}
+
+input {
+  font-size: inherit;
 }
 
 #fwd-runner-container {
@@ -45,7 +49,7 @@ input[type=range].slider:focus {
 }
 input[type=range].slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 8px;
+  height: 0.5rem;
   cursor: pointer;
   box-shadow: 1px 1px 4px #0000002c inset;
   background: #00000030;

@@ -35,7 +35,6 @@ injectStyle('TimeDisplay', `
     border: 1px solid #00000026;
     padding: 0px 10px;
     margin: auto 4px;
-    font-size: 15px;
     border-radius: 2px;
     background: #00000005;
 }

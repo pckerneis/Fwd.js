@@ -76,12 +76,13 @@ export class RunnerFooter {
 
 injectStyle('RunnerFooter', `
 .fwd-runner-footer {
-  height: 26px;
   background: ${defaultTheme.bgSecondary};
   border-top: solid 1px #00000020;
   display: flex;
   user-select: none;
   flex-shrink: 0;
+  font-size: smaller;
+  height: 2rem;
 }
 
 .fwd-runner-terminal-drawer {

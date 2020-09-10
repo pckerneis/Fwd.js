@@ -128,12 +128,13 @@ export class RunnerHeader {
 
 injectStyle('RunnerHeader', `
 .fwd-runner-header {
-  height: 27px;
   background: ${defaultTheme.bgPrimary};
   border-bottom: solid 1px #00000020;
   display: flex;
   user-select: none;
   flex-shrink: 0;
+  font-size: smaller;
+  height: 2rem;
 }
 
 .fwd-runner-toolbar {
@@ -146,12 +147,7 @@ injectStyle('RunnerHeader', `
   border: none;
   background: none;
   min-width: 120px;
-}
-
-.fwd-runner-auto-build-label {
-  font-size: 11px;
-  display: flex;
-    align-items: center;
+  font-size: inherit;
 }
 
 .fwd-file-select.dirty {

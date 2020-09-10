@@ -138,7 +138,6 @@ injectStyle('RunnerCodeEditor', `
 .fwd-code-editor-toolbar {
   display: flex;
   width: 100%;
-  height: 27px;
   background: ${defaultTheme.bgSecondary};
   border-bottom: solid 1px #00000020;
   user-select: none;

@@ -42,8 +42,8 @@ export class SyncStateElement {
 injectStyle('SyncStateElement', `
 .fwd-runner-sync-state {
   margin: auto 10px auto 4px;
-  width: 12px;
-  height: 12px;
+  width: 0.7rem;
+  height: 0.7rem;
   border-radius: 50%;
   box-shadow: inset 1px 1px 4px 0 #00000020;
   border: 1px solid #00000069;

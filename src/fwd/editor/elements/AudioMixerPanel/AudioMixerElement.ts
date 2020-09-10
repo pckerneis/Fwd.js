@@ -133,7 +133,7 @@ injectStyle('AudioMixerElement', `
   font-family: monospace;
   padding: 0;
   overflow: hidden;
-  font-size: 11px;
+  font-size: small;
   width: 100%;
   user-select: none;
   flex-shrink: 0;

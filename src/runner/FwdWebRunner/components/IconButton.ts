@@ -4,25 +4,19 @@ export class IconButton {
   public readonly htmlElement: HTMLButtonElement;
   private _objectElement: HTMLObjectElement;
 
-  constructor(iconName: string, size: number = 24) {
+  constructor(iconName: string) {
     const button = document.createElement('button');
     button.classList.add('fwd-icon-button');
 
     this.htmlElement = button;
 
     this.iconName = iconName;
-    this.size = size;
   }
 
   private static createSvgObject(): HTMLObjectElement {
     const object = document.createElement('object');
     object.type = 'image/svg+xml';
     return object;
-  }
-
-  public set size(newSize: number) {
-    this.htmlElement.style.width = newSize + 'px';
-    this.htmlElement.style.height = newSize + 'px';
   }
 
   public set iconName(iconName: string) {
@@ -47,6 +41,9 @@ injectStyle('IconButton', `
   border: none;
   margin: auto 0;
   overflow: hidden;
+  height: 1.6rem;
+  width: 1.6rem;
+  display: flex;
 }
 
 .fwd-icon-button:hover {

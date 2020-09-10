@@ -172,11 +172,12 @@ injectStyle('WebConsole', `
 }
 
 .web-console .web-console-menubar {
+  display: flex;
   border-bottom: #00000010 1px solid;
-  height: 27px;
+  height: 1.8rem;
   cursor: ns-resize;
   user-select: none;
-  font-size: 11px;
+  font-size: smaller;
 }
 
 .web-console .web-console-menubar label {
