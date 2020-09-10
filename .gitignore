@@ -5,7 +5,6 @@ yarn.lock
 /coverage/
 dist/
 doc/
-lib/
 src/fwd/**/*.d.ts
 src/fwd/**/*.js
 src/server/**/*.d.ts
