@@ -32,6 +32,14 @@ input {
   flex-grow: 1;
 }
 
+select {
+  color: inherit;
+  border: none;
+  background: none;
+  min-width: 120px;
+  font-size: inherit;
+}
+
 /*====================================*/
 /*              Other
 /*====================================*/
@@ -140,17 +148,17 @@ input[type=range].slider:focus::-ms-fill-upper {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00000018;
+  background: #00000048;
   border: none;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0000002d;
+  background: #0000005d;
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: #00000042;
+  background: #00000062;
 }
 
 ::-webkit-scrollbar-track {
@@ -159,7 +167,7 @@ input[type=range].slider:focus::-ms-fill-upper {
 }
 
 ::-webkit-scrollbar-track:hover {
-  background: #0000000c;
+  background: #00000010;
 }
 
 ::-webkit-scrollbar-corner {

@@ -1,9 +1,5 @@
 import { ContainerPanel } from "./elements/FlexPanel/FlexPanel";
 
-export interface EditorElement {
-  htmlElement?: HTMLElement;
-}
-
 export class FwdEditor {
   public readonly root: ContainerPanel;
 

@@ -4,8 +4,8 @@ import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
 import { Logger } from "../../../utils/Logger";
 import { clamp, parseNumber } from "../../../utils/numbers";
 import debounce from '../../../utils/time-filters/debounce';
-import { EditorElement } from "../../FwdEditor";
 import { AudioMeterElement } from "../AudioMeter/AudioMeter";
+import { EditorElement } from '../EditorElement';
 import parentLogger from "../logger.components";
 import { AbstractSoloGroupItem } from "./FwdSoloGroup";
 

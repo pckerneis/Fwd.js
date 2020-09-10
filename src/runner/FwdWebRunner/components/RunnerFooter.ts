@@ -3,10 +3,12 @@ import { formatTime } from '../../../fwd/utils/time';
 import audit from '../../../fwd/utils/time-filters/audit';
 import FwdRunner from '../../FwdRunner';
 import { darkTheme, defaultTheme } from '../../style.constants';
+import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { FwdWebConsole } from './Console';
 import { IconButton } from './IconButton';
 import { MasterSlider } from './MasterSlider';
+import { SyncStateElement } from './SyncState';
 
 export class RunnerFooter {
   public readonly htmlElement: HTMLElement;
@@ -17,6 +19,8 @@ export class RunnerFooter {
   public readonly masterSlider: MasterSlider;
 
   private _oneLineLogger: HTMLLabelElement;
+
+  private _syncStateElem: SyncStateElement;
 
   constructor(private readonly runner: FwdRunner) {
     this.htmlElement = document.createElement('div');
@@ -38,7 +42,14 @@ export class RunnerFooter {
     this.masterSlider = new MasterSlider();
     this.masterSlider.slider.oninput = audit(() => this.applyMasterValue());
 
-    this.htmlElement.append(terminalButton.htmlElement, this._oneLineLogger, this.masterSlider.htmlElement);
+    this._syncStateElem = new SyncStateElement();
+
+    this.htmlElement.append(
+      terminalButton.htmlElement,
+      this._oneLineLogger,
+      this.masterSlider.htmlElement,
+      this._syncStateElem.htmlElement,
+    );
 
     this._webConsole = new FwdWebConsole();
     this.terminalDrawer.append(this._webConsole.htmlElement);
@@ -63,6 +74,10 @@ export class RunnerFooter {
     masterGain.linearRampToValueAtTime(value, now + 0.01);
   }
 
+  public setRunnerClientState(newState: RunnerClientState): void {
+    this._syncStateElem.setSyncState(newState);
+  }
+
   private toggleTerminalDrawer(): void {
     if (this.terminalDrawer.style.display === 'none') {
       this.terminalDrawer.style.display = 'flex';
@@ -77,7 +92,7 @@ export class RunnerFooter {
 injectStyle('RunnerFooter', `
 .fwd-runner-footer {
   background: ${defaultTheme.bgSecondary};
-  border-top: solid 1px #00000020;
+  border-top: solid 1px ${defaultTheme.border};
   display: flex;
   user-select: none;
   flex-shrink: 0;
@@ -87,12 +102,13 @@ injectStyle('RunnerFooter', `
 
 .fwd-runner-terminal-drawer {
   background: ${defaultTheme.bgSecondary};
-  border-top: solid 1px #00000020;
+  border-top: solid 1px ${defaultTheme.border};
   display: flex;
 }
 
 .fwd-runner-dark-mode .fwd-runner-footer,
 .fwd-runner-dark-mode .fwd-runner-terminal-drawer {
   background: ${darkTheme.bgSecondary};
+  border-top: solid 1px ${darkTheme.border};
 }
 `);

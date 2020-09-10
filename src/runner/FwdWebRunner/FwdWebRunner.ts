@@ -1,5 +1,6 @@
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
 import { ContainerPanel, FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
+import { TabbedPanel } from '../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
 import { formatTime } from '../../fwd/utils/time';
@@ -8,11 +9,12 @@ import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import { RunnerConfig } from '../RunnerConfig';
-import { darkTheme } from '../style.constants';
-import { ExportPanel } from './components/ExportPanel';
+import { darkTheme, defaultTheme } from '../style.constants';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
+import { ExportPanel } from './panels/ExportPanel';
+import { SettingsPanel } from './panels/SettingsPanel';
 import { injectStyle } from './StyleInjector';
 
 export enum RunnerClientState {
@@ -32,7 +34,7 @@ export default class FwdWebRunner implements FwdRunner {
   private codeEditor: RunnerCodeEditor;
   private _clientState: RunnerClientState;
   private _codeEditorSeparator: SeparatorElement;
-  private _exportPanel: ExportPanel;
+  private _tabbedPanel: TabbedPanel;
 
   private _program: Program;
   private _executedCode: string;
@@ -40,7 +42,6 @@ export default class FwdWebRunner implements FwdRunner {
   private _codeHasErrors: boolean;
   private _isCodeEditorVisible: boolean = true;
   private _isExportPanelVisible: boolean = false;
-  private _isDarkMode: boolean = false;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -59,6 +60,9 @@ export default class FwdWebRunner implements FwdRunner {
     if (config.darkMode) {
       this.setDarkMode(true);
     }
+
+    // TEST
+    this.toggleRightDrawerVisibility();
   }
 
   public setProgram(program: Program): void {
@@ -160,8 +164,12 @@ export default class FwdWebRunner implements FwdRunner {
     }
   }
 
-  public toggleExportPanelVisibility(): void {
-    this.setExportPanelVisibility(! this._isExportPanelVisible);
+  public toggleRightDrawerVisibility(): void {
+    this.setRightDrawerVisibility(! this._isExportPanelVisible);
+  }
+
+  public isDarkMode(): boolean {
+    return this.config.darkMode;
   }
 
   public setDarkMode(darkMode: boolean): void {
@@ -175,11 +183,11 @@ export default class FwdWebRunner implements FwdRunner {
       document.body.classList.remove('fwd-runner-dark-mode');
     }
 
-    this._isDarkMode = darkMode;
+    this.config.darkMode = darkMode;
   }
 
   public toggleDarkMode(): void {
-    this.setDarkMode(! this._isDarkMode);
+    this.setDarkMode(! this.config.darkMode);
   }
 
   private isAudioReady(): boolean {
@@ -193,8 +201,8 @@ export default class FwdWebRunner implements FwdRunner {
     this._isCodeEditorVisible = showing;
   }
 
-  private setExportPanelVisibility(showing: boolean): void {
-    this._exportPanel.htmlElement.style.display = showing ? 'flex' : 'none';
+  private setRightDrawerVisibility(showing: boolean): void {
+    this._tabbedPanel.htmlElement.style.display = showing ? 'flex' : 'none';
     this._isExportPanelVisible = showing;
   }
 
@@ -325,7 +333,7 @@ export default class FwdWebRunner implements FwdRunner {
 
   private setClientState(newState: RunnerClientState): void {
     this._clientState = newState;
-    this._header.setRunnerClientState(newState);
+    this._footer.setRunnerClientState(newState);
   }
 
   private setDirty(isDirty: boolean): void {
@@ -346,9 +354,23 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private buildMainSection(): void {
+    const parentFlexPanel = new FlexPanel();
+    document.getElementById('fwd-runner-container').append(parentFlexPanel.htmlElement);
+    parentFlexPanel.htmlElement.style.overflow = 'auto';
+
     const flexPanel = new FlexPanel();
-    document.getElementById('fwd-runner-container').append(flexPanel.htmlElement);
     flexPanel.htmlElement.style.overflow = 'auto';
+
+    parentFlexPanel.addFlexItem('main', flexPanel, {
+      flexGrow: 0,
+      flexShrink: 0,
+      minWidth: 100,
+      maxWidth: 5000,
+    });
+
+    const sep = parentFlexPanel.addSeparator(0, true);
+    sep.separatorSize = 5;
+    sep.htmlElement.classList.add('fwd-runner-large-separator');
 
     if (this.config.useCodeEditor) {
       this.codeEditor = this.buildCodeEditor();
@@ -379,9 +401,28 @@ export default class FwdWebRunner implements FwdRunner {
       display: 'flex',
     });
 
-    this._exportPanel = new ExportPanel(this);
-    this._exportPanel.htmlElement.style.display = 'none';
-    document.getElementById('fwd-runner-container').append(this._exportPanel.htmlElement);
+    // tabbed panel
+    this._tabbedPanel = new TabbedPanel();
+    this._tabbedPanel.htmlElement.style.display = 'none';
+
+    parentFlexPanel.addFlexItem('right', this._tabbedPanel, {
+      flexGrow: 1,
+      flexShrink: 0,
+      minWidth: 250,
+      maxWidth: 5000,
+    });
+
+    this._tabbedPanel.addTab({
+      tabName: 'Settings',
+      tabContent: new SettingsPanel(this),
+      closeable: false,
+    });
+
+    this._tabbedPanel.addTab({
+      tabName: 'Export',
+      tabContent: new ExportPanel(this),
+      closeable: false,
+    });
   }
 
   private buildCodeEditor(): RunnerCodeEditor {
@@ -419,8 +460,8 @@ injectStyle('FwdWebRunner', `
 }
 
 .fwd-runner-large-separator {
-  border-left: solid 1px #00000015;
-  border-right: solid 1px #00000015;
+  border-left: solid 1px ${defaultTheme.border};
+  border-right: solid 1px ${defaultTheme.border};
 }
 `);
 
@@ -452,6 +493,11 @@ injectStyle('FwdWebRunner_DarkMode', `
 
 .fwd-runner-dark-mode select option {
     background: ${darkTheme.bgPrimary};
+}
+
+.fwd-runner-dark-mode .fwd-runner-large-separator {
+  border-left: solid 1px ${darkTheme.border};
+  border-right: solid 1px ${darkTheme.border};
 }
 `);
 

@@ -15,7 +15,6 @@ export class RunnerHeader {
   private readonly _codeEditorButton: IconButton;
   private readonly _projectSelect: HTMLSelectElement;
   private readonly _timeDisplay: TimeDisplay;
-  private readonly _syncStateElem: SyncStateElement;
 
   constructor(private readonly runner: FwdRunner, private readonly _devClient: DevClient) {
     this.htmlElement = document.createElement('div');
@@ -46,10 +45,14 @@ export class RunnerHeader {
     };
 
     this._playButton = new IconButton('play-button');
-    this._syncStateElem = new SyncStateElement();
+    this._playButton.htmlElement.onclick = () => this.runner.start();
+
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
     const firstSpacer = spacer();
+
+    const drawerButton = new IconButton('tools');
+    drawerButton.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
 
     this._toolbar.append(
       this._projectSelect,
@@ -57,24 +60,14 @@ export class RunnerHeader {
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
       spacer(),
-      this._syncStateElem.htmlElement,
+      drawerButton.htmlElement,
     );
-
-    this._playButton.htmlElement.onclick = () => this.runner.start();
 
     if (this.runner.config.useCodeEditor) {
       this._codeEditorButton = new IconButton('edit');
       this._toolbar.insertBefore(this._codeEditorButton.htmlElement, firstSpacer);
       this._codeEditorButton.htmlElement.onclick = () => this.runner.toggleCodeEditorVisibility();
     }
-
-    const exportButton = new IconButton('export');
-    this._toolbar.insertBefore(exportButton.htmlElement, firstSpacer);
-    exportButton.htmlElement.onclick = () => this.runner.toggleExportPanelVisibility();
-
-    const darkModeButton = new IconButton('moon');
-    this._toolbar.insertBefore(darkModeButton.htmlElement, firstSpacer);
-    darkModeButton.htmlElement.onclick = () => this.runner.toggleDarkMode();
   }
 
   public setFiles(files: string[]): void {
@@ -120,16 +113,12 @@ export class RunnerHeader {
       currentFileOption.innerText = currentFileOption.value;
     }
   }
-
-  public setRunnerClientState(newState: RunnerClientState): void {
-    this._syncStateElem.setSyncState(newState);
-  }
 }
 
 injectStyle('RunnerHeader', `
 .fwd-runner-header {
-  background: ${defaultTheme.bgPrimary};
-  border-bottom: solid 1px #00000020;
+  background: ${defaultTheme.bgSecondary};
+  border-bottom: solid 1px ${defaultTheme.border};
   display: flex;
   user-select: none;
   flex-shrink: 0;
@@ -143,11 +132,7 @@ injectStyle('RunnerHeader', `
 }
 
 .fwd-runner-toolbar .fwd-file-select {
-  color: inherit;
-  border: none;
-  background: none;
   min-width: 120px;
-  font-size: inherit;
 }
 
 .fwd-file-select.dirty {
@@ -156,5 +141,6 @@ injectStyle('RunnerHeader', `
 
 .fwd-runner-dark-mode .fwd-runner-header {
   background: ${darkTheme.bgSecondary};
+  border-bottom: solid 1px ${darkTheme.border};
 }
 `);

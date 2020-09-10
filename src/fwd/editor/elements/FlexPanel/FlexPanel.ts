@@ -1,7 +1,7 @@
 import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
 import { clamp } from "../../../utils/numbers";
 import audit from "../../../utils/time-filters/audit";
-import { EditorElement } from "../../FwdEditor";
+import { EditorElement } from '../EditorElement';
 
 abstract class AbstractContainerElement implements EditorElement {
   public abstract htmlElement: HTMLDivElement;
@@ -114,8 +114,8 @@ export class FlexPanel extends ContainerPanel {
     super();
 
     this.htmlElement.style.display = 'flex';
-    this.htmlElement.style.width = '100%';
-    this.htmlElement.style.height = '100%';
+    // this.htmlElement.style.width = '100%';
+    // this.htmlElement.style.height = '100%';
     this.htmlElement.style.flexDirection = _direction;
   }
 

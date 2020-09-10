@@ -1,4 +1,3 @@
-import { FwdAudio } from '../fwd/audio/FwdAudio';
 import { Fwd } from '../fwd/Fwd';
 import { Program } from '../server/DevServer.constants';
 import { RunnerConfig } from './RunnerConfig';
@@ -19,7 +18,8 @@ export default interface FwdRunner {
   render(duration: number, sampleRate: number, fileName: string): void;
 
   toggleCodeEditorVisibility(): void;
-  toggleExportPanelVisibility(): void;
+  toggleRightDrawerVisibility(): void;
   toggleDarkMode(): void;
   setDarkMode(darkMode: boolean): void;
+  isDarkMode(): boolean;
 }
