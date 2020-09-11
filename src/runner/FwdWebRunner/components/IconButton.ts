@@ -41,8 +41,8 @@ injectStyle('IconButton', `
   border: none;
   margin: auto 0;
   overflow: hidden;
-  height: 1.6rem;
-  width: 1.6rem;
+  height: 1.7rem;
+  width: 1.7rem;
   display: flex;
 }
 
