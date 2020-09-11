@@ -1,6 +1,6 @@
 # Writing your first program
 
-We'll write a basic program where we'll create a button. When this button is clicked, we'll play a 440Hz sine tone for 1 second.
+We'll write a basic program where we'll show a button. When this button is clicked, a 440Hz sine tone will be played for 1 second.
 Here is the code for that.
 
 ```javascript
@@ -54,11 +54,11 @@ const osc = fwd.audio.osc(440);
 osc.connectToMaster();
 osc.gain.value = 0.4;
 ```
-The next instruction involved the ```fwd.scheduler``` module. This module is used when you need to schedule some function
-to be called in the future. 
+The next instruction involves the ```fwd.scheduler``` module. This module is used when you need some function
+to be called in the future. To get the current time position, we can call ```fwd.scheduler.clock```.
 
 ```javascript
 fwd.scheduler.schedule(this.scheduler.clock() + 1.0, () => { /* action */ });
 ```
 
-Here, we just call ```osc.tearDown()``` to stop the oscillator one second in the future.
+Here, we just call ```osc.tearDown``` to stop the oscillator one second in the future.
