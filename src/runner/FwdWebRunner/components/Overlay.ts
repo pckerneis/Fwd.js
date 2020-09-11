@@ -10,7 +10,7 @@ export class Overlay {
 
   private readonly _shadowElement: HTMLDivElement;
 
-  constructor() {
+  constructor(public options?: { hideWhenContainerClicked: boolean, hideWhenBackdropClicked: boolean }) {
     this._shadowElement = document.createElement('div');
     this._shadowElement.classList.add('overlay-shadow-element', 'hidden');
 
@@ -22,10 +22,14 @@ export class Overlay {
     this._backdrop.append(this._shadowElement, this.container);
 
     this._backdrop.addEventListener('click', () => {
-      this.hide();
+      if (this.options?.hideWhenBackdropClicked)
+        this.hide();
     });
 
     this.container.addEventListener('click', (evt) => {
+      if (this.options?.hideWhenContainerClicked)
+        this.hide();
+
       evt.stopPropagation();
     });
   }
@@ -84,8 +88,6 @@ injectStyle('Overlay', `
 
 .overlay-container {
   background: ${defaultTheme.bgSecondary};
-  min-width: 100px;
-  min-height: 100px;
   position: relative;
   margin: auto;
   border-radius: 2px;

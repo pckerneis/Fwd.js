@@ -10,7 +10,6 @@ export default interface FwdRunner {
   setProgram(program: Program): void;
   setFiles(files: string[]): void;
 
-  reset(): void;
   runCode(): void;
   start(): void;
   stop(): void;

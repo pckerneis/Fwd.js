@@ -10,6 +10,7 @@ import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
+import { Overlay } from './components/Overlay';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
@@ -49,10 +50,6 @@ export default class FwdWebRunner implements FwdRunner {
     this._header = new RunnerHeader(this, this._devClient);
     this._footer = new RunnerFooter(this);
 
-    this.fwd.scheduler.onEnded = () => {
-      this._header.onRunnerStop();
-    };
-
     this.buildRunner();
 
     this.prepareConsoleWrappers();
@@ -67,34 +64,27 @@ export default class FwdWebRunner implements FwdRunner {
   public setProgram(program: Program): void {
     const fileChanged = program.file !== this._program?.file;
 
-    this._program = program;
+    if (fileChanged && this.isSchedulerRunning()) {
+      this.handleProgramFileChangeWhileRunning(program);
+    } else {
+      this._program = program;
 
-    if (this.config.useCodeEditor) {
-      this.codeEditor.setCode(program.code, fileChanged);
-    }
-
-    if (fileChanged) {
-      this.reset();
-      this.setDirty(false);
       this._header.setSelectedFile(program.file);
-    }
 
-    if (this.isAudioReady()) {
-      this.runCode();
+      if (this.config.useCodeEditor) {
+        this.codeEditor.setCode(program.code, fileChanged);
+      }
+
+      if (fileChanged) {
+        this.resetAndRun();
+      } else if (this.isAudioReady()) {
+        this.runCode();
+      }
     }
   }
 
   public setFiles(files: string[]): void {
     this._header.setFiles(files);
-  }
-
-  public reset(): void {
-    if (this.isSchedulerRunning()) {
-      this.stop();
-    }
-
-    FwdRuntime.resetContext(this.fwd);
-    this._executedCode = null;
   }
 
   public submit(): void {
@@ -134,7 +124,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public stop(): void {
-    FwdRuntime.stopContext(this.fwd);
+    FwdRuntime.stopContext(this.fwd, () => this._header.onRunnerStop());
   }
 
   public runCode(): void {
@@ -455,7 +445,44 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private isSchedulerRunning(): boolean {
-    return this.fwd.scheduler.state === 'running';
+    return this.fwd.scheduler.state === 'running' || this.fwd.scheduler.state === 'stopping';
+  }
+
+  private resetAndRun(): void {
+    FwdRuntime.resetContext(this.fwd);
+    this._executedCode = null;
+    this.setDirty(false);
+
+    if (this.isAudioReady()) {
+      this.runCode();
+    }
+  }
+
+  private handleProgramFileChangeWhileRunning(program: Program): void {
+    const message = document.createElement('span');
+    message.innerText = 'Waiting for the program to stop...';
+
+    const quitButton = document.createElement('button');
+    quitButton.innerText = 'Force quit';
+    quitButton.style.marginTop = '10px';
+    quitButton.classList.add('text-button');
+    quitButton.onclick = () => {
+      this.fwd.audio.master.disconnect();
+      this.fwd.scheduler.clearEvents();
+      this._header.onRunnerStop();
+      overlay.hide();
+    };
+
+    const overlay = new Overlay();
+    overlay.container.classList.add('fwd-runner-force-quit-overlay');
+    overlay.container.append(message, quitButton);
+    overlay.show();
+
+    FwdRuntime.stopContext(this.fwd, () => {
+      overlay.hide();
+      this._header.onRunnerStop();
+      this.setProgram(program);
+    });
   }
 }
 
@@ -471,6 +498,13 @@ injectStyle('FwdWebRunner', `
 .fwd-runner-large-separator {
   border-left: solid 1px ${defaultTheme.border};
   border-right: solid 1px ${defaultTheme.border};
+}
+
+.fwd-runner-force-quit-overlay {
+    padding: 12px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
 }
 `);
 

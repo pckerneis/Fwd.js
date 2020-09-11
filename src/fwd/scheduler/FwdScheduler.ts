@@ -180,12 +180,6 @@ class FwdChain {
 type State = 'stopping' | 'stopped' | 'running' | 'ready';
 
 export class FwdScheduler {
-
-  /**
-   * A method that will be called when the scheduler stops (that is when all non-cancelable events were fired).
-   */
-  public onEnded: Function;
-
   private _scheduler: Scheduler<FwdEvent>;
 
   private _state: State = 'ready';
@@ -200,15 +194,6 @@ export class FwdScheduler {
    */
   constructor(interval: number = SchedulerImpl.MIN_INTERVAL, lookAhead: number = SchedulerImpl.DEFAULT_LOOKAHEAD) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
-    this._scheduler.onEnded = () => {
-      this._state = 'stopped';
-
-      DBG.debug('on ended called');
-
-      if (this.onEnded != null) {
-        this.onEnded();
-      }
-    }
   }
 
   /**
@@ -341,7 +326,7 @@ export class FwdScheduler {
    * Calling this method will set the scheduler state to `stopping` until all non-cancelable events were processed, which
    * will flip the state to `stopped`.
    */
-  public stop(): void {
+  public stop(onEnded?: Function): void {
     if (this._state === 'stopping') {
       // Stop has already been called but there are still events to process...
       return;
@@ -359,6 +344,16 @@ export class FwdScheduler {
 
     this._state = 'stopping';
     this._scheduler.keepAlive = false;
+
+    this._scheduler.onEnded = () => {
+      this._state = 'stopped';
+
+      DBG.debug('on ended called');
+
+      if (typeof onEnded === 'function') {
+        onEnded();
+      }
+    }
   }
 
   public runSync(duration: Time): void {

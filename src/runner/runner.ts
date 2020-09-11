@@ -19,17 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
   (window as any).fwd = runner.fwd;
 
   // Add audio gesture overlay
-  const overlay = new Overlay();
+  const overlay = new Overlay({
+    hideWhenContainerClicked: true,
+    hideWhenBackdropClicked: true,
+  });
   const message = document.createElement('span');
   message.innerText = 'Click anywhere or press a key to start.';
-  overlay.container.style.padding = '12px';
-  overlay.container.style.minHeight = '55px';
-  overlay.container.style.height = '55px';
   overlay.container.style.padding = '12px';
   overlay.container.style.display = 'flex';
   overlay.container.style.alignItems = 'center';
   overlay.container.append(message);
-  overlay.container.onclick = () =>  overlay.hide();
 
   overlay.show();
 
