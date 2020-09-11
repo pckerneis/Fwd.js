@@ -59,8 +59,10 @@ export function renderOffline(fwd: Fwd, duration: number, sampleRate: number): P
   return offlineContext.startRendering();
 }
 
-export function stopContext(fwd: Fwd): void {
-  fwd.scheduler.stop();
+export function stopContext(fwd: Fwd, endCallback: Function): void {
+  fwd.scheduler.stop(() => {
+    endCallback();
+  });
 
   if (typeof fwd.onStop === 'function') {
     fwd.onStop();
@@ -75,4 +77,5 @@ export function resetContext(fwd: Fwd): void {
   fwd.editor.reset();
   fwd.globals = {};
   fwd.scheduler.resetActions();
+  fwd.scheduler.clearEvents();
 }
