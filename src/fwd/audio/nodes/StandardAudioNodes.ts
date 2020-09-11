@@ -207,7 +207,7 @@ export class FwdSamplerNode extends FwdAudioNode {
   public get outputNode(): AudioNode { return this._output; }
 
   public play(): void {
-    this.fwdAudio.fwdScheduler.schedule(0, () => {
+    this.fwdAudio.fwdScheduler.scheduleNow(() => {
       const source = this._output.context.createBufferSource();
       source.buffer = this._buffer;
       source.connect(this._output);

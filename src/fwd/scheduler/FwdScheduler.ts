@@ -51,7 +51,7 @@ class FwdWait extends FwdChainEvent {
         this.time() :
         this.time;
 
-      this.scheduler.schedule(timeValue, () => this.next.trigger(), true);
+      this.scheduler.schedule(this.scheduler.now() + timeValue, () => this.next.trigger(), true);
     }
   }
 }
@@ -85,7 +85,7 @@ class FwdFire extends FwdChainEvent {
     }
 
     if (this.next && typeof this.next.trigger === 'function') {
-      this.scheduler.schedule(0, () => this.next.trigger(), true);
+      this.scheduler.scheduleNow(() => this.next.trigger(), true);
     }
   }
 }
@@ -97,7 +97,7 @@ class FwdContinueIf extends FwdChainEvent {
 
   public trigger(): void {
     if (typeof this.condition === 'function' && this.condition()) {
-      this.scheduler.schedule(0, () => this.next.trigger(), true);
+      this.scheduler.scheduleNow(() => this.next.trigger(), true);
     }
   }
 }
@@ -262,17 +262,16 @@ export class FwdScheduler {
       return null;
     }
 
-    const nextTime = NOW + time;
-    return this._scheduler.schedule(nextTime, new FwdEvent(nextTime, action, ! preventCancel));
+    DBG.debug('Scheduling at ' + time);
+    return this._scheduler.schedule(time, new FwdEvent(time, action, ! preventCancel));
   }
 
-
   public scheduleNow(action: Function, preventCancel?: boolean): EventRef {
-    // TODO: errhh.. what should it do when called inside scheduler's stack or outside ?
-    // fixme
-    // Maybe this.schedule should be changed so that it will always schedule from scheduler's start
-    // The "schedule forward" concept would only apply inside event chains ? Or something ? Needs careful design
-    return this.schedule(this.now() || this.clock(), action, preventCancel);
+    return this.schedule(this.now(), action, preventCancel);
+  }
+
+  public scheduleAhead(time: Time, action: Function, preventCancel?: boolean): EventRef {
+    return this.schedule(this.now() + time, action, preventCancel);
   }
 
   /**
@@ -315,6 +314,8 @@ export class FwdScheduler {
 
     this._scheduler.eventQueue.clear();
     this._state = 'ready';
+
+    DBG.debug('events cleared');
   }
 
   /**
