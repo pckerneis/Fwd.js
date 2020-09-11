@@ -1,6 +1,6 @@
 const scale = [0, 2, 3, 5, 7, 9, 10];
 // const scale = [0, 2, 4, 5, 7, 9, 11];
-const base = 40;
+const base = 42;
 
 fwd.onStart = () => {
   const chain = fwd.scheduler
@@ -17,7 +17,7 @@ fwd.scheduler.defineAction('playSomeNotes', () => {
     .map(note => note + base);
 
   notes.forEach((note, index) => {
-      if (Math.random() < 0.2) {
+      if (Math.random() < 0.12) {
           notes[index] += 12;
       }
   });
@@ -31,13 +31,13 @@ fwd.scheduler.defineAction('playSomeNotes', () => {
 });
 
 fwd.scheduler.defineAction('playNote', (noteNumber) => {
-  const attack = 0.01;
-  const release = 3.8;
+  const attack = 0.005;
+  const release = 5.0;
 
   const targetFq = fwd.midi.noteToFrequency(noteNumber);
   const startFq = targetFq * 2;
 
-  const fx = fwd.audio.stereoDelay(2.0);
+  const fx = fwd.audio.stereoDelay(5.0);
   fx.connectToMaster();
 
   const osc = fwd.audio.osc(startFq);

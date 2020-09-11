@@ -4,15 +4,16 @@ gui.update = () => {
   gui.rootElement.style.display = 'grid';
   gui.rootElement.style.gridTemplateColumns = '1fr 2fr';
   gui.rootElement.style.gridAutoRows = '20px';
+  gui.rootElement.style.padding = '10px';
   
   gui.label('detune');
-  gui.slider('detune', { defaultValue: 0, max: 12 });
+  gui.slider('detune', { defaultValue: 0, max: 12, cssClasses: ['slider'] });
   
   gui.label('on/off');
   gui.slider('detuneActive', { 
     defaultValue: 0, max: 1, step: 1, style: { 
       width: "30px", margin: '0 auto'
-    } 
+    }, cssClasses: ['slider'] 
   });
 };
 
@@ -99,12 +100,12 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
   }
 
   // Tear down audio nodes when not needed anymore
-  const totalTime = timeBetweenNotes * fwd.globals.steps + 
-        reverbTime + 
-        attack + 
+  const totalTime = timeBetweenNotes * fwd.globals.steps +
+        reverbTime +
+        attack +
         release;
 
-  fwd.scheduler.schedule(totalTime, () => {
+  fwd.scheduler.scheduleAhead(totalTime, () => {
     del.tearDown();
     rvb.tearDown();
   });
