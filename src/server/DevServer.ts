@@ -58,13 +58,36 @@ export class DevServer {
   private static sendWelcomePacket(ws: WebSocket, rootPath: string): void {
     DBG.debug('Scan directory : ' + path.resolve(rootPath));
 
-    const files = fs.readdirSync(rootPath)
-      .filter((file: string) => this.isExecutableFile(file))
-      .filter((file: string) => ! file.endsWith('.config.js'));
+    const files = DevServer.readdirRecursive(rootPath)
+      .map(f => path.relative(rootPath, f));
 
     this.sendMessage(ws, {type: MessageType.WELCOME_TYPE, files});
 
     DBG.debug('Available files: ', files);
+  }
+
+  private static readdirRecursive(rootPath: string): string[] {
+    const items = fs.readdirSync(rootPath);
+
+    DBG.debug('reading ' + rootPath, items);
+
+    const results = items
+      .filter((file: string) => this.isExecutableFile(file))
+      .map((file: string) => path.resolve(rootPath, file));
+
+    items.forEach((file: string) => {
+      const fullPathToFile = path.resolve(rootPath, file);
+      const stat = fs.statSync(fullPathToFile);
+
+      if (stat && stat.isDirectory()) {
+        DBG.debug('Found directory ' + file);
+
+        const res = this.readdirRecursive(fullPathToFile);
+        results.push(...res);
+      }
+    });
+
+    return results;
   }
 
   private static sendMessage(ws: WebSocket, message: ServerMessage): void {
@@ -151,7 +174,7 @@ export class DevServer {
       .watch(fullPathToPrograms, {ignored: /src|.idea|node_modules|.config.js|\.git|[\/\\]\./})
       .on('change', (file: string) => {
         const textContent = fs.readFileSync(file, 'utf8');
-        file = path.basename(file);
+        file = path.relative(fullPathToPrograms, file)
 
         DBG.debug('changed: ' + file);
 
@@ -177,7 +200,7 @@ export class DevServer {
           });
 
           if (clientsWatching.length !== 0) {
-            DBG.info(`Transmit module to ${clientsWatching.length} clients.`);
+            DBG.info(`Transmit changes to ${clientsWatching.length} clients.`);
             clientsWatching.forEach(client => DevServer.sendSketch(client, file, fullPathToPrograms));
           }
         }
