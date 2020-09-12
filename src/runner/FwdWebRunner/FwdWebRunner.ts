@@ -3,11 +3,13 @@ import { ContainerPanel, FlexPanel, SeparatorElement } from '../../fwd/editor/el
 import { TabbedPanel } from '../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
+import { Logger } from '../../fwd/utils/Logger';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
+import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
 import { Overlay } from './components/Overlay';
@@ -17,6 +19,8 @@ import { RunnerHeader } from './components/RunnerHeader';
 import { ExportPanel } from './panels/ExportPanel';
 import { SettingsPanel } from './panels/SettingsPanel';
 import { injectStyle } from './StyleInjector';
+
+const DBG = new Logger('FwdWebRunner', parentLogger);
 
 export enum RunnerClientState {
   disconnected = 'disconnected',
@@ -43,6 +47,9 @@ export default class FwdWebRunner implements FwdRunner {
   private _codeHasErrors: boolean;
   private _isCodeEditorVisible: boolean = true;
   private _isRightDrawerVisible: boolean = false;
+
+  private _forceQuitOverlay: Overlay;
+  private _programToLoadWhenSchedulerStops: Program;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -124,7 +131,19 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public stop(): void {
-    FwdRuntime.stopContext(this.fwd, () => this._header.onRunnerStop());
+    FwdRuntime.stopContext(this.fwd, () => {
+      this._header.onRunnerStop();
+
+      if (this._programToLoadWhenSchedulerStops != null) {
+        this.setProgram(this._programToLoadWhenSchedulerStops);
+        this._programToLoadWhenSchedulerStops = null;
+      }
+
+      if (this._forceQuitOverlay != null) {
+        this._forceQuitOverlay.hide();
+        this._forceQuitOverlay = null;
+      }
+    });
   }
 
   public runCode(): void {
@@ -459,6 +478,8 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private handleProgramFileChangeWhileRunning(program: Program): void {
+    DBG.debug('Waiting for program to stop before changing file', program.file);
+
     const message = document.createElement('span');
     message.innerText = 'Waiting for the program to stop...';
 
@@ -467,9 +488,13 @@ export default class FwdWebRunner implements FwdRunner {
     quitButton.style.marginTop = '10px';
     quitButton.classList.add('text-button');
     quitButton.onclick = () => {
-      this.fwd.audio.master.disconnect();
-      this.fwd.scheduler.clearEvents();
-      this._header.onRunnerStop();
+      if (this.isSchedulerRunning()) {
+        this.fwd.audio.master.disconnect();
+        this.fwd.scheduler.clearEvents();
+        this._header.onRunnerStop();
+        this.setProgram(program);
+      }
+
       overlay.hide();
     };
 
@@ -478,11 +503,9 @@ export default class FwdWebRunner implements FwdRunner {
     overlay.container.append(message, quitButton);
     overlay.show();
 
-    FwdRuntime.stopContext(this.fwd, () => {
-      overlay.hide();
-      this._header.onRunnerStop();
-      this.setProgram(program);
-    });
+    this._programToLoadWhenSchedulerStops = program;
+    this._forceQuitOverlay = overlay;
+    this.stop();
   }
 }
 
