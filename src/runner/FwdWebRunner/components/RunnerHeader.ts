@@ -1,10 +1,8 @@
 import { DevClient } from '../../../server/DevClient';
 import FwdRunner from '../../FwdRunner';
 import { darkTheme, defaultTheme } from '../../style.constants';
-import { RunnerClientState } from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
-import { SyncStateElement } from './SyncState';
 import { TimeDisplay } from './TimeDisplay';
 
 export class RunnerHeader {
@@ -13,7 +11,7 @@ export class RunnerHeader {
 
   private readonly _toolbar: HTMLElement;
   private readonly _playButton: IconButton;
-  private readonly _projectSelect: HTMLSelectElement;
+  private readonly _programSelect: HTMLSelectElement;
   private readonly _timeDisplay: TimeDisplay;
 
   constructor(private readonly runner: FwdRunner, private readonly _devClient: DevClient) {
@@ -25,17 +23,17 @@ export class RunnerHeader {
 
     this.htmlElement.append(this._toolbar);
 
-    this._projectSelect = document.createElement('select');
-    this._projectSelect.classList.add('fwd-file-select');
-    this._projectSelect.oninput = () => {
+    this._programSelect = document.createElement('select');
+    this._programSelect.classList.add('fwd-file-select');
+    this._programSelect.oninput = () => {
       // TODO warn user if unsaved changes
 
       // Remove all extra '*' characters
-      for (let i = 0; i < this._projectSelect.options.length; ++i) {
-        this._projectSelect.options.item(i).label = this._projectSelect.options.item(i).value;
+      for (let i = 0; i < this._programSelect.options.length; ++i) {
+        this._programSelect.options.item(i).label = this._programSelect.options.item(i).value;
       }
 
-      this._devClient.watchFile(this._projectSelect.value);
+      this._devClient.watchFile(this._programSelect.value);
     };
 
     const spacer = () => {
@@ -55,7 +53,7 @@ export class RunnerHeader {
     this.rightDrawerToggle.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
 
     this._toolbar.append(
-      this._projectSelect,
+      this._programSelect,
       firstSpacer,
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,
@@ -65,7 +63,7 @@ export class RunnerHeader {
   }
 
   public setFiles(files: string[]): void {
-    this._projectSelect.innerHTML = '';
+    this._programSelect.innerHTML = '';
 
     files
       .map(label => {
@@ -74,13 +72,13 @@ export class RunnerHeader {
         option.innerText = label;
         return option;
       }).forEach(option => {
-      this._projectSelect.append(option);
+      this._programSelect.append(option);
     });
   }
 
   public setSelectedFile(file: string): void {
-    for (let i = 0; i < this._projectSelect.options.length; ++i) {
-      this._projectSelect.options.item(i).selected = this._projectSelect.options.item(i).value === file;
+    for (let i = 0; i < this._programSelect.options.length; ++i) {
+      this._programSelect.options.item(i).selected = this._programSelect.options.item(i).value === file;
     }
   }
 
@@ -97,13 +95,13 @@ export class RunnerHeader {
   }
 
   public setDirty(isDirty: boolean): void {
-    const currentFileOption = this._projectSelect.options.item(this._projectSelect.options.selectedIndex);
+    const currentFileOption = this._programSelect.options.item(this._programSelect.options.selectedIndex);
 
     if (isDirty) {
-      this._projectSelect.classList.add('dirty');
+      this._programSelect.classList.add('dirty');
       currentFileOption.innerText = currentFileOption.value + '*';
     } else {
-      this._projectSelect.classList.remove('dirty');
+      this._programSelect.classList.remove('dirty');
       currentFileOption.innerText = currentFileOption.value;
     }
   }
