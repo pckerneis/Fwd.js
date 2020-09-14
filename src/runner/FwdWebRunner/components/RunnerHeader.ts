@@ -13,6 +13,7 @@ export class RunnerHeader {
   private readonly _playButton: IconButton;
   private readonly _programSelect: HTMLSelectElement;
   private readonly _timeDisplay: TimeDisplay;
+  private readonly _newProgramButton: IconButton;
 
   constructor(private readonly runner: FwdRunner, private readonly _devClient: DevClient) {
     this.htmlElement = document.createElement('div');
@@ -36,24 +37,28 @@ export class RunnerHeader {
       this._devClient.watchFile(this._programSelect.value);
     };
 
+    this._newProgramButton = new IconButton('add');
+    this._newProgramButton.htmlElement.onclick = () => this.runner.createNewProgram();
+
     const spacer = () => {
       const elem = document.createElement('span');
       elem.style.flexGrow = '1';
       return elem;
     };
 
+    const firstSpacer = spacer();
+
     this._playButton = new IconButton('play-button');
     this._playButton.htmlElement.onclick = () => this.runner.start();
 
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
-
-    const firstSpacer = spacer();
 
     this.rightDrawerToggle = new IconButton('tools');
     this.rightDrawerToggle.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
 
     this._toolbar.append(
       this._programSelect,
+      this._newProgramButton.htmlElement,
       firstSpacer,
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,

@@ -10,6 +10,8 @@ export default interface FwdRunner {
   setProgram(program: Program): void;
   setFiles(files: string[]): void;
 
+  createNewProgram(): void;
+
   runCode(): void;
   start(): void;
   stop(): void;
@@ -27,4 +29,5 @@ export default interface FwdRunner {
   toggleDarkMode(): void;
   setDarkMode(darkMode: boolean): void;
   isDarkMode(): boolean;
+
 }
