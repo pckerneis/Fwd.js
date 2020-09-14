@@ -3,6 +3,7 @@ import { ContainerPanel, FlexPanel, SeparatorElement } from '../../fwd/editor/el
 import { TabbedPanel } from '../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
+import { createDomElement } from '../../fwd/utils/dom-utils';
 import { Logger } from '../../fwd/utils/Logger';
 import { formatTime } from '../../fwd/utils/time';
 import debounce from '../../fwd/utils/time-filters/debounce';
@@ -48,8 +49,8 @@ export default class FwdWebRunner implements FwdRunner {
   private _isCodeEditorVisible: boolean = true;
   private _isRightDrawerVisible: boolean = false;
 
-  private _forceQuitOverlay: Overlay;
-  private _programToLoadWhenSchedulerStops: Program;
+  private _postStopAction: Function;
+  private _availableFiles: string[] = [];
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this.initDevClient();
@@ -91,7 +92,49 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public setFiles(files: string[]): void {
+    this._availableFiles = files;
     this._header.setFiles(files);
+  }
+
+  public createNewProgram(): void {
+    if (this.isSchedulerRunning()) {
+      this.stopAndShowForceQuitOverlay().then(() => this.createNewProgram());
+      return;
+    }
+
+    const message = createDomElement('span', { innerText: 'Create a new program'});
+    const pathInput = createDomElement('input', {
+      type: 'text',
+      placeholder: 'program.js',
+      style: { margin: '8px', display: 'block', padding: '5px' },
+    });
+    const confirmButton = createDomElement('button', { innerText: 'Confirm' });
+
+    const overlay = new Overlay({ hideWhenBackdropClicked: true, hideWhenContainerClicked: false });
+    overlay.container.classList.add('fwd-runner-new-program-overlay');
+    overlay.container.append(message, pathInput, confirmButton);
+    overlay.show();
+
+    confirmButton.onclick = () => {
+      let path = pathInput.value.trim();
+
+      if (path != '') {
+        if (! path.endsWith('.js')) {
+          path += '.js';
+        }
+
+        console.log('Create new file ' + path);
+
+        const allFiles = [...this._availableFiles];
+        allFiles.push(path);
+        allFiles.sort();
+
+        this._devClient.saveFile(path, '');
+        this.setFiles(allFiles);
+        this._devClient.watchFile(path);
+        overlay.hide();
+      }
+    };
   }
 
   public submit(): void {
@@ -134,14 +177,9 @@ export default class FwdWebRunner implements FwdRunner {
     FwdRuntime.stopContext(this.fwd, () => {
       this._header.onRunnerStop();
 
-      if (this._programToLoadWhenSchedulerStops != null) {
-        this.setProgram(this._programToLoadWhenSchedulerStops);
-        this._programToLoadWhenSchedulerStops = null;
-      }
-
-      if (this._forceQuitOverlay != null) {
-        this._forceQuitOverlay.hide();
-        this._forceQuitOverlay = null;
+      if (this._postStopAction != null) {
+        this._postStopAction();
+        this._postStopAction = null;
       }
     });
   }
@@ -385,10 +423,6 @@ export default class FwdWebRunner implements FwdRunner {
       maxWidth: 5000,
     });
 
-    // const sep = parentFlexPanel.addSeparator(0, true);
-    // sep.separatorSize = 5;
-    // sep.htmlElement.classList.add('fwd-runner-large-separator');
-
     if (this.config.useCodeEditor) {
       this.codeEditor = this.buildCodeEditor();
 
@@ -480,32 +514,41 @@ export default class FwdWebRunner implements FwdRunner {
   private handleProgramFileChangeWhileRunning(program: Program): void {
     DBG.debug('Waiting for program to stop before changing file', program.file);
 
-    const message = document.createElement('span');
-    message.innerText = 'Waiting for the program to stop...';
+    this.stopAndShowForceQuitOverlay().then(() => this.setProgram(program));
+  }
 
-    const quitButton = document.createElement('button');
-    quitButton.innerText = 'Force quit';
-    quitButton.style.marginTop = '10px';
-    quitButton.classList.add('text-button');
-    quitButton.onclick = () => {
-      if (this.isSchedulerRunning()) {
-        this.fwd.audio.master.disconnect();
-        this.fwd.scheduler.clearEvents();
-        this._header.onRunnerStop();
-        this.setProgram(program);
-      }
+  private stopAndShowForceQuitOverlay(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const message = createDomElement('span', { innerText: 'Waiting for the program to stop...' });
+      const quitButton = createDomElement('button', {
+        innerText: 'Force quit',
+        classList: ['text-button'],
+        style: { marginTop: '10px' },
+      });
 
-      overlay.hide();
-    };
+      quitButton.onclick = () => {
+        if (this.isSchedulerRunning()) {
+          this.fwd.audio.master.disconnect();
+          this.fwd.scheduler.clearEvents();
+          this._header.onRunnerStop();
+          resolve();
+        }
 
-    const overlay = new Overlay();
-    overlay.container.classList.add('fwd-runner-force-quit-overlay');
-    overlay.container.append(message, quitButton);
-    overlay.show();
+        overlay.hide();
+      };
 
-    this._programToLoadWhenSchedulerStops = program;
-    this._forceQuitOverlay = overlay;
-    this.stop();
+      const overlay = new Overlay();
+      overlay.container.classList.add('fwd-runner-force-quit-overlay');
+      overlay.container.append(message, quitButton);
+      overlay.show();
+
+      this._postStopAction = () => {
+        resolve();
+        overlay.hide();
+      };
+
+      this.stop();
+    })
   }
 }
 
@@ -524,6 +567,13 @@ injectStyle('FwdWebRunner', `
 }
 
 .fwd-runner-force-quit-overlay {
+    padding: 12px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.fwd-runner-new-program-overlay {
     padding: 12px;
     align-items: center;
     display: flex;
