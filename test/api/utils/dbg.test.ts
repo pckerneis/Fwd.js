@@ -1,4 +1,4 @@
-import { Logger, LoggerLevel } from '../../src/fwd/utils/Logger';
+import { Logger, LoggerLevel } from '../../../src/fwd/utils/Logger';
 
 describe('Logger', () => {
   beforeEach(() => {

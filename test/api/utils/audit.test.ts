@@ -1,4 +1,4 @@
-import audit from '../../src/fwd/utils/time-filters/audit';
+import audit from '../../../src/fwd/utils/time-filters/audit';
 
 beforeEach(() => {
   jest.useFakeTimers();

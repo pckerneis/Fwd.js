@@ -16,8 +16,8 @@ export class Logger {
   public readonly pathLength: number = 32;
 
   constructor(public readonly identifier: string,
-              public readonly parentLogger: Logger = null,
-              public level: LoggerLevel = null) {}
+              public readonly parentLogger?: Logger,
+              public level?: LoggerLevel) {}
 
 
   public info(...messages: any[]): void {

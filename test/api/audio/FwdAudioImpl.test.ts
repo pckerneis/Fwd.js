@@ -79,6 +79,8 @@ describe('FwdAudioNode', () => {
     expect(() => fwdAudio.distortion(1.0)).toThrowError();
     expect(() => fwdAudio.compressor()).toThrowError();
     expect(() => fwdAudio.reverb()).toThrowError();
+    // @ts-ignore
+    expect(() => fwdAudio.bufferNode(null)).toThrowError();
 
     fwdAudio.start();
     expect(() => fwdAudio.gain()).not.toThrowError();
@@ -91,5 +93,7 @@ describe('FwdAudioNode', () => {
     expect(() => fwdAudio.distortion(1.0)).not.toThrowError();
     expect(() => fwdAudio.compressor()).not.toThrowError();
     expect(() => fwdAudio.reverb()).not.toThrowError();
+    // @ts-ignore
+    expect(() => fwdAudio.bufferNode(null)).not.toThrowError();
   });
 });

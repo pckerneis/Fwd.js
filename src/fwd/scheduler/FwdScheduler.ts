@@ -217,7 +217,7 @@ export class FwdScheduler {
    * @returns The current position of the scheduler's head in seconds.
    */
   public now(): Time {
-    return NOW;
+    return NOW || 0;
   }
 
   /**

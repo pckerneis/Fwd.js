@@ -10,7 +10,6 @@ import {
   FwdOscillatorNode, FwdReverbNode,
   FwdSamplerNode, FwdStereoDelayNode, tearDownNativeNode,
 } from '../../../../src/fwd/audio/nodes/StandardAudioNodes';
-import { Time } from '../../../../src/fwd/scheduler/EventQueue/EventQueue';
 import { Logger, LoggerLevel } from '../../../../src/fwd/utils/Logger';
 import { mockFwd } from '../../../mocks/Fwd.mock';
 import { mockFwdAudio } from '../../../mocks/FwdAudio.mock';
@@ -253,9 +252,11 @@ describe('StandardAudioNodes', () => {
     });
 
     it('can be played', () => {
+      jest.useFakeTimers();
+
       (global as any).AudioParam = mockAudioParam;
       const fwdAudioMock = mockFwdAudio();
-      fwdAudioMock.fwdScheduler['schedule'] = (t: Time, fn: Function) => fn();
+      fwdAudioMock.fwdScheduler['scheduleNow'] = (fn: Function) => fn();
 
       // We need to provide fetch
       (global as any).fetch = jest.fn().mockImplementation(() => {
@@ -267,7 +268,6 @@ describe('StandardAudioNodes', () => {
       node.outputNode['context'] = mockAudioContext();
 
       node.play();
-
       expect(node.outputNode.context.createBufferSource).toHaveBeenCalled();
     });
   });

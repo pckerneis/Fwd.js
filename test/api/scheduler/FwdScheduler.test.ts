@@ -103,23 +103,6 @@ describe('FwdScheduler', () => {
     expect(mockAction).toHaveBeenCalledTimes(2);
   });
 
-  it('change state and fire onEnded callback', async () => {
-    const onEnded = jest.fn();
-    scheduler.onEnded = onEnded;
-
-    expect(scheduler.state).toBe('ready');
-    scheduler.start();
-    expect(scheduler.state).toBe('running');
-
-    await waitSeconds(0, TIME);
-    scheduler.stop();
-    expect(scheduler.state).toBe('stopping');
-
-    await waitSeconds(0.01, TIME);
-    expect(scheduler.state).toBe('stopped');
-    expect(onEnded).toHaveBeenCalledTimes(1);
-  });
-
   it('passes scoped time to events', async () => {
     const action1 = jest.fn(() => {
       expect(scheduler.now()).toBe(0.01);
