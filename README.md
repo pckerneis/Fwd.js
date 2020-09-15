@@ -1,6 +1,6 @@
 # Fwd.js
 
-A toolbox for livecoding and interactive music composition with WebAudio and WebMidi.
+A toolbox for livecoding and interactive music composition with WebAudio.
 
 The project consists of :
 - An API focused on sound manipulation and scheduling
