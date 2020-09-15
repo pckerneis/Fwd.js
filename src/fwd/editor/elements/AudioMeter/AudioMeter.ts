@@ -16,6 +16,8 @@ export class AudioMeterElement implements EditorElement {
 
   private _sampleBuffer: Float32Array;
 
+  private _source: AudioNode;
+
   constructor() {
     this.htmlElement = document.createElement('div');
 
@@ -33,14 +35,23 @@ export class AudioMeterElement implements EditorElement {
     this.update();
   }
 
+  public get audioSource(): AudioNode {
+    return this._source;
+  }
+
   public set audioSource(source: AudioNode) {
     if (this._analyser != null) {
       this._analyser.disconnect();
+      this._analyser = null;
     }
 
-    this._analyser = source.context.createAnalyser();
-    this._analyser.fftSize = 2048;
-    source.connect(this._analyser);
+    this._source = source;
+
+    if (this._source != null) {
+      this._analyser = source.context.createAnalyser();
+      this._analyser.fftSize = 2048;
+      source.connect(this._analyser);
+    }
   }
 
   public get mute(): boolean {
