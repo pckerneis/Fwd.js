@@ -411,7 +411,13 @@ export default class FwdWebRunner implements FwdRunner {
   private buildMainSection(): void {
     const parentFlexPanel = new FlexPanel();
     parentFlexPanel.htmlElement.style.justifyContent = 'flex-end';
-    document.getElementById('fwd-runner-container').append(parentFlexPanel.htmlElement);
+    const container = document.getElementById('fwd-runner-container');
+
+    if (container != null) {
+      container.append(parentFlexPanel.htmlElement);
+    } else {
+      DBG.error('Cannot find runner\'s container element.')
+    }
 
     const flexPanel = new FlexPanel();
 
