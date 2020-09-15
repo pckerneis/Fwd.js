@@ -79,3 +79,7 @@ export function resetContext(fwd: Fwd): void {
   fwd.scheduler.resetActions();
   fwd.scheduler.clearEvents();
 }
+
+export function forgetAllContexts(): void {
+  programs.clear();
+}
