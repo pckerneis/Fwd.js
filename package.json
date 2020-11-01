@@ -1,10 +1,14 @@
 {
-  "name": "sketch",
+  "name": "@pckerneis/fwd",
   "version": "0.0.1",
   "license": "GPL-3.0",
+  "main": "api/fwd/index.js",
+  "files": ["api/**/*"],
   "scripts": {
     "doc": "typedoc",
+    "docs": "docsify serve ./docs",
     "test": "jest --coverage",
+    "build-api": "tsc --p api.tsconfig.json",
     "build-runner": "webpack --config webpack.config.js --display-error-details",
     "build-server": "cd src/server && tsc && cd ../..",
     "build-all": "yarn build-runner && yarn build-server",
