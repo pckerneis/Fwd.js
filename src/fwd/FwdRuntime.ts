@@ -38,8 +38,6 @@ function createContext(): Fwd {
 }
 
 export function startContext(fwd: Fwd): void {
-  fwd.scheduler.clearEvents();
-
   fwd.audio.start();
 
   if (typeof fwd.onStart === 'function') {
@@ -50,8 +48,6 @@ export function startContext(fwd: Fwd): void {
 }
 
 export function renderOffline(fwd: Fwd, duration: number, sampleRate: number): Promise<AudioBuffer> {
-  fwd.scheduler.clearEvents();
-
   const offlineContext = fwd.audio.startOffline(duration, sampleRate);
   fwd.onStart();
   fwd.scheduler.runSync(duration);
@@ -77,7 +73,6 @@ export function resetContext(fwd: Fwd): void {
   fwd.editor.reset();
   fwd.globals = {};
   fwd.scheduler.resetActions();
-  fwd.scheduler.clearEvents();
 }
 
 export function forgetAllContexts(): void {

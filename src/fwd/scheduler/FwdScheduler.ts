@@ -282,28 +282,6 @@ export class FwdScheduler {
   }
 
   /**
-   * Removes all scheduled events, regardless of whether they can be canceled or not, and set the state to `ready`.
-   * Use it with care when you know you can cancel all events without any harm, before starting a new execution. The
-   * scheduler state will be set to `ready` which will then allow to call {@link start} again.
-   *
-   * Calling this method while the scheduler's state is `running` will throw an error.
-   */
-  public clearEvents(): void {
-    if (this._state === 'running') {
-      throw new Error('You should call stop before calling clearEvents.');
-    }
-
-    this._scheduler.eventQueue.events.forEach((scheduledEvent) => {
-      this._scheduler.cancel(scheduledEvent.ref);
-    });
-
-    this._scheduler.eventQueue.clear();
-    this._state = 'ready';
-
-    DBG.debug('events cleared');
-  }
-
-  /**
    * Reset the time pointer, start a new execution and set the state to `running`.
    *
    * Calling this method will throw an error if the current state is not `ready`.
@@ -347,6 +325,7 @@ export class FwdScheduler {
 
     this._scheduler.onEnded = () => {
       this._state = 'stopped';
+      this.clearEvents();
 
       DBG.debug('on ended called');
 
@@ -381,5 +360,20 @@ export class FwdScheduler {
 
   public chain(fwdChainEvents?: FwdChainEvent[]): FwdChain {
     return new FwdChain(this, fwdChainEvents);
+  }
+
+  private clearEvents(): void {
+    if (this._state === 'running') {
+      throw new Error('You should call stop before calling clearEvents.');
+    }
+
+    this._scheduler.eventQueue.events.forEach((scheduledEvent) => {
+      this._scheduler.cancel(scheduledEvent.ref);
+    });
+
+    this._scheduler.eventQueue.clear();
+    this._state = 'ready';
+
+    DBG.debug('events cleared');
   }
 }

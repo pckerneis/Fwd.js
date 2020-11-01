@@ -535,7 +535,6 @@ export default class FwdWebRunner implements FwdRunner {
       quitButton.onclick = () => {
         if (this.isSchedulerRunning()) {
           this.fwd.audio.master.disconnect();
-          this.fwd.scheduler.clearEvents();
           this._header.onRunnerStop();
           resolve();
         }
