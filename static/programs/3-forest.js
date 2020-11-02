@@ -12,7 +12,7 @@ fwd.onStart = () => {
   chain.trigger();
 };
 
-fwd.scheduler.defineAction('playSomeNotes', () => {
+fwd.scheduler.set('playSomeNotes', () => {
   const notes = generateChord()
     .map(note => note + base);
 
@@ -30,7 +30,7 @@ fwd.scheduler.defineAction('playSomeNotes', () => {
   }); 
 });
 
-fwd.scheduler.defineAction('playNote', (noteNumber) => {
+fwd.scheduler.set('playNote', (noteNumber) => {
   const attack = 0.005;
   const release = 5.0;
 

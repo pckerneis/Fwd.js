@@ -227,7 +227,7 @@ describe('FwdScheduler', () => {
 
   it('fires event chains', async () => {
     const action1 = jest.fn();
-    scheduler.defineAction('action1', action1);
+    scheduler.set('action1', action1);
     scheduler.fire(action1).wait(1).fire('action1').trigger();
 
     scheduler.start();
@@ -244,7 +244,7 @@ describe('FwdScheduler', () => {
     const throwingAction = () => {
       throw error;
     };
-    scheduler.defineAction('action1', throwingAction);
+    scheduler.set('action1', throwingAction);
     scheduler.fire(throwingAction).fire('action1').trigger();
 
     scheduler.start();
@@ -435,9 +435,9 @@ describe('FwdScheduler', () => {
 
   it('should reset defined actions', async () => {
     const definedAction = () => {};
-    scheduler.defineAction('hey', definedAction);
-    expect(scheduler.getAction('hey')).toBe(definedAction);
+    scheduler.set('hey', definedAction);
+    expect(scheduler.get('hey')).toBe(definedAction);
     scheduler.resetActions();
-    expect(scheduler.getAction('hey')).toBeUndefined();
+    expect(scheduler.get('hey')).toBeUndefined();
   });
 });

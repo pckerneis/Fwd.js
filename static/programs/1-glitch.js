@@ -36,7 +36,7 @@ fwd.onStart = () => {
   
   const chain = fwd.scheduler
     .fire('glitch')
-    .wait(3)
+    .wait(2)
   	.continueIfStillRunning()
   	.fire(() => chain.trigger());
   
@@ -46,7 +46,7 @@ fwd.onStart = () => {
 // Counter for the filename
 let counter = 0;
 
-fwd.scheduler.defineAction('glitch', () => {  
+fwd.scheduler.set('glitch', () => {
   const numSamples = Math.floor(44100 * gui.getValue('duration'));
   const sr = 44100;
   
@@ -70,7 +70,7 @@ fwd.scheduler.defineAction('glitch', () => {
 
 
     for (let i = 0; i < numSamples; i++) {
-      channelData[i] = Math.sin(t + incr(fq) * i);
+      // channelData[i] = Math.sin(t + incr(fq) * i);
 
       if (fwd.utils.random() < changeProb) {
         fq = fwd.utils.random(30, 2000);

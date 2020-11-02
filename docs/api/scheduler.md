@@ -132,7 +132,7 @@ You can define reusable actions with ```scheduler.defineAction``` and giving the
 ```fire``` calls.
 
 ```javascript
-fwd.scheduler.defineAction("greetings", (who) => console.log(`Hello, ${who}!`));
+fwd.scheduler.set("greetings", (who) => console.log(`Hello, ${who}!`));
 fwd.scheduler.fire("greetings", "World").trigger();
 // > "Hello, World!"
 ```

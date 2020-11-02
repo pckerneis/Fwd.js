@@ -8,7 +8,7 @@ const gain = 0.4;
 const attackTime = 0.01;
 const releaseTime = 0.3;
 
-fwd.scheduler.defineAction('noteOn', (pitch) => {
+fwd.scheduler.set('noteOn', (pitch) => {
   const freq = mtof(pitch);
   const osc = fwd.audio.osc(freq);
   const distorsion = fwd.audio.distortion(10);

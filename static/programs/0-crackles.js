@@ -53,7 +53,7 @@ fwd.onStart = () => {
   chain.trigger();
 };
 
-fwd.scheduler.defineAction('cloud', (rvb) => {
+fwd.scheduler.set('cloud', (rvb) => {
   rvb.wetGain.gain.value = gui.getValue('wetGain');
   rvb.dryGain.gain.value = gui.getValue('dryGain');
   
@@ -67,7 +67,7 @@ fwd.scheduler.defineAction('cloud', (rvb) => {
   }
 });
 
-fwd.scheduler.defineAction('burst', (rvb) => {
+fwd.scheduler.set('burst', (rvb) => {
   const attNoise = gui.getValue('attackNoise');
   const attack = Math.max(1, Math.floor(gui.getValue('attack') + fwd.utils.random(-attNoise, attNoise)));
 

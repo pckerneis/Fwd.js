@@ -1,5 +1,6 @@
 import { Logger } from '../utils/Logger';
 import { EventRef, Time } from './EventQueue/EventQueue';
+import { Callable, FwdChain, FwdChainEvent, FwdFire, FwdWait } from './FwdChain';
 import parentLogger from './logger.core';
 import { Action, Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
@@ -23,160 +24,6 @@ class FwdEvent implements Action {
   }
 }
 
-abstract class FwdChainEvent {
-  private _next: FwdChainEvent;
-
-  protected constructor(public readonly scheduler: FwdScheduler) {
-  }
-
-  public get next(): FwdChainEvent {
-    return this._next;
-  }
-
-  public set next(event: FwdChainEvent) {
-    this._next = event;
-  }
-
-  public abstract trigger(): void;
-}
-
-class FwdWait extends FwdChainEvent {
-  constructor(scheduler: FwdScheduler, public readonly time: (() => Time) | Time) {
-    super(scheduler);
-  }
-
-  public trigger(): void {
-    if (this.next && typeof this.next.trigger === 'function') {
-      const timeValue = typeof this.time === 'function' ?
-        this.time() :
-        this.time;
-
-      this.scheduler.schedule(this.scheduler.now() + timeValue, () => this.next.trigger(), true);
-    }
-  }
-}
-
-class FwdFire extends FwdChainEvent {
-  constructor(scheduler: FwdScheduler, public readonly action: Function | string, public readonly args: any[]) {
-    super(scheduler);
-  }
-
-  public trigger(): void {
-    if (typeof this.action === 'function') {
-      try {
-        this.action(...this.args);
-      } catch(e) {
-        console.error(e);
-      }
-    } else if (typeof this.action === 'string') {
-      const action = this.scheduler.getAction(this.action);
-
-      if (action != null) {
-        try {
-          action(...this.args);
-        } catch(e) {
-          console.error(e);
-        }
-      } else {
-        console.error(`No action was found with the key '${this.action}'.`);
-      }
-    } else {
-      console.error('Cannot fire action. You should provide a function or a defined action name.', this.action);
-    }
-
-    if (this.next && typeof this.next.trigger === 'function') {
-      this.scheduler.scheduleNow(() => this.next.trigger(), true);
-    }
-  }
-}
-
-class FwdContinueIf extends FwdChainEvent {
-  constructor(scheduler: FwdScheduler, public readonly condition: () => boolean) {
-    super(scheduler);
-  }
-
-  public trigger(): void {
-    if (typeof this.condition === 'function' && this.condition()) {
-      this.scheduler.scheduleNow(() => this.next.trigger(), true);
-    }
-  }
-}
-
-class FwdChain {
-  private fwdChainEvents: FwdChainEvent[];
-
-  constructor(public readonly scheduler: FwdScheduler, events?: FwdChainEvent[]) {
-    this.fwdChainEvents = events || [];
-  }
-
-  public get events(): FwdChainEvent[] { return this.fwdChainEvents; }
-
-  public fire(action: Function | string, ...args: any[]): this {
-    this.append(new FwdFire(this.scheduler, action, args));
-    return this;
-  }
-
-  public wait(time: (() => Time) | Time): this {
-    this.append(new FwdWait(this.scheduler, time));
-    return this;
-  }
-
-  public continueIf(condition: () => boolean): this {
-    this.append(new FwdContinueIf(this.scheduler, condition));
-    return this;
-  }
-
-  public continueIfStillRunning(): this {
-    return this.continueIf(() => this.scheduler.state === 'running');
-  }
-
-  public concat(chain: FwdChain): this {
-    const previous = this.last();
-    const next = chain.first();
-
-    if (previous != null) {
-      previous.next = next;
-    }
-
-    this.fwdChainEvents = [...this.fwdChainEvents, ...chain.fwdChainEvents];
-
-    return this;
-  }
-
-  public trigger(): void {
-    if ((this.scheduler.state === 'running' || this.scheduler.state === 'ready')
-      && this.fwdChainEvents.length > 0) {
-      this.fwdChainEvents[0].trigger();
-    }
-  }
-
-  public first(): FwdChainEvent {
-    if (this.fwdChainEvents.length === 0) {
-      return null;
-    }
-
-    return this.fwdChainEvents[0];
-  }
-
-  public last(): FwdChainEvent {
-    if (this.fwdChainEvents.length === 0) {
-      return null;
-    }
-
-    return this.fwdChainEvents[this.fwdChainEvents.length - 1];
-  }
-
-  public append(event: FwdChainEvent): void {
-    const previous = this.last();
-
-    if (previous != null) {
-      previous.next = event;
-    }
-
-    this.fwdChainEvents = [...this.fwdChainEvents, event];
-  }
-}
-
 type State = 'stopping' | 'stopped' | 'running' | 'ready';
 
 export class FwdScheduler {
@@ -194,6 +41,10 @@ export class FwdScheduler {
    */
   constructor(interval: number = SchedulerImpl.MIN_INTERVAL, lookAhead: number = SchedulerImpl.DEFAULT_LOOKAHEAD) {
     this._scheduler = new SchedulerImpl<FwdEvent>(interval, lookAhead);
+  }
+
+  public get env(): any {
+    return this._definitions;
   }
 
   /**
@@ -269,18 +120,6 @@ export class FwdScheduler {
     this._scheduler.cancel(eventRef);
   }
 
-  public wait(time: Time | (() => Time)): FwdChain {
-    const chain = new FwdChain(this);
-    chain.wait(time);
-    return chain;
-  }
-
-  public fire(action: Function | string, ...args: any[]): FwdChain {
-    const chain = new FwdChain(this);
-    chain.fire(action, ...args);
-    return chain;
-  }
-
   /**
    * Reset the time pointer, start a new execution and set the state to `running`.
    *
@@ -345,21 +184,46 @@ export class FwdScheduler {
     this._state = 'stopped';
   }
 
-  public getAction(name: string): any {
+  public get(name: string): any {
     return this._definitions[name];
   }
 
-  public defineAction(name: string, action: () => any): any {
-    this._definitions[name] = action;
-    return action;
+  public set(name: string, value: any): any {
+    this._definitions[name] = value;
+    return value;
   }
 
   public resetActions(): void {
     this._definitions = {};
   }
 
-  public chain(fwdChainEvents?: FwdChainEvent[]): FwdChain {
-    return new FwdChain(this, fwdChainEvents);
+  public wait(time: Time | (() => Time)): FwdChain {
+    const chain = new FwdChain(this);
+    chain.wait(time);
+    return chain;
+  }
+
+  public fire(action: Callable | string, ...args: any[]): FwdChain {
+    const chain = new FwdChain(this);
+    chain.fire(action, ...args);
+    return chain;
+  }
+
+  public chain(...events: (Callable | string | number | any[])[]): FwdChain {
+    const fwdEvents: FwdChainEvent[] = events.map((event) => {
+      if (typeof event === 'function') {
+        return new FwdFire(this, event, []);
+      } else if (typeof event === 'number') {
+        return new FwdWait(this, event);
+      } else if (typeof event === 'string') {
+        return new FwdFire(this, event, []);
+      } else if (Array.isArray(event)) {
+        return this.chain(...event);
+      }
+      return null;
+    }).filter((event) => Boolean(event));
+
+    return new FwdChain(this, fwdEvents);
   }
 
   private clearEvents(): void {

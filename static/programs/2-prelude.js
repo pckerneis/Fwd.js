@@ -71,7 +71,7 @@ fwd.onStart = () => {
 	gui.changed();
 };
 
-fwd.scheduler.defineAction('arp', (chord, duration) => {
+fwd.scheduler.set('arp', (chord, duration) => {
   duration = duration || fwd.globals.dur;
 
   const notes = chord.map(n => n + 12 * 4);
@@ -111,7 +111,7 @@ fwd.scheduler.defineAction('arp', (chord, duration) => {
   });
 });
 
-fwd.scheduler.defineAction('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
+fwd.scheduler.set('playNote', (idx, noteNumber, timeBetweenNotes, attack, reverbTime, del, release) => {
   const osc = fwd.audio.osc(fwd.midi.noteToFrequency(noteNumber + gui.getValue('detune') * gui.getValue('detuneActive')));
   osc.connect(del);
 
