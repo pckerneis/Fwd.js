@@ -51,6 +51,7 @@ injectStyle('IconButton', `
 }
 
 .fwd-icon-button object {
+  width: 100%;
   height: 100%;
   pointer-events: none;
 }
