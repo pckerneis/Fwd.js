@@ -27,7 +27,7 @@ class FwdEvent implements Action {
 type State = 'stopping' | 'stopped' | 'running' | 'ready';
 
 export class FwdScheduler {
-  private _scheduler: Scheduler<FwdEvent>;
+  private readonly _scheduler: Scheduler<FwdEvent>;
 
   private _state: State = 'ready';
 
@@ -198,32 +198,35 @@ export class FwdScheduler {
   }
 
   public wait(time: Time | (() => Time)): FwdChain {
-    const chain = new FwdChain(this);
+    const chain = new FwdChain(this, null);
     chain.wait(time);
     return chain;
   }
 
   public fire(action: Callable | string, ...args: any[]): FwdChain {
-    const chain = new FwdChain(this);
+    const chain = new FwdChain(this, null);
     chain.fire(action, ...args);
     return chain;
   }
 
   public chain(...events: (Callable | string | number | any[])[]): FwdChain {
-    const fwdEvents: FwdChainEvent[] = events.map((event) => {
+    const chain = new FwdChain(this, null);
+
+    events.map((event) => {
       if (typeof event === 'function') {
-        return new FwdFire(this, event, []);
+        return new FwdFire(chain, event, []);
       } else if (typeof event === 'number') {
-        return new FwdWait(this, event);
+        return new FwdWait(chain, event);
       } else if (typeof event === 'string') {
-        return new FwdFire(this, event, []);
+        return new FwdFire(chain, event, []);
       } else if (Array.isArray(event)) {
         return this.chain(...event);
       }
       return null;
-    }).filter((event) => Boolean(event));
+    }).filter((event) => Boolean(event))
+      .forEach(event => chain.append(event));
 
-    return new FwdChain(this, fwdEvents);
+    return chain;
   }
 
   private clearEvents(): void {
