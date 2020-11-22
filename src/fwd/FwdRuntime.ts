@@ -28,7 +28,6 @@ function createContext(): Fwd {
     scheduler,
     editor,
     audio,
-    globals: {},
     gui: fwdGui,
     midi: fwdMidi,
     utils: {
@@ -71,7 +70,6 @@ export function resetContext(fwd: Fwd): void {
   fwd.onStart = null;
   fwd.onStop = null;
   fwd.editor.reset();
-  fwd.globals = {};
   fwd.scheduler.resetActions();
 }
 

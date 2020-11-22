@@ -12,37 +12,32 @@ export interface Fwd {
   /**
    * The {@link FwdScheduler}.
    */
-  scheduler: FwdScheduler;
+  readonly scheduler: FwdScheduler;
 
   /**
    * The {@link FwdAudio} module.
    */
-  audio: FwdAudio;
+  readonly audio: FwdAudio;
 
   /**
    * The {@link FwdEditor} module.
    */
-  editor: FwdEditor;
+  readonly editor: FwdEditor;
 
   /**
    * The {@link FwdGui} module.
    */
-  gui: FwdGui;
+  readonly gui: FwdGui;
 
   /**
    * The {@link FwdMidi} module.
    */
-  midi: FwdMidi;
+  readonly midi: FwdMidi;
 
   /**
    * The {@link FwdUtils} module.
    */
-  utils: FwdUtils;
-
-  /**
-   * A 'bag' to persist things on...
-   */
-  globals: any;
+  readonly utils: FwdUtils;
 
   /**
    * Start life cycle hook. A program may be started more than once.
