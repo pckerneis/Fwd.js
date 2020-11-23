@@ -2,55 +2,53 @@ import { Time } from './EventQueue/EventQueue';
 import { FwdScheduler } from './FwdScheduler';
 
 export abstract class FwdChainEvent {
-  protected constructor(public readonly parentChain: FwdChain) {
+  protected constructor() {
   }
 
-  public abstract trigger(position: number): void;
+  public abstract trigger(scheduler: FwdScheduler, next: Function): void;
 }
 
 export class FwdWait extends FwdChainEvent {
-  constructor(parentChain: FwdChain, public readonly time: (() => Time) | Time) {
-    super(parentChain);
+  constructor(public readonly time: (() => Time) | Time) {
+    super();
   }
 
-  public trigger(position: number): void {
+  public trigger(scheduler: FwdScheduler, next: Function): void {
     const timeValue = typeof this.time === 'function' ?
       this.time() :
       this.time;
 
-    this.parentChain.scheduler.scheduleAhead(timeValue,
-      () => this.parentChain.triggerAt(position + 1), true);
+    scheduler.scheduleAhead(timeValue, next, true);
   }
 }
 
 export type Callable = (...args: readonly any[]) => any;
 
 export class FwdFire extends FwdChainEvent {
-  constructor(parentChain: FwdChain, public readonly action: Callable | string, public readonly args: any[]) {
-    super(parentChain);
+  constructor(public readonly action: Callable | string, public readonly args: any[]) {
+    super();
   }
 
-  public trigger(position: number): void {
+  public trigger(scheduler: FwdScheduler, next: Function): void {
     let timeValue = 0;
 
     if (typeof this.action === 'function') {
       timeValue = this.triggerActionFunction(this.action);
     } else if (typeof this.action === 'string') {
-      timeValue = this.triggerNamedAction(this.action);
+      timeValue = this.triggerNamedAction(scheduler, this.action);
     } else {
       console.error('Cannot fire action. You should provide a function or a defined action name.', this.action);
     }
 
-    if (isNaN(timeValue)) {
+    if (! isStrictlyPositive(timeValue)) {
       timeValue = 0;
     }
 
-    this.parentChain.scheduler.scheduleAhead(timeValue,
-      () => this.parentChain.triggerAt(position + 1), true);
+    scheduler.scheduleAhead(timeValue, next, true);
   }
 
-  private triggerNamedAction(actionName: string): any {
-    const action = this.parentChain.scheduler.get(actionName);
+  private triggerNamedAction(scheduler: FwdScheduler, actionName: string): any {
+    const action = scheduler.get(actionName);
 
     if (action != null) {
       try {
@@ -73,14 +71,13 @@ export class FwdFire extends FwdChainEvent {
 }
 
 export class FwdContinueIf extends FwdChainEvent {
-  constructor(parentChain: FwdChain, public readonly condition: () => boolean) {
-    super(parentChain);
+  constructor(public readonly condition: () => boolean) {
+    super();
   }
 
-  public trigger(position: number): void {
+  public trigger(scheduler: FwdScheduler, next: Function): void {
     if (typeof this.condition === 'function' && this.condition()) {
-      this.parentChain.scheduler.scheduleNow(() =>
-        this.parentChain.triggerAt(position + 1), true);
+      scheduler.scheduleNow(next, true);
     }
   }
 }
@@ -89,26 +86,25 @@ export class FwdChain extends FwdChainEvent {
   private fwdChainEvents: readonly FwdChainEvent[];
 
   constructor(public readonly scheduler: FwdScheduler,
-              public readonly parentChain: FwdChain,
               events?: readonly FwdChainEvent[]) {
-    super(parentChain);
+    super();
     this.fwdChainEvents = events || [];
   }
 
   public get events(): readonly FwdChainEvent[] { return this.fwdChainEvents; }
 
   public fire(action: Callable | string, ...args: any[]): this {
-    this.append(new FwdFire(this, action, args));
+    this.append(new FwdFire( action, args));
     return this;
   }
 
   public wait(time: (() => Time) | Time): this {
-    this.append(new FwdWait(this, time));
+    this.append(new FwdWait(time));
     return this;
   }
 
   public continueIf(condition: () => boolean): this {
-    this.append(new FwdContinueIf(this, condition));
+    this.append(new FwdContinueIf(condition));
     return this;
   }
 
@@ -117,7 +113,25 @@ export class FwdChain extends FwdChainEvent {
   }
 
   public concat(chain: FwdChain): this {
-    this.fwdChainEvents = [...this.fwdChainEvents, ...chain.fwdChainEvents];
+    this.fwdChainEvents = [
+      ...this.fwdChainEvents,
+      ...chain.fwdChainEvents,
+    ];
+
+    return this;
+  }
+
+  public repeat(count: number, chain: FwdChain): this {
+    if (!isStrictlyPositive(count)) {
+      return this;
+    }
+
+    do {
+      this.concat(chain);
+      console.log(this.events);
+      count--;
+    } while (count > 0);
+
     return this;
   }
 
@@ -130,7 +144,8 @@ export class FwdChain extends FwdChainEvent {
 
   public triggerAt(position: number): void {
     if (position < this.fwdChainEvents.length) {
-      this.fwdChainEvents[position].trigger(position);
+      this.fwdChainEvents[position].trigger(this.scheduler,
+        () => this.triggerAt(position + 1));
     }
   }
 

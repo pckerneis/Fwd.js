@@ -214,11 +214,11 @@ export class FwdScheduler {
 
     events.map((event) => {
       if (typeof event === 'function') {
-        return new FwdFire(chain, event, []);
+        return new FwdFire(event, []);
       } else if (typeof event === 'number') {
-        return new FwdWait(chain, event);
+        return new FwdWait(event);
       } else if (typeof event === 'string') {
-        return new FwdFire(chain, event, []);
+        return new FwdFire(event, []);
       } else if (Array.isArray(event)) {
         return this.chain(...event);
       }
