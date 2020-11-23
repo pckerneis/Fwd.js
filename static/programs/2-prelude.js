@@ -19,8 +19,8 @@ gui.update = () => {
 
 gui.changed();
 
-fwd.globals.steps = 32;
-fwd.globals.dur = 5;
+fwd.scheduler.env.steps = 32;
+fwd.scheduler.env.dur = 5;
 
 const chords_C9 = 	[ 0,  2,  4,  7];
 const chords_Am9 = 	[-3, -1,  0,  4];
@@ -32,9 +32,9 @@ const chords_Fm9 = 	[-7, -5, -4,  0];
 const chords_G9 = 	[-5, -3, -1,  2];
 
 function concat(...chains) {
-  return chains.reduce((accumulator, currentValue) => {
+  return chains.slice(1).reduce((accumulator, currentValue) => {
     return accumulator.concat(currentValue);
-  });
+  }, chains[0]);
 }
 
 function arp(chord, dur) {
@@ -45,20 +45,20 @@ function arp(chord, dur) {
 }
 
 const A = () => concat(
-  arp(chords_C9, 		() => fwd.globals.dur),
-  arp(chords_Am9, 	() => fwd.globals.dur),
-  arp(chords_C9, 		() => fwd.globals.dur),
-  arp(chords_Am9, 	() => fwd.globals.dur),
-  arp(chords_F9, 		() => fwd.globals.dur),
-  arp(chords_G9r, 	() => fwd.globals.dur),
-  arp(chords_AbM7, 	() => fwd.globals.dur),
-  arp(chords_BbM7, 	() => fwd.globals.dur),
+  arp(chords_C9, 		() => fwd.scheduler.env.dur),
+  arp(chords_Am9, 	() => fwd.scheduler.env.dur),
+  arp(chords_C9, 		() => fwd.scheduler.env.dur),
+  arp(chords_Am9, 	() => fwd.scheduler.env.dur),
+  arp(chords_F9, 		() => fwd.scheduler.env.dur),
+  arp(chords_G9r, 	() => fwd.scheduler.env.dur),
+  arp(chords_AbM7, 	() => fwd.scheduler.env.dur),
+  arp(chords_BbM7, 	() => fwd.scheduler.env.dur),
 );
 
 const B = () => concat(
-  arp(chords_C9, 		() => fwd.globals.dur),
-  arp(chords_Fm9, 	() => fwd.globals.dur / 2),
-  arp(chords_G9, 		() => fwd.globals.dur / 2),
+  arp(chords_C9, 		() => fwd.scheduler.env.dur),
+  arp(chords_Fm9, 	() => fwd.scheduler.env.dur / 2),
+  arp(chords_G9, 		() => fwd.scheduler.env.dur / 2),
 );
 
 fwd.onStart = () => {
@@ -72,7 +72,7 @@ fwd.onStart = () => {
 };
 
 fwd.scheduler.set('arp', (chord, duration) => {
-  duration = duration || fwd.globals.dur;
+  duration = duration || fwd.scheduler.env.dur;
 
   const notes = chord.map(n => n + 12 * 4);
   const reverbTime = 10;
@@ -86,11 +86,11 @@ fwd.scheduler.set('arp', (chord, duration) => {
   const attack = 0.01;
   const release = 0.18;
 
-  const timeBetweenNotes = fwd.globals.dur / fwd.globals.steps;
+  const timeBetweenNotes = fwd.scheduler.env.dur / fwd.scheduler.env.steps;
 
-  for (let t = 0; t < fwd.globals.steps; ++t) {
+  for (let t = 0; t < fwd.scheduler.env.steps; ++t) {
     if (t * timeBetweenNotes < duration) {
-      const i = t > fwd.globals.steps / 2 ? fwd.globals.steps - t : t;
+      const i = t > fwd.scheduler.env.steps / 2 ? fwd.scheduler.env.steps - t : t;
       const p = notes[i % notes.length] + (Math.floor(i / notes.length) * 12);
 
       fwd.scheduler
@@ -100,7 +100,7 @@ fwd.scheduler.set('arp', (chord, duration) => {
   }
 
   // Tear down audio nodes when not needed anymore
-  const totalTime = timeBetweenNotes * fwd.globals.steps +
+  const totalTime = timeBetweenNotes * fwd.scheduler.env.steps +
         reverbTime +
         attack +
         release;

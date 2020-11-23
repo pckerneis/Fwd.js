@@ -19,11 +19,11 @@ fwd.scheduler.set('noteOn', (pitch) => {
     .fire(() => osc.gain.rampTo(gain, attackTime))
     .trigger();
 
-  fwd.globals.notes[pitch] = osc;
+  fwd.scheduler.env.notes[pitch] = osc;
 });
 
 fwd.onStart = () => {
-  fwd.globals.notes = [];
+  fwd.scheduler.env.notes = [];
 
   fwd.editor.root.htmlElement.tabIndex = 0;
   fwd.editor.root.htmlElement.style.width = '100%';
@@ -51,7 +51,7 @@ fwd.onStart = () => {
 };
 
 function press(pitch) {
-  if (fwd.globals.notes[pitch]) {
+  if (fwd.scheduler.env.notes[pitch]) {
     return;
   }
 
@@ -59,18 +59,18 @@ function press(pitch) {
 }
 
 function releaseAll() {
-  Object.keys(fwd.globals.notes).forEach((n) => {
+  Object.keys(fwd.scheduler.env.notes).forEach((n) => {
     release(n);
   });
 
-  fwd.globals.notes = [];
+  fwd.scheduler.env.notes = [];
 }
 
 function release(pitch) {
-  const osc = fwd.globals.notes[pitch];
+  const osc = fwd.scheduler.env.notes[pitch];
 
   if (osc != null) {
-    fwd.globals.notes[pitch] = null;
+    fwd.scheduler.env.notes[pitch] = null;
 
     fwd.scheduler
       .wait(() => fwd.scheduler.clock() + 0.01)

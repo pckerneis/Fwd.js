@@ -54,12 +54,12 @@ env.loop = fwd.scheduler
       combine(first, second, 'rot', newCell);
 
       env.cells.push(new Cell());
-      fwd.log('+1 : ' + env.cells.length);
+      console.log('+1 : ' + env.cells.length);
     } else if (fired.length > 3) {
       const pickedIndex = Math.floor(fwd.utils.random(fired.length));
       const picked = fired[pickedIndex];
       env.cells.splice(env.cells.indexOf(picked), 1);
-      fwd.log('-1 : ' + env.cells.length);
+      console.log('-1 : ' + env.cells.length);
     }
   })
   .wait(beat(1))
@@ -115,8 +115,6 @@ env.playNote = (noteNumber, attack, release) => {
 };
 
 function init() {
-  fwd.log('initialize');
-
   env.delay = fwd.audio.stereoDelay(2.0);
 
   env.delay
