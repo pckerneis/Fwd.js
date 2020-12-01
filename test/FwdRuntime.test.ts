@@ -78,6 +78,5 @@ describe('FwdRuntime', () => {
     jest.runAllTimers();
 
     expect(ctx1.onStart).toBeNull();
-    expect(ctx1.globals).toStrictEqual({});
   });
 });

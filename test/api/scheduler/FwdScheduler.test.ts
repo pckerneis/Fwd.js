@@ -133,32 +133,9 @@ describe('FwdScheduler', () => {
 
     expect(scheduler.state).toBe('stopping');
     await waitSeconds(0.001, TIME);
-    expect(scheduler.state).toBe('stopped');
+    expect(scheduler.state).toBe('ready');
 
     expect(action).not.toHaveBeenCalled();
-  });
-
-  it('throws exception when clearing events before stop is called', async () => {
-    scheduler.start();
-    expect(() => scheduler.clearEvents()).toThrowError();
-    scheduler.stop();
-
-    await waitSeconds(0, TIME);
-    expect(() => scheduler.clearEvents()).not.toThrowError();
-  });
-
-  it('clears events', async () => {
-    scheduler.schedule(0, () => {
-    });
-    scheduler.schedule(0, () => {
-    });
-    scheduler.schedule(0, () => {
-    });
-
-    scheduler.clearEvents();
-
-    expect(scheduler['_scheduler'].eventQueue.events).toHaveLength(0);
-    expect(scheduler.state).toBe('ready');
   });
 
   it('throws exception when start is called but scheduler is not ready', async () => {
@@ -166,8 +143,6 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.start()).toThrowError();
     scheduler.stop();
     expect(() => scheduler.start()).toThrowError();
-    scheduler.clearEvents();
-    expect(() => scheduler.start()).not.toThrowError();
   });
 
   it('throws exception when stop is called but scheduler is not running', async () => {
@@ -180,7 +155,7 @@ describe('FwdScheduler', () => {
     expect(() => scheduler.stop()).not.toThrowError();
 
     await waitSeconds(0, TIME);
-    expect(scheduler.state).toBe('stopped');
+    expect(scheduler.state).toBe('ready');
     expect(() => scheduler.stop()).toThrowError();
   });
 
@@ -207,7 +182,7 @@ describe('FwdScheduler', () => {
 
     await waitSeconds(0.010, TIME);
 
-    expect(scheduler.state).toBe('stopped');
+    expect(scheduler.state).toBe('ready');
     expect(action).toHaveBeenCalledTimes(1);
   });
 
@@ -315,15 +290,6 @@ describe('FwdScheduler', () => {
     expect(action1).toHaveBeenCalledTimes(1);
   });
 
-  it('should not schedule action when wait is followed by invalid action', async () => {
-    scheduler['schedule'] = jest.fn();
-    scheduler.wait(0).trigger();
-    scheduler.start();
-    await waitSeconds(0.1, TIME);
-    scheduler.stop();
-    expect(scheduler['schedule']).not.toHaveBeenCalled();
-  });
-
   it('should stop after continueIfStillRunning', async () => {
     const action1 = jest.fn();
 
@@ -378,8 +344,6 @@ describe('FwdScheduler', () => {
     const action1 = jest.fn();
 
     const chain1 = scheduler.chain();
-    expect(chain1.first()).toBeNull();
-
     const chain2 = scheduler
       .fire(action1);
 
@@ -418,19 +382,6 @@ describe('FwdScheduler', () => {
 
     scheduler.runSync(150);
     expect(action1).toHaveBeenCalledTimes(2);
-  });
-
-  it('should not run sync when not ready', async () => {
-    scheduler.start();
-    expect(() => scheduler.runSync(1)).toThrowError();
-    scheduler.stop();
-    expect(() => scheduler.runSync(1)).toThrowError();
-
-    waitSeconds(0.1, TIME);
-    expect(() => scheduler.runSync(1)).toThrowError();
-
-    scheduler.clearEvents();
-    expect(() => scheduler.runSync(1)).not.toThrowError();
   });
 
   it('should reset defined actions', async () => {
