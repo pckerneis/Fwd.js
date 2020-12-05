@@ -25,7 +25,7 @@ fwd.onStart = () => fwd.scheduler
 
 env.loop = fwd.scheduler
   .fire(() => env.currentBass = env.bass.next())
-	.repeat(4, fwd.scheduler
+	.repeat(8, fwd.scheduler
     .fire(() => {
       const chordOffset = env.ring.next();
       const chord = [0, 2, 4]

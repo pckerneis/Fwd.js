@@ -103,7 +103,7 @@ env.playNote = (noteNumber, attack, release) => {
   fwd.scheduler
     .fire(() => osc.frequency.rampTo(fq + fwd.utils.random(-5, 5) * env.temperature, attack * 0.5))
     .fire(() => osc.gain.rampTo(0.2, attack))
-    .fire(() => gain.gain.rampTo(0.03, 0))
+    .fire(() => gain.gain.rampTo(0.02, 0))
     .fire(() => gain.gain.rampTo(0, attack))
     .wait(attack)
     .fire(() => osc.gain.rampTo(0, release))
