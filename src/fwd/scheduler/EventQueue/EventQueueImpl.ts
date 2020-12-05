@@ -10,7 +10,7 @@ export class EventQueueImpl<EventType> extends EventQueue<EventType> {
   private _events: ScheduledEvent<EventType>[] = [];
 
   /** @inheritdoc */
-  public get events(): ScheduledEvent<EventType>[] {
+  public get events(): readonly ScheduledEvent<EventType>[] {
       return this._events;
     }
 

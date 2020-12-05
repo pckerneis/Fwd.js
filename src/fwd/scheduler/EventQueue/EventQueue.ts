@@ -1,3 +1,5 @@
+import { FwdChainEvent } from '../FwdChain';
+
 export type Time = number;
 
 /**
@@ -10,9 +12,9 @@ export type EventRef = any;
  * event.
  */
 export interface ScheduledEvent<EventType> {
-    ref: EventRef,
-    time: Time,
-    event: EventType
+    readonly ref: EventRef,
+    readonly time: Time,
+    readonly event: EventType
 }
 
 /**
@@ -25,7 +27,7 @@ export abstract class EventQueue<EventType> {
     /**
      * The current list of scheduled events.
      */
-    public readonly events: ScheduledEvent<EventType>[];
+    public readonly events: readonly ScheduledEvent<EventType>[];
 
     /**
      * Pop and return the next event in the queue if its time location is inferior to the specified time location. Return

@@ -3,9 +3,9 @@ import { Program } from '../server/DevServer.constants';
 import { RunnerConfig } from './RunnerConfig';
 
 export default interface FwdRunner {
-  config: RunnerConfig;
+  readonly config: RunnerConfig;
 
-  fwd: Fwd;
+  readonly fwd: Fwd;
 
   setProgram(program: Program): void;
   setFiles(files: string[]): void;
