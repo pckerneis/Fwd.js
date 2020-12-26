@@ -1,8 +1,8 @@
 export const defaultTheme = {
   bgPrimary: '#fff',
-  bgSecondary: 'rgb(247, 248, 249)',
+  bgSecondary: 'rgb(243,244,245)',
   textColor: '#000',
-  border: '#d9d9d9',
+  border: '#cfcdcd',
 
 };
 
