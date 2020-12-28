@@ -1,5 +1,5 @@
-import {SequencerDisplayModel} from '../note-sequencer';
-import {Component} from './BaseComponent';
+import { Component } from '../../canvas/BaseComponent';
+import { SequencerDisplayModel } from '../note-sequencer';
 
 export class VelocityRuler extends Component {
 
@@ -9,7 +9,7 @@ export class VelocityRuler extends Component {
 
   protected render(g: CanvasRenderingContext2D): void {
     g.fillStyle = this.model.colors.background;
-    g.fillRect (0, 0, this.width, this.height);
+    g.fillRect(0, 0, this.width, this.height);
 
     this.model.theme.drawVelocityRuler(g, this.width, this.height, this.model.colors);
   }

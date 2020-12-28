@@ -1,4 +1,4 @@
-import {RootComponentHolder} from './RootComponentHolder';
+import { RootComponentHolder } from './RootComponentHolder';
 
 export interface ComponentPosition {
   x: number,
@@ -65,7 +65,7 @@ export interface ComponentMouseEvent {
   position: ComponentPosition,
   pressedComponent: Component,
   wasDragged: boolean,
-  modifiers: {shift: boolean, option: boolean}
+  modifiers: { shift: boolean, option: boolean }
 }
 
 /**
@@ -188,7 +188,7 @@ export abstract class Component {
   }
 
   public hitTest(mousePosition: ComponentPosition): boolean {
-    if (!this._visible)
+    if (! this._visible)
       return false;
 
     const pos = this.getPosition();
@@ -197,7 +197,7 @@ export abstract class Component {
       return false;
     }
 
-    return !(mousePosition.y < pos.y || mousePosition.y > pos.y + this._bounds.height);
+    return ! (mousePosition.y < pos.y || mousePosition.y > pos.y + this._bounds.height);
   }
 
   public findComponentAt(position: ComponentPosition): Component {

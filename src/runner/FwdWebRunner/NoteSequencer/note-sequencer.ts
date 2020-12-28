@@ -1,4 +1,5 @@
-import {RootComponentHolder} from './canvas-components/RootComponentHolder';
+import {RootComponentHolder} from '../canvas/RootComponentHolder';
+import { injectStyle } from '../StyleInjector';
 import {SequencerRoot} from './canvas-components/SequencerRoot';
 import {LookAndFeel, LookAndFeel_Default, LookAndFeel_Live} from './themes/LookAndFeel';
 
@@ -8,12 +9,6 @@ export const PITCH_PATTERN: number[] = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
 export const MIN_PITCH: number = 0;
 export const MAX_PITCH: number = 127;
 export const MAX_VELOCITY: number = 127;
-
-declare class ResizeObserver {
-  constructor(...args: any[]);
-
-  public observe(element: HTMLElement, options?: any): any;
-}
 
 export interface Range {
   start: number,
@@ -79,16 +74,7 @@ const defaultColors: Colors = {
   lassoOutline: '#00a8ff80',
 };
 
-/**
- * A canvas-based note sequencer.
- *
- * @noInheritDoc
- */
 export class NoteSequencer {
-  public static readonly TIME_START: string = 'time-start';
-  public static readonly DURATION: string = 'duration';
-  public static readonly THEME: string = 'theme';
-
   public readonly container: HTMLElement;
   private _rootHolder: RootComponentHolder<SequencerRoot>;
   private readonly _model: SequencerDisplayModel;
@@ -113,46 +99,16 @@ export class NoteSequencer {
     this._rootHolder = new RootComponentHolder<SequencerRoot>(100, 100, this._sequencerRoot);
 
     this.container.append(this._rootHolder.canvas);
-
-    const styleElement = document.createElement('style');
-    styleElement.innerHTML = CSS_STYLE;
-    this.container.append(styleElement);
-
-    // Events handlers
-    const resizeObserver = new ResizeObserver(() => this.resizeAndDraw());
-    resizeObserver.observe(this.container);
+    this.container.classList.add(CONTAINER_CLASS);
 
     this._rootHolder.attachMouseEventListeners();
-  }
-
-  /**
-   * HTML tag name used for this element.
-   */
-  public static get tag(): string {
-    return 'note-sequencer';
-  }
-
-  /**
-   * Observed HTML attributes (custom element implementation).
-   */
-  public static get observedAttributes(): string[] {
-    return [
-      NoteSequencer.TIME_START,
-      'duration',
-      'pitch-start',
-      'pitch-end',
-    ];
+    this._rootHolder.attachResizeObserver(this.container);
   }
 
   public get colors(): Colors {
     return this._model.colors;
   }
 
-  // Attributes/properties reflection
-
-  /**
-   * First time value to show.
-   */
   public get timeStart(): number {
     return this._model.maxTimeRange.start;
   }
@@ -167,9 +123,6 @@ export class NoteSequencer {
     this._sequencerRoot.setTimeStart(numberValue);
   }
 
-  /**
-   * Maximum visible time range from timeStart.
-   */
   public get duration(): number {
     return this._model.maxTimeRange.start + this._model.maxTimeRange.end;
   }
@@ -184,16 +137,10 @@ export class NoteSequencer {
     this._sequencerRoot.setDuration(numberValue);
   }
 
-  /**
-   * Set the current theme. Defaults to 'default'.
-   */
   public get theme(): string {
     return this._model.theme.name;
   }
 
-  /**
-   * Set the current theme. Defaults to 'default'.
-   */
   public set theme(value: string) {
     switch(value) {
       case 'live':
@@ -202,14 +149,11 @@ export class NoteSequencer {
       case 'default':
       default:
         this._model.theme = new LookAndFeel_Default();
-        value = 'default';
         break;
     }
 
     this.draw();
-
   }
-
 
   public removeMouseEventListeners(): void {
     this._rootHolder.removeMouseEventListeners();
@@ -218,16 +162,12 @@ export class NoteSequencer {
   public draw(): void {
     this._rootHolder.repaint();
   }
-
-  private resizeAndDraw(): void {
-    const boundingClientRect = this.container.getBoundingClientRect();
-    this._rootHolder.resize(Math.ceil(boundingClientRect.width), Math.ceil(boundingClientRect.height));
-    this.draw();
-  }
 }
 
-const CSS_STYLE = `
-:host {
+const CONTAINER_CLASS = 'fwd-runner-note-sequencer';
+
+injectStyle('NoteSequencer', `
+${CONTAINER_CLASS} {
   position: relative;
   min-width: 200px;
   min-height: 200px;
@@ -236,11 +176,11 @@ const CSS_STYLE = `
   display: inline-block;
 }
 
-canvas {
+${CONTAINER_CLASS} canvas {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
 }
-`;
+`);

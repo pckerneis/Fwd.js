@@ -1,5 +1,11 @@
-import {Component, ComponentBounds, ComponentMouseEvent, ComponentPosition} from './BaseComponent';
-import {squaredDistance} from './RenderHelpers';
+import { squaredDistance } from '../NoteSequencer/canvas-components/RenderHelpers';
+import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from './BaseComponent';
+
+declare class ResizeObserver {
+  constructor(...args: any[]);
+  public observe(element: HTMLElement, options?: any): any;
+  public disconnect(): any;
+}
 
 const CLICK_MAX_DISTANCE_SQUARED = 30;
 const CLICK_INTERVAL = 200;
@@ -12,6 +18,7 @@ export class RootComponentHolder<T extends Component> {
   private canvasMouseDownListener: (event: MouseEvent) => void;
   private documentMouseUpListener: (event: MouseEvent) => void;
   private documentMouseMoveListener: (event: MouseEvent) => void;
+  private _resizeObserver: ResizeObserver;
 
   constructor(public readonly width: number, public readonly height: number, public readonly rootComponent: T) {
     rootComponent.rootHolder = this;
@@ -199,7 +206,7 @@ export class RootComponentHolder<T extends Component> {
 
         component.mouseMoved({
           nativeEvent: mouseEvent,
-          position: { x, y },
+          position: {x, y},
           positionAtMouseDown: mouseDownPos,
           pressedComponent: component,
           wasDragged,
@@ -213,7 +220,7 @@ export class RootComponentHolder<T extends Component> {
 
         pressedComponent.mouseDragged({
           nativeEvent: mouseEvent,
-          position: { x, y },
+          position: {x, y},
           positionAtMouseDown: mouseDownPos,
           pressedComponent,
           wasDragged,
@@ -235,9 +242,32 @@ export class RootComponentHolder<T extends Component> {
     document.removeEventListener('mouseup', this.documentMouseUpListener);
     document.removeEventListener('mousemove', this.documentMouseMoveListener);
   }
+
+  public attachResizeObserver(elementToObserve: HTMLElement): void {
+    if (this._resizeObserver != null) {
+      this.removeResizeObserver();
+    }
+
+    const resizeObserver = new ResizeObserver(() => this.resizeAndDraw(elementToObserve));
+    resizeObserver.observe(elementToObserve);
+    this._resizeObserver = resizeObserver;
+  }
+
+  public removeResizeObserver(): void {
+    if (this._resizeObserver != null) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+  }
+
+  private resizeAndDraw(containerElement: HTMLElement): void {
+    const boundingClientRect = containerElement.getBoundingClientRect();
+    this.resize(Math.ceil(boundingClientRect.width), Math.ceil(boundingClientRect.height));
+    this.repaint();
+  }
 }
 
-function extractModifiers(mouseEvent: MouseEvent): {shift: boolean, option: boolean} {
+function extractModifiers(mouseEvent: MouseEvent): { shift: boolean, option: boolean } {
   return {
     shift: mouseEvent.shiftKey,
     option: mouseEvent.ctrlKey,

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     useCodeEditor: true,
     useConsoleRedirection: false,
     useConsoleTimePrefix: true,
-    darkMode: true,
+    darkMode: false,
   });
 
   (window as any).fwd = runner.fwd;

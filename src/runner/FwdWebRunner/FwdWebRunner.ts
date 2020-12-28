@@ -18,6 +18,7 @@ import { Overlay } from './components/Overlay';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
+import { GraphComponent } from './GraphComponent/graph-component';
 import { ExportPanel } from './panels/ExportPanel';
 import { SettingsPanel } from './panels/SettingsPanel';
 import { injectStyle } from './StyleInjector';
@@ -448,9 +449,35 @@ export default class FwdWebRunner implements FwdRunner {
       this._codeEditorSeparator.htmlElement.classList.add('fwd-runner-large-separator');
     }
 
+    const centerFlex = new FlexPanel('column');
+
+    const graphEditor = new GraphComponent();
+
+    centerFlex.addFlexItem('top', graphEditor, {
+      flexShrink: 1,
+      flexGrow: 0,
+      height: 600,
+      minHeight: 100,
+      maxHeight: 5000,
+      display: 'flex',
+    });
+
+    const hSeparator = centerFlex.addSeparator(0, true);
+    hSeparator.separatorSize = 10;
+    hSeparator.htmlElement.classList.add('fwd-runner-large-hseparator');
+
     const sequencerElement = new NoteSequencerElement();
 
-    flexPanel.addFlexItem('center', sequencerElement, {
+    centerFlex.addFlexItem('bottom', sequencerElement, {
+      flexShrink: 1,
+      flexGrow: 1,
+      height: 0,
+      minHeight: 100,
+      maxHeight: 5000,
+      display: 'flex',
+    });
+
+    flexPanel.addFlexItem('center', centerFlex, {
       flexShrink: 1,
       flexGrow: 1,
       width: 600,
@@ -462,6 +489,7 @@ export default class FwdWebRunner implements FwdRunner {
     // tabbed panel
     this._tabbedPanel = new TabbedPanel();
     this._tabbedPanel.htmlElement.style.display = 'none';
+    this._tabbedPanel.htmlElement.classList.add('fwd-runner-large-separator');
 
     parentFlexPanel.addFlexItem('right', this._tabbedPanel, {
       flexGrow: 0,
@@ -569,6 +597,11 @@ injectStyle('FwdWebRunner', `
 .fwd-runner-large-separator {
   border-left: solid 1px ${defaultTheme.border};
   border-right: solid 1px ${defaultTheme.border};
+}
+
+.fwd-runner-large-hseparator {
+  border-top: solid 1px ${defaultTheme.border};
+  border-bottom: solid 1px ${defaultTheme.border};
 }
 
 .fwd-runner-force-quit-overlay {

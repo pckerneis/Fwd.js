@@ -1,7 +1,7 @@
-import {Range, SequencerDisplayModel} from '../note-sequencer';
-import {clamp} from '../utils';
-import {Component, ComponentMouseEvent} from './BaseComponent';
-import {NoteGridComponent} from './NoteGridComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Range, SequencerDisplayModel } from '../note-sequencer';
+import { clamp } from '../utils';
+import { NoteGridComponent } from './NoteGridComponent';
 
 export class TimeRuler extends Component {
   private timeAtMouseDown: number;

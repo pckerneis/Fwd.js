@@ -1,6 +1,6 @@
-import {Colors} from '../note-sequencer';
-import {Component, ComponentMouseEvent, IBounds} from './BaseComponent';
-import {SelectableItem, SelectedItemSet} from './SelectedItemSet';
+import { Colors } from '../../NoteSequencer/note-sequencer';
+import { Component, ComponentMouseEvent, IBounds } from '../BaseComponent';
+import { SelectableItem, SelectedItemSet } from './SelectedItemSet';
 
 interface Lasso<T extends SelectableItem> {
   startX: number,
@@ -74,23 +74,23 @@ export class LassoSelector<T extends SelectableItem> {
       this.selectedItemSet.deselectAll();
 
       for (let s of this.lasso.commutableSelection)
-        this.selectedItemSet.addToSelection (s);
+        this.selectedItemSet.addToSelection(s);
 
       // Browse current lasso selection
       for (let s of lassoSelection) {
-        if (this.selectedItemSet.getItems().indexOf (s) >= 0) {
+        if (this.selectedItemSet.getItems().indexOf(s) >= 0) {
           // If the item is already selected, deselect it
-          this.selectedItemSet.removeFromSelection (s);
+          this.selectedItemSet.removeFromSelection(s);
         } else {
           // Else add it to the selection
-          this.selectedItemSet.addToSelection (s);
+          this.selectedItemSet.addToSelection(s);
         }
       }
     } else {
       this.selectedItemSet.deselectAll();
 
       for (let s of lassoSelection)
-        this.selectedItemSet.addToSelection (s);
+        this.selectedItemSet.addToSelection(s);
     }
   }
 

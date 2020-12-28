@@ -1,8 +1,8 @@
-import {MAX_PITCH, SequencerDisplayModel} from '../note-sequencer';
-import {Component, ComponentMouseEvent, ComponentPosition} from './BaseComponent';
-import {LassoSelector} from './LassoSelector';
-import {Note, NoteGridComponent} from './NoteGridComponent';
-import {squaredDistance} from './RenderHelpers';
+import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { LassoSelector } from '../../canvas/shared/LassoSelector';
+import { MAX_PITCH, SequencerDisplayModel } from '../note-sequencer';
+import { Note, NoteGridComponent } from './NoteGridComponent';
+import { squaredDistance } from './RenderHelpers';
 
 export class VelocityTrack extends Component {
 
@@ -49,7 +49,7 @@ export class VelocityTrack extends Component {
     const handle = this.findHandleAt(local);
 
     if (handle == null) {
-      if (!event.modifiers.shift) {
+      if (! event.modifiers.shift) {
         this.grid.selectedSet.deselectAll();
       }
 
@@ -76,7 +76,7 @@ export class VelocityTrack extends Component {
     event.nativeEvent.preventDefault();
     event.nativeEvent.stopPropagation();
 
-    if (!event.wasDragged)
+    if (! event.wasDragged)
       return;
 
     if (this._draggingHandle) {
@@ -129,7 +129,7 @@ export class VelocityTrack extends Component {
     }
 
     this.model.theme.drawTimeBackground(g, this.height, sixteenth, incr, start, end,
-        this.model.signature, this.model.colors);
+      this.model.signature, this.model.colors);
   }
 
   private drawVelocityHandles(g: CanvasRenderingContext2D): void {

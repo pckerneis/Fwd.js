@@ -1,7 +1,7 @@
-import {MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, SequencerDisplayModel} from '../note-sequencer'
-import {Component, ComponentBounds, ComponentMouseEvent, ComponentPosition} from './BaseComponent';
-import {LassoSelector} from './LassoSelector';
-import {SelectedItemSet} from './SelectedItemSet';
+import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { LassoSelector } from '../../canvas/shared/LassoSelector';
+import { SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
+import { MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, SequencerDisplayModel } from '../note-sequencer'
 
 export interface Note {
   time: number,
@@ -61,9 +61,9 @@ export class NoteGridComponent extends Component {
     this._lasso.findAllElementsInLasso = (lassoBounds: ComponentBounds) => {
       return this._notes.filter((note) => {
         const noteBounds = {
-          x: this.getPositionForTime (note.time),
-          y: this.getPositionForPitch (note.pitch),
-          width: Math.max (2, note.duration * this.getSixteenthWidth()),
+          x: this.getPositionForTime(note.time),
+          y: this.getPositionForPitch(note.pitch),
+          width: Math.max(2, note.duration * this.getSixteenthWidth()),
           height: this.getSemitoneHeight(),
         };
 
@@ -203,12 +203,12 @@ export class NoteGridComponent extends Component {
     const existingNote = this.findNoteAt(local);
 
     if (existingNote != null) {
-      this.removeNote (existingNote);
+      this.removeNote(existingNote);
       return;
     }
 
-    const t = this.snapToGrid (this.getTimeAt (event.position.x));
-    const p = Math.round (this.getPitchAt(event.position.y));
+    const t = this.snapToGrid(this.getTimeAt(event.position.x));
+    const p = Math.round(this.getPitchAt(event.position.y));
     const d = this.getTimeIncrement();
 
     const newNote: Note = {
@@ -238,7 +238,7 @@ export class NoteGridComponent extends Component {
 
     this.getParentComponent().repaint();
 
-    this.mouseCursor = "w-resize";
+    this.mouseCursor = 'w-resize';
   }
 
   public mouseMoved(event: ComponentMouseEvent): void {
@@ -257,20 +257,20 @@ export class NoteGridComponent extends Component {
     const existingNote = this.findNoteAt(local);
 
     if (existingNote == null) {
-      this.mouseCursor = "default";
+      this.mouseCursor = 'default';
       return;
     }
 
     const action = this.getDragActionForNoteAt(local, existingNote);
 
     if (action == 'MOVE_NOTE') {
-      this.mouseCursor = "move";
-    } else if (action == "LEFT") {
-      this.mouseCursor = "w-resize";
-    } else if (action == "RIGHT") {
-      this.mouseCursor = "e-resize";
+      this.mouseCursor = 'move';
+    } else if (action == 'LEFT') {
+      this.mouseCursor = 'w-resize';
+    } else if (action == 'RIGHT') {
+      this.mouseCursor = 'e-resize';
     } else {
-      this.mouseCursor = "default";
+      this.mouseCursor = 'default';
     }
   }
 
@@ -297,11 +297,11 @@ export class NoteGridComponent extends Component {
     }
 
     this._mouseDownResult = this._selectedSet.addToSelectionMouseDown(existingNote, event.modifiers.shift);
-    this._dragAction = this.getDragActionForNoteAt (local, existingNote);
+    this._dragAction = this.getDragActionForNoteAt(local, existingNote);
     this.setMouseCursor(this._dragAction);
 
     this._draggedItem = existingNote;
-    this.moveNoteToFront (existingNote);
+    this.moveNoteToFront(existingNote);
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
@@ -317,12 +317,12 @@ export class NoteGridComponent extends Component {
 
     // in case a drag would have caused negative durations
     for (const selected of this._selectedSet.getItems()) {
-      selected.duration = Math.max (0, selected.duration);
+      selected.duration = Math.max(0, selected.duration);
     }
 
     this._selectedSet.addToSelectionMouseUp(event.wasDragged, event.modifiers.shift, this._mouseDownResult);
 
-    this.removeOverlaps (true);
+    this.removeOverlaps(true);
 
     this._notes.forEach((note) => {
       note.initialVelocity = note.velocity;
@@ -336,28 +336,28 @@ export class NoteGridComponent extends Component {
     event.nativeEvent.preventDefault();
     event.nativeEvent.stopPropagation();
 
-    if (this._dragAction == "NONE") {
+    if (this._dragAction == 'NONE') {
       this._lasso.dragLasso(event);
     }
 
-    if (! event.wasDragged || this._dragAction == "NONE") {
+    if (! event.wasDragged || this._dragAction == 'NONE') {
       this.getParentComponent().repaint();
       return;
     }
 
-    if (this._dragAction == "MOVE_NOTE") {
+    if (this._dragAction == 'MOVE_NOTE') {
       this.moveSelection(event);
-    } else if (this._dragAction == "RIGHT" || this._dragAction == "V_RIGHT") {
+    } else if (this._dragAction == 'RIGHT' || this._dragAction == 'V_RIGHT') {
       this.dragEndPoints(event);
-    } else if (this._dragAction == "LEFT") {
+    } else if (this._dragAction == 'LEFT') {
       this.dragStartPoints(event);
     }
 
-    if (this._dragAction == "V_RIGHT") {
+    if (this._dragAction == 'V_RIGHT') {
       this.dragVelocity(event);
     }
 
-    this.removeOverlaps (false);
+    this.removeOverlaps(false);
 
     this.getParentComponent().repaint();
   }
@@ -483,7 +483,7 @@ export class NoteGridComponent extends Component {
         this._maxDragOffset.time));
 
     const scaledY = Math.max(this._minDragOffset.pitch,
-      Math.min(- dragOffset.y / this.getSemitoneHeight(),
+      Math.min(-dragOffset.y / this.getSemitoneHeight(),
         this._maxDragOffset.pitch));
 
     // Apply translate to itemDragged
@@ -538,7 +538,7 @@ export class NoteGridComponent extends Component {
     if (! event.modifiers.option) {
       const snappedEndPoint = this.snapToGrid(this._draggedItem.time + this._draggedItem.duration);
       this._draggedItem.duration = snappedEndPoint - this._draggedItem.time;
-      this._draggedItem.duration = Math.max (0, this._draggedItem.duration);
+      this._draggedItem.duration = Math.max(0, this._draggedItem.duration);
     }
 
     // Now we determine the actual offset
@@ -586,11 +586,11 @@ export class NoteGridComponent extends Component {
     const currentEndPoint = this._draggedItem.time + this._draggedItem.duration;
 
     // Apply to itemDragged
-    this._draggedItem.time = Math.min (currentEndPoint, this._initialStart + scaledX);
-    this._draggedItem.duration = Math.max (0, this._initialDuration - scaledX);
+    this._draggedItem.time = Math.min(currentEndPoint, this._initialStart + scaledX);
+    this._draggedItem.duration = Math.max(0, this._initialDuration - scaledX);
 
     // snap to grid
-    if (!event.modifiers.option && this._draggedItem.duration > 0) {
+    if (! event.modifiers.option && this._draggedItem.duration > 0) {
       this._draggedItem.time = this.snapToGrid(this._draggedItem.time);
       this._draggedItem.duration = Math.max(0, this._initialDuration - (this._draggedItem.time - this._initialStart));
     }
@@ -606,8 +606,8 @@ export class NoteGridComponent extends Component {
       const endPoint = s.time + s.duration;
 
       s.time = s.initialStart + startOffset;
-      s.time = Math.min (s.time, endPoint);
-      s.duration = Math.max (0, endPoint - s.time)
+      s.time = Math.min(s.time, endPoint);
+      s.duration = Math.max(0, endPoint - s.time)
     }
   }
 
@@ -624,7 +624,7 @@ export class NoteGridComponent extends Component {
     const dragOffset = event.position.y - event.positionAtMouseDown.y;
 
     this._draggedItem.velocity = this._initialVelocity - dragOffset;
-    this._draggedItem.velocity = Math.max (0, Math.min (this._draggedItem.velocity, 127));
+    this._draggedItem.velocity = Math.max(0, Math.min(this._draggedItem.velocity, 127));
 
     this._currentVelocity = this._draggedItem.velocity;
   }
@@ -678,7 +678,7 @@ export class NoteGridComponent extends Component {
             // If note is also selected, we won't remove it
             if (! note.selected) {
               if (apply)
-                this.removeNote (note);
+                this.removeNote(note);
               else
                 note.hidden = true;
             }
@@ -702,23 +702,23 @@ export class NoteGridComponent extends Component {
 
   private getDragActionForNoteAt(pos: ComponentPosition, n: Note): DragAction {
     const margin = 3;
-    const noteX = this.getPositionForTime (n.time);
-    const noteW = Math.max (2, n.duration * this.getSixteenthWidth());
+    const noteX = this.getPositionForTime(n.time);
+    const noteW = Math.max(2, n.duration * this.getSixteenthWidth());
     const localPos = pos.x - noteX;
 
-    if (localPos > noteW) return "NONE";
-    if (localPos >= noteW - margin) return "RIGHT";
-    if (localPos >= margin) return "MOVE_NOTE";
-    if (localPos >= 0) return "LEFT";
-    return "NONE";
+    if (localPos > noteW) return 'NONE';
+    if (localPos >= noteW - margin) return 'RIGHT';
+    if (localPos >= margin) return 'MOVE_NOTE';
+    if (localPos >= 0) return 'LEFT';
+    return 'NONE';
   }
 
   private findNoteAt(pos: ComponentPosition): Note {
     // We need to iterate from end to start to have front most notes first
     for (const note of this.notes) {
-      const x = this.getPositionForTime (note.time);
-      const y = this.getPositionForPitch (note.pitch);
-      const w = Math.max (2, note.duration * this.getSixteenthWidth());
+      const x = this.getPositionForTime(note.time);
+      const y = this.getPositionForPitch(note.pitch);
+      const w = Math.max(2, note.duration * this.getSixteenthWidth());
       const h = this.getSemitoneHeight();
 
       if (pos.x >= x && pos.x <= x + w && pos.y >= y && pos.y <= y + h) {
@@ -741,13 +741,13 @@ export class NoteGridComponent extends Component {
 
   private setMouseCursor(action: DragAction): void {
     switch (action) {
-      case "MOVE_NOTE":
+      case 'MOVE_NOTE':
         this.mouseCursor = 'move';
         break;
-      case "LEFT":
+      case 'LEFT':
         this.mouseCursor = 'w-resize';
         break;
-      case "RIGHT":
+      case 'RIGHT':
         this.mouseCursor = 'e-resize';
         break;
       default:

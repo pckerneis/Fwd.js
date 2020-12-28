@@ -1,6 +1,6 @@
-import {MAX_PITCH, MAX_SEMI_H, MIN_PITCH, SequencerDisplayModel} from '../note-sequencer';
-import {Component, ComponentMouseEvent} from './BaseComponent';
-import {NoteGridComponent} from './NoteGridComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { MAX_PITCH, MAX_SEMI_H, MIN_PITCH, SequencerDisplayModel } from '../note-sequencer';
+import { NoteGridComponent } from './NoteGridComponent';
 
 export class PitchRuler extends Component {
   private lastMouseX: number;
@@ -118,9 +118,6 @@ export class PitchRuler extends Component {
 
     this.isPreviewingNote = true;
     this.lastPreviewedPitch = p;
-
-    // TODO
-    // owner.onPianoRollChange(p);
   }
 
   private zoomIn(): void {

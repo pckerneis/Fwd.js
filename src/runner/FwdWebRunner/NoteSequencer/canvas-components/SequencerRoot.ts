@@ -1,11 +1,11 @@
-import {SequencerDisplayModel} from '../note-sequencer';
-import {Component} from './BaseComponent';
-import {DraggableBorder, DraggableBorderOwner} from './DraggableBorder';
-import {NoteGridComponent} from './NoteGridComponent';
-import {PitchRuler} from './PitchRuler';
-import {TimeRuler} from './TimeRuler';
-import {VelocityRuler} from './VelocityRuler';
-import {VelocityTrack} from './VelocityTrack';
+import { Component } from '../../canvas/BaseComponent';
+import { DraggableBorder, DraggableBorderOwner } from '../../canvas/shared/DraggableBorder';
+import { SequencerDisplayModel } from '../note-sequencer';
+import { NoteGridComponent } from './NoteGridComponent';
+import { PitchRuler } from './PitchRuler';
+import { TimeRuler } from './TimeRuler';
+import { VelocityRuler } from './VelocityRuler';
+import { VelocityTrack } from './VelocityTrack';
 
 export class SequencerRoot extends Component implements DraggableBorderOwner {
   private readonly _grid: NoteGridComponent;
@@ -75,7 +75,7 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
     g.fillRect(0, 0, this.width, this.height);
   }
 
-  public borderDragged(newPosition: number): void {
+  public borderDragged(border: DraggableBorder, newPosition: number): void {
     this.draggableBorderPosition = Math.max(80, Math.min(newPosition - this.getPosition().y, this.height));
 
     const snapThreshold = 50;
