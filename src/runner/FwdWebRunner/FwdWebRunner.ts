@@ -1,5 +1,5 @@
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
-import { ContainerPanel, FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
+import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
@@ -13,6 +13,7 @@ import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
+import { NoteSequencerElement } from './components/NoteSequencerElement';
 import { Overlay } from './components/Overlay';
 import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
@@ -102,15 +103,15 @@ export default class FwdWebRunner implements FwdRunner {
       return;
     }
 
-    const message = createDomElement('span', { innerText: 'Create a new program'});
+    const message = createDomElement('span', {innerText: 'Create a new program'});
     const pathInput = createDomElement('input', {
       type: 'text',
       placeholder: 'program.js',
-      style: { margin: '8px', display: 'block', padding: '5px' },
+      style: {margin: '8px', display: 'block', padding: '5px'},
     });
-    const confirmButton = createDomElement('button', { innerText: 'Confirm' });
+    const confirmButton = createDomElement('button', {innerText: 'Confirm'});
 
-    const overlay = new Overlay({ hideWhenBackdropClicked: true, hideWhenContainerClicked: false });
+    const overlay = new Overlay({hideWhenBackdropClicked: true, hideWhenContainerClicked: false});
     overlay.container.classList.add('fwd-runner-new-program-overlay');
     overlay.container.append(message, pathInput, confirmButton);
     overlay.show();
@@ -447,10 +448,9 @@ export default class FwdWebRunner implements FwdRunner {
       this._codeEditorSeparator.htmlElement.classList.add('fwd-runner-large-separator');
     }
 
-    const containerPanel = new ContainerPanel();
-    containerPanel.htmlElement.append(this.fwd.editor.root.htmlElement);
+    const sequencerElement = new NoteSequencerElement();
 
-    flexPanel.addFlexItem('center', containerPanel, {
+    flexPanel.addFlexItem('center', sequencerElement, {
       flexShrink: 1,
       flexGrow: 1,
       width: 600,
@@ -525,11 +525,11 @@ export default class FwdWebRunner implements FwdRunner {
 
   private stopAndShowForceQuitOverlay(): Promise<void> {
     return new Promise<void>((resolve) => {
-      const message = createDomElement('span', { innerText: 'Waiting for the program to stop...' });
+      const message = createDomElement('span', {innerText: 'Waiting for the program to stop...'});
       const quitButton = createDomElement('button', {
         innerText: 'Force quit',
         classList: ['text-button'],
-        style: { marginTop: '10px' },
+        style: {marginTop: '10px'},
       });
 
       quitButton.onclick = () => {
