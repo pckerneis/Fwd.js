@@ -1,5 +1,4 @@
 import { FwdAudio } from "./audio/FwdAudio";
-import { FwdEditor } from "./editor/FwdEditor";
 import { FwdGui } from './gui/Gui';
 import { FwdMidi } from './midi/FwdMidi';
 import { FwdScheduler } from './scheduler/FwdScheduler';
@@ -18,11 +17,6 @@ export interface Fwd {
    * The {@link FwdAudio} module.
    */
   readonly audio: FwdAudio;
-
-  /**
-   * The {@link FwdEditor} module.
-   */
-  readonly editor: FwdEditor;
 
   /**
    * The {@link FwdGui} module.

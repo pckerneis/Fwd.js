@@ -3,54 +3,6 @@ import { clamp } from "../../../utils/numbers";
 import audit from "../../../utils/time-filters/audit";
 import { EditorElement } from '../EditorElement';
 
-abstract class AbstractContainerElement implements EditorElement {
-  public abstract htmlElement: HTMLDivElement;
-
-  public elements: Map<string, EditorElement>;
-
-  protected constructor() {
-    this.elements = new Map<string, EditorElement>();
-  }
-
-  public get(key: string): EditorElement {
-    return this.elements.get(key);
-  }
-
-  protected set(key: string, element: EditorElement): EditorElement {
-    this.elements.set(key, element);
-    return element;
-  }
-
-  protected delete(key: string): EditorElement {
-    const elem = this.get(key);
-    this.elements.delete(key);
-    return elem;
-  }
-}
-
-export class ContainerPanel extends AbstractContainerElement {
-  public readonly htmlElement: HTMLDivElement;
-
-  constructor() {
-    super();
-    this.htmlElement = document.createElement('div');
-  }
-
-  public add(key: string, element: EditorElement): EditorElement {
-    const existing = this.get(key);
-
-    if (existing != null) {
-      console.warn('Element already exists and cannot be added!');
-      return null;
-    }
-
-    this.set(key, element);
-    this.htmlElement.append(element.htmlElement);
-
-    return element;
-  }
-}
-
 interface FlexItemOptions {
   minHeight?: number,
   maxHeight?: number,
@@ -105,28 +57,22 @@ export interface FlexItem {
   element: EditorElement;
 }
 
-export class FlexPanel extends ContainerPanel {
+export class FlexPanel implements EditorElement {
   public readonly htmlElement: HTMLDivElement;
   private _elementStack: FlexItem[] = [];
   private _separators: SeparatorElement[] = [];
 
   constructor(private _direction: FlexDirection = 'row') {
-    super();
-
+    this.htmlElement = document.createElement('div');
     this.htmlElement.style.display = 'flex';
     this.htmlElement.style.overflow = 'hidden';
     this.htmlElement.style.flexDirection = _direction;
   }
 
   public addFlexItem(key: string, element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
-    element = this.add(key, element);
-
-    if (element == null) {
-      return element;
-    }
+    this.add(element.htmlElement);
 
     // Default values
-    // element.htmlElement.style.overflow = 'hidden';
     element.htmlElement.style.position = 'relative';
 
     if (this.isVerticalAlignment()) {
@@ -167,17 +113,9 @@ export class FlexPanel extends ContainerPanel {
     return element;
   }
 
-  public getOrAddFlexItem(key: string,
-                          elementFactory: () => EditorElement,
-                          flexItemOptions: FlexItemOptions): EditorElement {
-    return this.get(key) || this.addFlexItem(key, elementFactory(), flexItemOptions);
-  }
-
   public addSeparator(index: number, draggable?: boolean): SeparatorElement {
     if (this.getSeparatorWithIndex(index) != null) {
-      // TODO: find a nice way to 'soft' re-add separators
-      // throw new Error(`There\'s already a separator with the index ${index}.`);
-      return;
+      throw new Error(`There\'s already a separator with the index ${index}.`);
     }
 
     const separator = this.createSeparatorElement(this._elementStack.length - 1, draggable);
@@ -189,6 +127,10 @@ export class FlexPanel extends ContainerPanel {
     }
 
     return separator;
+  }
+
+  private add(htmlElement: HTMLElement): void {
+    this.htmlElement.append(htmlElement);
   }
 
   private createSeparatorElement(index: number, draggable: boolean): SeparatorElement {

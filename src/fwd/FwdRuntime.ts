@@ -1,5 +1,4 @@
 import { FwdAudioImpl } from './audio/FwdAudioImpl';
-import { FwdEditor } from './editor/FwdEditor';
 import { Fwd } from './Fwd';
 import { clearGuiManagers, fwdGui } from './gui/Gui';
 import { fwdMidi } from './midi/FwdMidi';
@@ -21,12 +20,10 @@ export function getContext(id: string): Fwd {
 
 function createContext(): Fwd {
   const scheduler = new FwdScheduler();
-  const editor = new FwdEditor();
   const audio = new FwdAudioImpl(scheduler);
 
   return {
     scheduler,
-    editor,
     audio,
     gui: fwdGui,
     midi: fwdMidi,
@@ -69,7 +66,6 @@ export function resetContext(fwd: Fwd): void {
 
   fwd.onStart = null;
   fwd.onStop = null;
-  fwd.editor.reset();
   fwd.scheduler.resetActions();
 }
 
