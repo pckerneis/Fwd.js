@@ -25,6 +25,10 @@ export class ComponentBounds implements IBounds {
     this.height = Math.ceil(height);
   }
 
+  public clone(): ComponentBounds {
+    return new ComponentBounds(this.x, this.y, this.width, this.height);
+  }
+
   public removeFromLeft(amount: number): ComponentBounds {
     amount = Math.floor(Math.max(0, Math.min(amount, this.width)));
 
@@ -56,9 +60,16 @@ export class ComponentBounds implements IBounds {
 
     return removed;
   }
+
+  public translated(offset: ComponentPosition): ComponentBounds {
+    return new ComponentBounds(
+      this.x + offset.x,
+      this.y + offset.y,
+      this.width, this.height);
+  }
 }
 
-export interface ComponentMouseEvent {
+export interface IComponentMouseEvent {
   nativeEvent: MouseEvent;
   isDragging: boolean;
   positionAtMouseDown: ComponentPosition,
@@ -66,6 +77,33 @@ export interface ComponentMouseEvent {
   pressedComponent: Component,
   wasDragged: boolean,
   modifiers: { shift: boolean, option: boolean }
+}
+
+export class ComponentMouseEvent implements IComponentMouseEvent {
+  public readonly isDragging: boolean;
+  public readonly modifiers: { shift: boolean; option: boolean };
+  public readonly nativeEvent: MouseEvent;
+  public readonly position: ComponentPosition;
+  public readonly positionAtMouseDown: ComponentPosition;
+  public readonly pressedComponent: Component;
+  public readonly wasDragged: boolean;
+
+  constructor(infos: IComponentMouseEvent) {
+    this.isDragging = infos.isDragging;
+    this.modifiers = infos.modifiers;
+    this.nativeEvent = infos.nativeEvent;
+    this.position = infos.position;
+    this.positionAtMouseDown = infos.positionAtMouseDown;
+    this.pressedComponent = infos.pressedComponent;
+    this.wasDragged = infos.wasDragged;
+  }
+
+  public getDragOffset(): ComponentPosition {
+    return {
+      x: this.position.x - this.positionAtMouseDown.x,
+      y: this.position.y - this.positionAtMouseDown.y,
+    };
+  }
 }
 
 /**
@@ -117,8 +155,20 @@ export abstract class Component {
     return Math.ceil(this._bounds.width);
   }
 
+  public set width(newWidth: number) {
+    if (newWidth != this._bounds.width) {
+      this._bounds.width = newWidth;
+    }
+  }
+
   public get height(): number {
     return Math.ceil(this._bounds.height);
+  }
+
+  public set height(newHeight: number) {
+    if (newHeight != this._bounds.height) {
+      this._bounds.height = newHeight;
+    }
   }
 
   public set rootHolder(holder: RootComponentHolder<this>) {
@@ -166,6 +216,10 @@ export abstract class Component {
 
   public getLocalBounds(): ComponentBounds {
     return new ComponentBounds(0, 0, this.width, this.height);
+  }
+
+  public getBounds(): ComponentBounds {
+    return this._bounds.clone();
   }
 
   public setBounds(newBounds: ComponentBounds): void {
@@ -295,11 +349,28 @@ export abstract class Component {
 
       this.render(g.getContext('2d'));
 
-      context.drawImage(g, Math.floor(this._bounds.x), Math.floor(this._bounds.y));
+      const bounds = this.getAbsoluteBounds();
+      context.drawImage(g, Math.floor(bounds.x), Math.floor(bounds.y));
     }
 
     this._children.forEach(child => child.paint(context));
 
     this._needRepaint = false;
+  }
+
+  private getAbsoluteBounds(): ComponentBounds {
+    let offset: ComponentPosition = {
+      x: 0, y: 0,
+    };
+
+    let parent = this.getParentComponent();
+
+    while (parent != null) {
+      offset.x += parent.getPosition().x;
+      offset.y += parent.getPosition().y;
+      parent = parent.getParentComponent();
+    }
+
+    return this.getBounds().translated(offset);
   }
 }

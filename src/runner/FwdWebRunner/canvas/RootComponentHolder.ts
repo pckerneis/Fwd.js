@@ -82,7 +82,7 @@ export class RootComponentHolder<T extends Component> {
       wasDragged = false;
       isDragging = true;
 
-      component.mousePressed({
+      component.mousePressed(new ComponentMouseEvent({
         nativeEvent: mouseEvent,
         position: mouseDownPos,
         positionAtMouseDown: mouseDownPos,
@@ -90,7 +90,7 @@ export class RootComponentHolder<T extends Component> {
         wasDragged,
         modifiers: extractModifiers(mouseEvent),
         isDragging,
-      });
+      }));
 
       if (lastClickPos == null
         || lastClickTime == null
@@ -102,7 +102,7 @@ export class RootComponentHolder<T extends Component> {
       }
 
       if (consecutivePressCount == 2) {
-        component.doublePressed({
+        component.doublePressed(new ComponentMouseEvent({
           nativeEvent: mouseEvent,
           position: mouseDownPos,
           positionAtMouseDown: mouseDownPos,
@@ -110,7 +110,7 @@ export class RootComponentHolder<T extends Component> {
           wasDragged,
           modifiers: extractModifiers(mouseEvent),
           isDragging,
-        });
+        }));
 
         consecutivePressCount = 0;
       }
@@ -121,7 +121,7 @@ export class RootComponentHolder<T extends Component> {
       mouseUpTime = performance.now();
 
       if (pressedComponent != null) {
-        pressedComponent.mouseReleased({
+        pressedComponent.mouseReleased(new ComponentMouseEvent({
           nativeEvent: mouseEvent,
           position: mouseUpPos,
           positionAtMouseDown: mouseDownPos,
@@ -129,13 +129,13 @@ export class RootComponentHolder<T extends Component> {
           wasDragged,
           modifiers: extractModifiers(mouseEvent),
           isDragging,
-        });
+        }));
 
         if (mouseUpTime < mouseDownTime + CLICK_INTERVAL
           && ! wasDragged) {
           lastClickPos = mouseUpPos;
 
-          pressedComponent.clicked({
+          pressedComponent.clicked(new ComponentMouseEvent({
             nativeEvent: mouseEvent,
             position: mouseUpPos,
             positionAtMouseDown: mouseDownPos,
@@ -143,7 +143,7 @@ export class RootComponentHolder<T extends Component> {
             wasDragged,
             modifiers: extractModifiers(mouseEvent),
             isDragging,
-          });
+          }));
 
           if (lastClickTime == null || mouseUpTime > lastClickTime + DOUBLE_CLICK_INTERVAL) {
             consecutiveClickCount = 1;
@@ -153,7 +153,7 @@ export class RootComponentHolder<T extends Component> {
 
           if (consecutiveClickCount == 2
             && ! wasDragged) {
-            pressedComponent.doubleClicked({
+            pressedComponent.doubleClicked(new ComponentMouseEvent({
               nativeEvent: mouseEvent,
               position: mouseUpPos,
               positionAtMouseDown: mouseDownPos,
@@ -161,7 +161,7 @@ export class RootComponentHolder<T extends Component> {
               wasDragged,
               modifiers: extractModifiers(mouseEvent),
               isDragging,
-            });
+            }));
 
             consecutiveClickCount = 0;
           }
@@ -188,7 +188,7 @@ export class RootComponentHolder<T extends Component> {
         document.body.style.cursor = component.mouseCursor || 'default';
 
         if (componentUnderMouse != null && componentUnderMouse != component) {
-          const event: ComponentMouseEvent = {
+          const event = {
             nativeEvent: mouseEvent,
             position: {x, y},
             positionAtMouseDown: mouseDownPos,
@@ -198,13 +198,13 @@ export class RootComponentHolder<T extends Component> {
             isDragging,
           };
 
-          componentUnderMouse.mouseExit({...event});
-          component.mouseEnter({...event});
+          componentUnderMouse.mouseExit(new ComponentMouseEvent(event));
+          component.mouseEnter(new ComponentMouseEvent(event));
         }
 
         componentUnderMouse = component;
 
-        component.mouseMoved({
+        component.mouseMoved(new ComponentMouseEvent({
           nativeEvent: mouseEvent,
           position: {x, y},
           positionAtMouseDown: mouseDownPos,
@@ -212,13 +212,13 @@ export class RootComponentHolder<T extends Component> {
           wasDragged,
           modifiers: extractModifiers(mouseEvent),
           isDragging,
-        });
+        }));
       });
 
       if (mouseEvent.buttons > 0 && pressedComponent != null) {
         document.body.style.cursor = pressedComponent.mouseCursor;
 
-        pressedComponent.mouseDragged({
+        pressedComponent.mouseDragged(new ComponentMouseEvent({
           nativeEvent: mouseEvent,
           position: {x, y},
           positionAtMouseDown: mouseDownPos,
@@ -226,7 +226,7 @@ export class RootComponentHolder<T extends Component> {
           wasDragged,
           modifiers: extractModifiers(mouseEvent),
           isDragging,
-        });
+        }));
       }
     };
   }

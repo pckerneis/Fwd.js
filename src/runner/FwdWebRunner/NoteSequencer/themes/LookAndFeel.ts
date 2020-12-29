@@ -188,19 +188,25 @@ export class LookAndFeel_Default implements LookAndFeel {
   public drawPitchLabels(g: CanvasRenderingContext2D, width: number, height: number, start: number, end: number,
                          semiHeight: number, hoveredPitch: number, colors: Colors): void {
 
+
     const isPianoRollVisible = this.isPianoRollVisible(semiHeight);
     const x = isPianoRollVisible ? width * 0.25 : width * 0.5;
+    const fontSize = 11;
+    const shouldDrawLabels = semiHeight * 12 > fontSize;
 
     for (let i = 0; i < 128; i += 12) {
       if (i + 6 >= start && i <= end) {
         const y = height - (i - start) * semiHeight;
-        const txt = '' + this.getOctaveNumber(i);
 
-        g.fillStyle = colors.text;
-        g.font = '11px Arial';
-        g.textBaseline = 'middle';
-        g.textAlign = 'center';
-        g.fillText(txt, x, y - 6 * semiHeight, width / 2);
+        if (shouldDrawLabels) {
+          const txt = '' + this.getOctaveNumber(i);
+
+          g.fillStyle = colors.text;
+          g.font = `${fontSize}px Arial`;
+          g.textBaseline = 'middle';
+          g.textAlign = 'center';
+          g.fillText(txt, x, y - 6 * semiHeight, width / 2);
+        }
 
         g.fillStyle = colors.strokeDark;
         g.fillRect(0, y, width, 1);

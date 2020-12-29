@@ -70,6 +70,8 @@ export class VelocityTrack extends Component {
     this._draggingHandle = true;
 
     this._mouseDownResult = this.grid.selectedSet.addToSelectionMouseDown(handle, event.modifiers.shift);
+
+    this.getParentComponent().repaint();
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {

@@ -16,5 +16,7 @@ export class GraphComponent implements EditorElement {
 
     this.htmlElement.append(this._rootHolder.canvas);
     this._rootHolder.attachResizeObserver(this.htmlElement);
+    this._rootHolder.attachMouseEventListeners();
+
   }
 }

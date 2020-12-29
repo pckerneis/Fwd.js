@@ -19,7 +19,5 @@ export class GraphRoot extends Component {
   }
 
   public render(g: CanvasRenderingContext2D): void {
-    // g.fillStyle = this.model.colors.background;
-    // g.fillRect(0, 0, this.width, this.height);
   }
 }

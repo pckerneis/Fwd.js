@@ -68,8 +68,8 @@ const defaultColors: Colors = {
   noteLowBlend: '#d2c263',
   noteOutline: '#60606090',
   noteOutlineSelected: '#00a8ff',
-  draggableBorder: '#8f8f8f',
-  draggableBorderHover: '#676767',
+  draggableBorder: '#c1c1c1',
+  draggableBorderHover: '#aea5a5',
   lassoBackground: '#00a8ff20',
   lassoOutline: '#00a8ff80',
 };

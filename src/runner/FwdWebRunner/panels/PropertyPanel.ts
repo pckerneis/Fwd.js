@@ -14,6 +14,7 @@ export class PropertyPanel implements EditorElement {
     const e = document.createElement('b');
     e.innerText = text;
     e.style.gridColumn = '1 / span 2';
+    e.style.userSelect = 'none';
     this.htmlElement.append(e);
     return e;
   }
@@ -21,6 +22,7 @@ export class PropertyPanel implements EditorElement {
   public addLabel(text: string): HTMLSpanElement {
     const e = document.createElement('span');
     e.innerText = text;
+    e.style.userSelect = 'none';
     this.htmlElement.append(e);
     return e;
   }

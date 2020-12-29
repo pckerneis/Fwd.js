@@ -232,10 +232,6 @@ export class NoteGridComponent extends Component {
     this._dragAction = 'V_RIGHT';
     this._draggedItem = newNote;
 
-    // Trigger callback method
-    // TODO
-    // this.onNoteAdded(newNote);
-
     this.getParentComponent().repaint();
 
     this.mouseCursor = 'w-resize';
