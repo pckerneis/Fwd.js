@@ -1,6 +1,33 @@
-import { Component } from '../../canvas/BaseComponent';
+import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { GraphNode } from './GraphNode';
+import { GraphRoot } from './GraphRoot';
 
-abstract class Pin extends Component {
+
+export abstract class Pin extends Component {
+
+  constructor(public readonly parentNode: GraphNode,
+              public readonly parentGraph: GraphRoot) {
+    super();
+  }
+
+  public abstract canConnect(other: Pin): boolean;
+
+  public mouseDragged(event: ComponentMouseEvent): void {
+    if (! this.parentGraph.hasTemporaryConnection) {
+      this.parentGraph.initiateTemporaryConnection(this, event);
+    }
+
+    this.parentGraph.temporaryConnectionDragged(event);
+  }
+
+  public mouseReleased(event: ComponentMouseEvent): void {
+    this.parentGraph.temporaryConnectionReleased(event);
+  }
+
+  public getBoundsInGraph(): ComponentBounds {
+    const nodePosition = this.parentNode.getPosition();
+    return this.getBounds().translated(nodePosition);
+  }
 
   protected resized(): void {
   }
@@ -16,12 +43,28 @@ abstract class Pin extends Component {
 }
 
 export class InletPin extends Pin {
+  public canConnect(other: Pin): boolean {
+    if (other instanceof OutletPin) {
+      return this.parentNode.canConnect(this, other);
+    }
+
+    return false;
+  }
+
   protected render(g: CanvasRenderingContext2D): void {
     this.drawPin(g, 1, this.height / 2, 4);
   }
 }
 
 export class OutletPin extends Pin {
+  public canConnect(other: Pin): boolean {
+    if (other instanceof InletPin) {
+      return this.parentNode.canConnect(other, this);
+    }
+
+    return false;
+  }
+
   protected render(g: CanvasRenderingContext2D): void {
     this.drawPin(g, this.width - 1, this.height / 2, 4);
   }

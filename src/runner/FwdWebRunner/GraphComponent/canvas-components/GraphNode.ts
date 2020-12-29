@@ -1,49 +1,59 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { InletPin, OutletPin } from './Pin';
+import { GraphRoot } from './GraphRoot';
+import { InletPin, OutletPin, Pin } from './Pin';
 
 export class GraphNode extends Component {
 
+  public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>()
+  public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>()
+
   public label: string;
+
+  private readonly defaultHeight: number = 24;
+  private readonly defaultWidth: number = 120;
+  private pinHeight: number = 15;
+  private pinWidth: number = 7;
 
   private _boundsAtMouseDown: ComponentBounds;
 
-  private readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>()
-  private readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>()
-  private readonly defaultHeight: number = 24;
-  private pinHeight: number = 15;
-
-  constructor() {
+  constructor(public readonly parentGraph: GraphRoot) {
     super();
+
+    this.width = this.defaultWidth;
+    this.height = this.defaultHeight;
   }
 
   public addInlet(): void {
-    const pin = new InletPin();
+    const pin = new InletPin(this, this.parentGraph);
     this.addAndMakeVisible(pin);
     this.inlets.add(pin);
     this.adaptSizeToPins();
+    this.resized();
   }
 
   public addOutlet(): void {
-    const pin = new OutletPin();
+    const pin = new OutletPin(this, this.parentGraph);
     this.addAndMakeVisible(pin);
     this.outlets.add(pin);
     this.adaptSizeToPins();
+    this.resized();
   }
-  
-  public adaptSizeToPins(): void {
-    this.height = Math.max(this.defaultHeight,
-      this.inlets.size() * this.pinHeight,
-      this.outlets.size() * this.pinHeight);
+
+  public canConnect(inlet: InletPin, outlet: OutletPin): boolean {
+    return inlet.parentNode != outlet.parentNode
+      && ! this.arePinsConnected(inlet, outlet);
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
     this._boundsAtMouseDown = this.getBounds();
     this.toFront();
     this.refreshParent();
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
     const targetBounds = this._boundsAtMouseDown.translated(event.getDragOffset());
     targetBounds.x = Math.max(0, targetBounds.x);
     targetBounds.y = Math.max(0, targetBounds.y);
@@ -83,21 +93,49 @@ export class GraphNode extends Component {
 
     this.inlets.array.forEach((pin, index) => {
       pin.setBounds(new ComponentBounds(0, inletOffsetY + this.pinHeight * index,
-        this.pinHeight, this.pinHeight));
+        this.pinWidth, this.pinHeight));
     });
 
     const outletOffsetY = (this.height - this.outlets.size() * this.pinHeight) / 2;
 
     this.outlets.array.forEach((pin, index) => {
-      pin.setBounds(new ComponentBounds(this.width - this.pinHeight,
+      pin.setBounds(new ComponentBounds(this.width - this.pinWidth,
         outletOffsetY + this.pinHeight * index,
-        this.pinHeight, this.pinHeight));
+        this.pinWidth, this.pinHeight));
     });
+  }
+
+  private adaptSizeToPins(): void {
+    this.height = Math.max(this.defaultHeight,
+      this.inlets.size() * this.pinHeight,
+      this.outlets.size() * this.pinHeight);
   }
 
   private refreshParent(): void {
     if (this.getParentComponent() != null) {
       this.getParentComponent().repaint();
     }
+  }
+
+  private arePinsConnected(first: Pin, second: Pin): Boolean {
+    return this.parentGraph.arePinsConnected(first, second);
+  }
+}
+
+export class InitNode extends GraphNode {
+  constructor(parentGraph: GraphRoot) {
+    super(parentGraph);
+
+    this.addOutlet();
+    this.label = 'init';
+  }
+}
+
+export class MidiClipNode extends GraphNode {
+  constructor(parentGraph: GraphRoot) {
+    super(parentGraph);
+
+    this.addInlet();
+    this.addOutlet();
   }
 }

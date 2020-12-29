@@ -25,6 +25,20 @@ export class ComponentBounds implements IBounds {
     this.height = Math.ceil(height);
   }
 
+  public get topLeft(): ComponentPosition {
+    return {
+      x: this.x,
+      y: this.y,
+    }
+  }
+
+  public get center(): ComponentPosition {
+    return {
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2,
+    }
+  }
+
   public clone(): ComponentBounds {
     return new ComponentBounds(this.x, this.y, this.width, this.height);
   }
@@ -103,6 +117,11 @@ export class ComponentMouseEvent implements IComponentMouseEvent {
       x: this.position.x - this.positionAtMouseDown.x,
       y: this.position.y - this.positionAtMouseDown.y,
     };
+  }
+
+  public consumeNativeEvent(): void {
+    this.nativeEvent.stopPropagation();
+    this.nativeEvent.preventDefault();
   }
 }
 
@@ -344,7 +363,10 @@ export abstract class Component {
    * @param context the canvas context to use
    */
   private paint(context: CanvasRenderingContext2D): void {
-    if (this._visible && this._needRepaint && Math.floor(this._bounds.width) > 0 && Math.floor(this._bounds.height) > 0) {
+    if (this._visible
+        && this._needRepaint
+        && Math.floor(this._bounds.width) > 0
+        && Math.floor(this._bounds.height) > 0) {
       const g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
 
       this.render(g.getContext('2d'));
