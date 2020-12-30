@@ -10,10 +10,6 @@ interface FlexItemOptions {
   minWidth?: number,
   maxWidth?: number,
   width?: number,
-  flexGrow?: number,
-  flexShrink?: number,
-  display?: string,
-  flexDirection?: string,
 }
 
 export class SeparatorElement implements EditorElement {
@@ -55,6 +51,7 @@ export type FlexDirection = 'row' | 'column';
 export interface FlexItem {
   flexItemOptions: FlexItemOptions;
   element: EditorElement;
+  container: HTMLElement;
 }
 
 export class FlexPanel implements EditorElement {
@@ -64,50 +61,54 @@ export class FlexPanel implements EditorElement {
 
   constructor(private _direction: FlexDirection = 'row') {
     this.htmlElement = document.createElement('div');
-    this.htmlElement.style.display = 'flex';
-    this.htmlElement.style.overflow = 'hidden';
+    this.htmlElement.classList.add(FLEX_PANEL_CLASS);
     this.htmlElement.style.flexDirection = _direction;
   }
 
   public addFlexItem(key: string, element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
-    this.add(element.htmlElement);
+    const container = document.createElement('div');
+    container.append(element.htmlElement);
+    container.classList.add(WRAPPER_CLASS);
+    this.htmlElement.append(container);
 
     // Default values
-    element.htmlElement.style.position = 'relative';
+    container.style.position = 'relative';
 
     if (this.isVerticalAlignment()) {
-      element.htmlElement.style.overflowX = 'auto';
-      element.htmlElement.style.overflowY = 'hidden';
+      container.style.overflowX = 'auto';
+      container.style.overflowY = 'hidden';
     } else {
-      element.htmlElement.style.overflowX = 'hidden';
-      element.htmlElement.style.overflowY = 'auto';
+      container.style.overflowX = 'hidden';
+      container.style.overflowY = 'auto';
     }
 
     if (flexItemOptions) {
       const affectIfNotNull = (property: string, suffix: string = '') => {
-        if (flexItemOptions[property] != null && property in element.htmlElement.style) {
-          element.htmlElement.style[property] = flexItemOptions[property] + suffix;
+        if (flexItemOptions[property] != null && property in container.style) {
+          container.style[property] = flexItemOptions[property] + suffix;
         }
       };
 
       ['height', 'width', 'minHeight', 'maxHeight', 'minWidth', 'maxWidth'].forEach(key => affectIfNotNull(key, 'px'));
-      ['flexGrow', 'flexShrink', 'display', 'flexDirection'].forEach(key => affectIfNotNull(key));
     }
 
     const newItem = {
       element,
+      container,
       flexItemOptions,
     };
 
     this._elementStack.push(newItem);
 
+    const containerBounds = container.getBoundingClientRect();
+
     const desiredSize = this.isVerticalAlignment() ?
-      (flexItemOptions.height || flexItemOptions.minHeight || element.htmlElement.getBoundingClientRect().height) :
-      (flexItemOptions.width || flexItemOptions.minWidth || element.htmlElement.getBoundingClientRect().width);
+      (flexItemOptions.height || flexItemOptions.minHeight || containerBounds.height) :
+      (flexItemOptions.width || flexItemOptions.minWidth || containerBounds.width);
 
     for (const e of this._elementStack) {
       this.setDesiredSize(e, e === newItem ? desiredSize :
-        e.element.htmlElement.getBoundingClientRect()[this.isVerticalAlignment() ? 'height' : 'width']);
+        containerBounds[this.isVerticalAlignment() ? 'height' : 'width']);
     }
 
     return element;
@@ -129,10 +130,6 @@ export class FlexPanel implements EditorElement {
     return separator;
   }
 
-  private add(htmlElement: HTMLElement): void {
-    this.htmlElement.append(htmlElement);
-  }
-
   private createSeparatorElement(index: number, draggable: boolean): SeparatorElement {
     return new SeparatorElement(this._direction, index, draggable);
   }
@@ -146,8 +143,8 @@ export class FlexPanel implements EditorElement {
     const item = this._elementStack[separator.index];
 
     const sizeAtMouseDown = vertical ?
-      item.element.htmlElement.getBoundingClientRect().height
-      : item.element.htmlElement.getBoundingClientRect().width;
+      item.container.getBoundingClientRect().height
+      : item.container.getBoundingClientRect().width;
 
     const containerPosAtMouseDown = vertical ?
       this.htmlElement.getBoundingClientRect().top
@@ -215,14 +212,17 @@ export class FlexPanel implements EditorElement {
     if (vertical) {
       newSize = clamp(newSize, item.flexItemOptions.minHeight, item.flexItemOptions.maxHeight);
       newSize = Math.min(newSize, computedMaxSize);
-      item.element.htmlElement.style.height = newSize + 'px';
+      item.container.style.height = newSize + 'px';
     } else {
       newSize = clamp(newSize, item.flexItemOptions.minWidth, item.flexItemOptions.maxWidth);
       newSize = Math.min(newSize, computedMaxSize);
-      item.element.htmlElement.style.width = newSize + 'px';
+      item.container.style.width = newSize + 'px';
     }
   }
 }
+
+const FLEX_PANEL_CLASS = 'fwd-runner-flex-panel';
+const WRAPPER_CLASS = 'fwd-runner-flex-wrapper';
 
 injectStyle('FlexPanel', `
 .fwd-flex-panel-separator {
@@ -233,6 +233,27 @@ injectStyle('FlexPanel', `
 
 .fwd-flex-panel-separator.draggable:hover {
   background: #00000010;
+}
+
+.${FLEX_PANEL_CLASS} {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.${WRAPPER_CLASS} {
+  display: flex;
+}
+
+.${FLEX_PANEL_CLASS} > .${WRAPPER_CLASS} {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.${FLEX_PANEL_CLASS} > .${WRAPPER_CLASS}:last-child {
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 `);
 

@@ -56,7 +56,8 @@ export class RunnerCodeEditor {
     this.htmlElement.children[0].classList.add('fwd-code-editor-cm');
 
     // Define 'save' command
-    CodeMirror.commands['save'] = () => this.submit();
+    // TODO
+    // CodeMirror.commands['save'] = () => this.submit();
 
     this.htmlElement.prepend(
       this.buildToolbar(),
@@ -132,13 +133,10 @@ export class RunnerCodeEditor {
       this._saveButton.htmlElement,
     );
 
-    this._saveButton.htmlElement.onclick = () => this.submit();
+    // TODO
+    // this._saveButton.htmlElement.onclick = () => this.submit();
 
     return toolbar;
-  }
-
-  private submit(): void {
-    this.runner.submit();
   }
 }
 

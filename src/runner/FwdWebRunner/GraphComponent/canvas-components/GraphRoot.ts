@@ -36,8 +36,12 @@ export class GraphRoot extends Component {
     this.addNode(node1);
     this.addNode(node2);
 
-    node2.addInlet();
-    node2.addInlet();
+    node2.addMidiOutlet({name: 'out2', time: 0});
+    node2.addMidiOutlet({name: 'out3', time: 0});
+
+    const node3 = new MidiClipNode(this);
+    node3.label = 'node 3';
+    this.addNode(node3);
   }
 
   public get temporaryConnection(): TemporaryConnection {

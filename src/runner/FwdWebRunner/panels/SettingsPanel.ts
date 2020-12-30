@@ -18,13 +18,6 @@ export class SettingsPanel extends PropertyPanel {
     fontSizeInput.oninput = () => {
       document.documentElement.style.fontSize = fontSizeInput.value + 'px';
     };
-
-    if (this.runner.config.useCodeEditor) {
-      this.addLabel('Show code editor');
-      this.addYesNoSelector(true, (yes: boolean) => {
-        this.runner.setCodeEditorVisible(yes);
-      });
-    }
   }
 
   private addThemeSelector(): void {

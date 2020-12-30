@@ -15,16 +15,7 @@ export default interface FwdRunner {
   runCode(): void;
   start(): void;
   stop(): void;
-  submit(): void;
   render(duration: number, sampleRate: number, fileName: string): void;
-
-  toggleCodeEditorVisibility(): void;
-  setCodeEditorVisible(visible: boolean): void;
-  isCodeEditorVisible(): boolean;
-
-  toggleRightDrawerVisibility(): void;
-  setRightDrawerVisible(visible: boolean): void;
-  isRightDrawerVisible(): boolean;
 
   toggleDarkMode(): void;
   setDarkMode(darkMode: boolean): void;

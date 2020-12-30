@@ -1,5 +1,6 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import FwdWebRunner from '../../FwdWebRunner';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
@@ -10,10 +11,15 @@ export class GraphNode extends Component {
 
   public label: string;
 
-  private readonly defaultHeight: number = 24;
-  private readonly defaultWidth: number = 120;
-  private pinHeight: number = 15;
-  private pinWidth: number = 7;
+  protected backgroundColor: string = '#eeeeee';
+  protected borderColor: string = '#444444';
+  protected labelColor: string = '#333333';
+
+  protected labelFontSize: number = 13;
+  protected pinHeight: number = 15;
+  protected pinWidth: number = 7;
+  protected readonly defaultHeight: number = 24;
+  protected readonly defaultWidth: number = 120;
 
   private _boundsAtMouseDown: ComponentBounds;
 
@@ -62,18 +68,18 @@ export class GraphNode extends Component {
   }
 
   protected render(g: CanvasRenderingContext2D): void {
-    g.fillStyle = 'white';
+    g.fillStyle = this.backgroundColor;
     g.fillRect(0, 0, this.width, this.height);
 
-    g.strokeStyle = '#333333';
+    g.strokeStyle = this.borderColor;
     g.lineWidth = 1;
     g.strokeRect(0, 0, this.width, this.height);
 
     if (this.label != null) {
-      g.font = '15px monospace';
+      g.font = `${this.labelFontSize}px monospace`;
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.fillStyle = '#333333';
+      g.fillStyle = this.labelColor;
 
       const allowedWidth = this.width - 16;
       const fullLabelWidth = g.measureText(this.label).width;
@@ -84,7 +90,6 @@ export class GraphNode extends Component {
       }
 
       g.fillText(textToRender, this.width / 2, this.height / 2, allowedWidth);
-      console.log(textToRender);
     }
   }
 
@@ -105,7 +110,7 @@ export class GraphNode extends Component {
     });
   }
 
-  private adaptSizeToPins(): void {
+  protected adaptSizeToPins(): void {
     this.height = Math.max(this.defaultHeight,
       this.inlets.size() * this.pinHeight,
       this.outlets.size() * this.pinHeight);
@@ -131,11 +136,113 @@ export class InitNode extends GraphNode {
   }
 }
 
+export interface MidiInlet {
+  time: number;
+  name: string;
+}
+
+export interface MidiOutlet {
+  time: number;
+  name: string;
+}
+
 export class MidiClipNode extends GraphNode {
+  protected readonly defaultHeight: number = 30;
+  private labelHeight: number = 18;
+
+  private midiInlets: ArrayList<MidiInlet> = new ArrayList<MidiInlet>();
+  private midiOutlets: ArrayList<MidiOutlet> = new ArrayList<MidiOutlet>();
+
   constructor(parentGraph: GraphRoot) {
     super(parentGraph);
 
+    this.addMidiInlet({name: 'in', time: 0});
+    this.addMidiOutlet({name: 'out', time: 4});
+  }
+
+  public doubleClicked(event: ComponentMouseEvent): void {
+    const pm = FwdWebRunner.sharedServices.panelManager;
+    pm.showMidiEditor(this);
+  }
+
+  public addMidiInlet(midiInlet: MidiInlet): void {
+    this.midiInlets.add(midiInlet);
     this.addInlet();
+  }
+
+  public addMidiOutlet(midiOutlet: MidiOutlet): void {
+    this.midiOutlets.add(midiOutlet);
     this.addOutlet();
+  }
+
+  protected render(g: CanvasRenderingContext2D): void {
+    g.fillStyle = this.backgroundColor;
+    g.fillRect(0, 0, this.width, this.height);
+
+    g.strokeStyle = this.borderColor;
+    g.lineWidth = 1;
+    g.strokeRect(0, 0, this.width, this.height);
+
+    if (this.label != null) {
+      g.font = '13px monospace';
+      g.textAlign = 'left';
+      g.textBaseline = 'hanging';
+      g.fillStyle = this.labelColor;
+
+      const allowedWidth = this.width - 4;
+      const fullLabelWidth = g.measureText(this.label).width;
+      let textToRender = this.label;
+
+      if (fullLabelWidth > allowedWidth) {
+        textToRender = this.label.slice(0, this.label.length * (allowedWidth / fullLabelWidth)) + '…';
+      }
+
+      g.fillText(textToRender, 3, 2, allowedWidth);
+    }
+
+    const availableHeight = this.height - this.labelHeight;
+
+    const inletOffsetY = this.labelHeight +
+      (availableHeight - this.midiInlets.size() * this.pinHeight) / 2;
+
+    this.midiInlets.array.forEach((inlet, index) => {
+      g.fillText(inlet.name, this.pinWidth, inletOffsetY + index * this.pinHeight, this.width / 0.6);
+    });
+
+    g.textAlign = 'right';
+
+    const outletOffsetY = this.labelHeight +
+      (availableHeight - this.midiOutlets.size() * this.pinHeight) / 2;
+
+    this.midiOutlets.array.forEach((outlet, index) => {
+      g.fillText(outlet.name, this.width - this.pinWidth, outletOffsetY + index * this.pinHeight, this.width / 0.6);
+    });
+  }
+
+  protected resized(): void {
+    const availableHeight = this.height - this.labelHeight;
+
+    const inletOffsetY = this.labelHeight +
+      (availableHeight - this.inlets.size() * this.pinHeight) / 2;
+
+    this.inlets.array.forEach((pin, index) => {
+      pin.setBounds(new ComponentBounds(0, inletOffsetY + this.pinHeight * index,
+        this.pinWidth, this.pinHeight));
+    });
+
+    const outletOffsetY = this.labelHeight +
+      (availableHeight - this.outlets.size() * this.pinHeight) / 2;
+
+    this.outlets.array.forEach((pin, index) => {
+      pin.setBounds(new ComponentBounds(this.width - this.pinWidth,
+        outletOffsetY + this.pinHeight * index,
+        this.pinWidth, this.pinHeight));
+    });
+  }
+
+  protected adaptSizeToPins(): void {
+    this.height = Math.max(this.defaultHeight,
+      this.inlets.size() * this.pinHeight + this.labelHeight,
+      this.outlets.size() * this.pinHeight + this.labelHeight);
   }
 }

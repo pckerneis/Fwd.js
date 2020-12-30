@@ -54,7 +54,8 @@ export class RunnerHeader {
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
     this.rightDrawerToggle = new IconButton('tools');
-    this.rightDrawerToggle.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
+    // TODO
+    // this.rightDrawerToggle.htmlElement.onclick = () => this.runner.toggleRightDrawerVisibility();
 
     this._toolbar.append(
       this._programSelect,

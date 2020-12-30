@@ -1,27 +1,24 @@
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
-import { FlexPanel, SeparatorElement } from '../../fwd/editor/elements/FlexPanel/FlexPanel';
-import { TabbedPanel } from '../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
 import { createDomElement } from '../../fwd/utils/dom-utils';
 import { Logger } from '../../fwd/utils/Logger';
 import { formatTime } from '../../fwd/utils/time';
-import debounce from '../../fwd/utils/time-filters/debounce';
 import { DevClient } from '../../server/DevClient';
 import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
-import { NoteSequencerElement } from './components/NoteSequencerElement';
 import { Overlay } from './components/Overlay';
-import { RunnerCodeEditor } from './components/RunnerCodeEditor';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
-import { GraphComponent } from './GraphComponent/graph-component';
-import { ExportPanel } from './panels/ExportPanel';
-import { SettingsPanel } from './panels/SettingsPanel';
+import { PanelManager } from './panels/PanelManager';
 import { injectStyle } from './StyleInjector';
+
+interface SharedServices {
+  panelManager: PanelManager;
+}
 
 const DBG = new Logger('FwdWebRunner', parentLogger);
 
@@ -34,27 +31,29 @@ export enum RunnerClientState {
 }
 
 export default class FwdWebRunner implements FwdRunner {
+
+  private static _sharedServices: SharedServices;
+
   private _devClient: DevClient;
   private _reconnectionTimeout: number = 5000;
 
   private readonly _header: RunnerHeader;
   private readonly _footer: RunnerFooter;
-  private codeEditor: RunnerCodeEditor;
   private _clientState: RunnerClientState;
-  private _codeEditorSeparator: SeparatorElement;
-  private _tabbedPanel: TabbedPanel;
 
   private _program: Program;
   private _executedCode: string;
   private _sketchIsDirty: boolean = false;
   private _codeHasErrors: boolean;
-  private _isCodeEditorVisible: boolean = true;
-  private _isRightDrawerVisible: boolean = false;
 
   private _postStopAction: Function;
   private _availableFiles: string[] = [];
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
+    FwdWebRunner._sharedServices = {
+      panelManager: new PanelManager(),
+    };
+
     this.initDevClient();
 
     this._header = new RunnerHeader(this, this._devClient);
@@ -67,8 +66,10 @@ export default class FwdWebRunner implements FwdRunner {
     if (config.darkMode) {
       this.setDarkMode(true);
     }
+  }
 
-    this.setRightDrawerVisible(false);
+  public static get sharedServices(): SharedServices {
+    return FwdWebRunner._sharedServices;
   }
 
   public setProgram(program: Program): void {
@@ -80,10 +81,6 @@ export default class FwdWebRunner implements FwdRunner {
       this._program = program;
 
       this._header.setSelectedFile(program.file);
-
-      if (this.config.useCodeEditor) {
-        this.codeEditor.setCode(program.code, fileChanged);
-      }
 
       if (fileChanged) {
         this.resetAndRun();
@@ -139,19 +136,6 @@ export default class FwdWebRunner implements FwdRunner {
     };
   }
 
-  public submit(): void {
-    if (! this.config.useCodeEditor) {
-      throw new Error('Cannot save when code editor is not used.');
-    }
-
-    if (this.config.writeToFile) {
-      this._devClient.saveFile(this._program.file, this.codeEditor.code);
-    } else {
-      this._program.code = this.codeEditor.code;
-      this.runCode();
-    }
-  }
-
   public start(): void {
     this.checkSketchCanBeStarted();
 
@@ -187,41 +171,20 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public runCode(): void {
-    if (this._program?.code == null) {
-      throw new Error('There\'s no program to run.');
-    }
-
-    try {
-      new Function(this._program.code)(window);
-      this._codeHasErrors = false;
-    } catch (e) {
-      this._codeHasErrors = true;
-      this.reportErrors(e);
-    } finally {
-      this._executedCode = this._program.code;
-      this.refreshState();
-    }
-  }
-
-  public isCodeEditorVisible(): boolean {
-    return this._isRightDrawerVisible;
-  }
-
-  public toggleCodeEditorVisibility(): void {
-    this.setCodeEditorVisible(! this._isCodeEditorVisible);
-
-    // We need to manually refresh if the code editor was hidden and its content changed
-    if (this._isCodeEditorVisible) {
-      this.codeEditor.refresh();
-    }
-  }
-
-  public isRightDrawerVisible(): boolean {
-    return this._isRightDrawerVisible;
-  }
-
-  public toggleRightDrawerVisibility(): void {
-    this.setRightDrawerVisible(! this._isRightDrawerVisible);
+    // if (this._program?.code == null) {
+    //   throw new Error('There\'s no program to run.');
+    // }
+    //
+    // try {
+    //   new Function(this._program.code)(window);
+    //   this._codeHasErrors = false;
+    // } catch (e) {
+    //   this._codeHasErrors = true;
+    //   this.reportErrors(e);
+    // } finally {
+    //   this._executedCode = this._program.code;
+    //   this.refreshState();
+    // }
   }
 
   public isDarkMode(): boolean {
@@ -229,10 +192,6 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   public setDarkMode(darkMode: boolean): void {
-    if (!! this.codeEditor) {
-      this.codeEditor.setDarkMode(darkMode);
-    }
-
     if (darkMode) {
       document.body.classList.add('fwd-runner-dark-mode');
     } else {
@@ -244,19 +203,6 @@ export default class FwdWebRunner implements FwdRunner {
 
   public toggleDarkMode(): void {
     this.setDarkMode(! this.config.darkMode);
-  }
-
-  public setCodeEditorVisible(showing: boolean): void {
-    this.codeEditor.htmlElement.style.display = showing ? 'flex' : 'none';
-    this._codeEditorSeparator.htmlElement.style.display = showing ? '' : 'none';
-
-    this._isCodeEditorVisible = showing;
-  }
-
-  public setRightDrawerVisible(showing: boolean): void {
-    this._tabbedPanel.htmlElement.style.display = showing ? 'flex' : 'none';
-    this._isRightDrawerVisible = showing;
-    this._header.rightDrawerToggle.htmlElement.style.opacity = showing ? '1' : '0.5';
   }
 
   private isAudioReady(): boolean {
@@ -411,119 +357,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private buildMainSection(): void {
-    const parentFlexPanel = new FlexPanel();
-    parentFlexPanel.htmlElement.style.justifyContent = 'flex-end';
-    const container = document.getElementById('fwd-runner-container');
-
-    if (container != null) {
-      container.append(parentFlexPanel.htmlElement);
-    } else {
-      DBG.error('Cannot find runner\'s container element.')
-    }
-
-    const flexPanel = new FlexPanel();
-
-    parentFlexPanel.addFlexItem('main', flexPanel, {
-      flexGrow: 1,
-      flexShrink: 1,
-      width: 1000,
-      minWidth: 200,
-      maxWidth: 5000,
-    });
-
-    if (this.config.useCodeEditor) {
-      this.codeEditor = this.buildCodeEditor();
-
-      flexPanel.addFlexItem('left', this.codeEditor, {
-        minWidth: 200,
-        maxWidth: 5000,
-        width: 600,
-        flexShrink: 0,
-        flexGrow: 0,
-        display: 'flex',
-        flexDirection: 'column',
-      });
-
-      this._codeEditorSeparator = flexPanel.addSeparator(0, true);
-      this._codeEditorSeparator.separatorSize = 10;
-      this._codeEditorSeparator.htmlElement.classList.add('fwd-runner-large-separator');
-    }
-
-    const centerFlex = new FlexPanel('column');
-
-    const graphEditor = new GraphComponent();
-
-    centerFlex.addFlexItem('top', graphEditor, {
-      flexShrink: 1,
-      flexGrow: 0,
-      height: 600,
-      minHeight: 100,
-      maxHeight: 5000,
-      display: 'flex',
-    });
-
-    const hSeparator = centerFlex.addSeparator(0, true);
-    hSeparator.separatorSize = 10;
-    hSeparator.htmlElement.classList.add('fwd-runner-large-hseparator');
-
-    const sequencerElement = new NoteSequencerElement();
-
-    centerFlex.addFlexItem('bottom', sequencerElement, {
-      flexShrink: 1,
-      flexGrow: 1,
-      height: 0,
-      minHeight: 100,
-      maxHeight: 5000,
-      display: 'flex',
-    });
-
-    flexPanel.addFlexItem('center', centerFlex, {
-      flexShrink: 1,
-      flexGrow: 1,
-      width: 600,
-      minWidth: 200,
-      maxWidth: 5000,
-      display: 'flex',
-    });
-
-    // tabbed panel
-    this._tabbedPanel = new TabbedPanel();
-    this._tabbedPanel.htmlElement.style.display = 'none';
-    this._tabbedPanel.htmlElement.classList.add('fwd-runner-large-separator');
-
-    parentFlexPanel.addFlexItem('right', this._tabbedPanel, {
-      flexGrow: 0,
-      flexShrink: 0,
-      minWidth: 280,
-      maxWidth: 5000,
-    });
-
-    this._tabbedPanel.addTab({
-      tabName: 'Settings',
-      tabContent: new SettingsPanel(this),
-      closeable: false,
-    });
-
-    this._tabbedPanel.addTab({
-      tabName: 'Export',
-      tabContent: new ExportPanel(this),
-      closeable: false,
-    });
-  }
-
-  private buildCodeEditor(): RunnerCodeEditor {
-    const editor = new RunnerCodeEditor(this);
-
-    editor.onchanges = debounce(() => {
-      const codeChanged = ! areStringsEqualIgnoreNonSignificantWhitespaces(this._program.code, this.codeEditor.code);
-      this.setDirty(codeChanged);
-
-      if (editor.autoSaves && this.codeEditor.code !== this._executedCode) {
-        this.submit();
-      }
-    }, 200);
-
-    return editor;
+    FwdWebRunner.sharedServices.panelManager.buildMainSection();
   }
 
   private refreshState(): void {
@@ -654,11 +488,3 @@ injectStyle('FwdWebRunner_DarkMode', `
   border-right: solid 1px ${darkTheme.border};
 }
 `);
-
-function areStringsEqualIgnoreNonSignificantWhitespaces(a: string, b: string): boolean {
-  const escape = (s: string) => s
-    .replace(/\s*/gm, ' ')
-    .replace(/^\s*[\r\n]*/gm, '\n');
-
-  return escape(a) === escape(b);
-}

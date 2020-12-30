@@ -120,10 +120,20 @@ injectStyle('TabbedPanel', `
   background: ${darkTheme.bgSecondary};
   border-color: ${darkTheme.bgPrimary};
 }
+
 .fwd-tabbed-panel-viewport {
   flex-grow: 1;
   overflow: auto;
   display: flex;
   width: 100%;
+  position: relative;
+}
+
+.fwd-tabbed-panel-viewport > * {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
 }
 `);
