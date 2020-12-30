@@ -35,7 +35,7 @@ export class RootComponentHolder<T extends Component> {
   }
 
   public repaint(): void {
-    this.rootComponent.repaint();
+    this.rootComponent.repaintNow();
   }
 
   public resize(width: number, height: number): void {

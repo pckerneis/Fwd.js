@@ -285,23 +285,22 @@ export abstract class Component {
     return this;
   }
 
-  public repaint(isOriginalRepaintTarget: boolean = true): void {
+  public repaintNow(): void {
+    this.repaint(true, true);
+  }
+
+  public repaint(isOriginalRepaintTarget: boolean = true,
+                 shouldRepaintRightNow: boolean = false): void {
     this._needRepaint = true;
 
     // Mark all children so that they will repaint
-    this._children.forEach(child => child.repaint(false));
+    this._children.forEach(child => child.repaint(false, false));
 
     if (isOriginalRepaintTarget) {
-      // Find root component
-      let root: Component = this;
-
-      while (root._parent != null) {
-        root = root._parent;
-      }
-
-      // Render
-      if (root._rootHolder != null) {
-        root.paint(root._rootHolder.renderingContext);
+      if (shouldRepaintRightNow) {
+        this.repaintFromRoot();
+      } else {
+        setTimeout(() => this.repaintFromRoot());
       }
     }
   }
@@ -364,9 +363,9 @@ export abstract class Component {
    */
   private paint(context: CanvasRenderingContext2D): void {
     if (this._visible
-        && this._needRepaint
-        && Math.floor(this._bounds.width) > 0
-        && Math.floor(this._bounds.height) > 0) {
+      && this._needRepaint
+      && Math.floor(this._bounds.width) > 0
+      && Math.floor(this._bounds.height) > 0) {
       const g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
 
       this.render(g.getContext('2d'));
@@ -394,5 +393,19 @@ export abstract class Component {
     }
 
     return this.getBounds().translated(offset);
+  }
+
+  private repaintFromRoot(): void {
+    // Find root component
+    let root: Component = this;
+
+    while (root._parent != null) {
+      root = root._parent;
+    }
+
+    // Render
+    if (root._rootHolder != null) {
+      root.paint(root._rootHolder.renderingContext);
+    }
   }
 }

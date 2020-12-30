@@ -123,6 +123,24 @@ export class NoteSequencer {
     this._sequencerRoot.setTimeStart(numberValue);
   }
 
+  public get signatureUpper(): number {
+    return this._model.signature.upper;
+  }
+
+  public set signatureUpper(value: number) {
+    this._model.signature.upper = value;
+    this._sequencerRoot.repaint();
+  }
+
+  public get signatureLower(): number {
+    return this._model.signature.lower;
+  }
+
+  public set signatureLower(value: number) {
+    this._model.signature.lower = value;
+    this._sequencerRoot.repaint();
+  }
+
   public get duration(): number {
     return this._model.maxTimeRange.start + this._model.maxTimeRange.end;
   }

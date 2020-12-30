@@ -20,19 +20,23 @@ export class PanelManager {
 
   public showMidiEditor(node: MidiClipNode): void {
     if (this.noteSequencerPanels.get(node)) {
-      // TODO: don't like this because there's state duplication between label and tab name. This may lead to sync issues!
-      this._contextualTabbedPanel.setCurrentTab(node.label);
+      this._contextualTabbedPanel.setCurrentTab(node.id);
     } else {
-      const panel = new MidiClipPanel();
+      const panel = new MidiClipPanel(node);
       this._contextualTabbedPanel.addTab({
+        id: node.id,
         tabName: node.label,
         closeable: true,
         tabContent: panel,
       });
 
-      this._contextualTabbedPanel.setCurrentTab(node.label);
-
+      this._contextualTabbedPanel.setCurrentTab(node.id);
       this.noteSequencerPanels.set(node, panel);
+
+      node.observeLabel((newLabel) => {
+        console.log(newLabel);
+        this._contextualTabbedPanel.renameTab(node.id, newLabel);
+      });
     }
   }
 
@@ -49,7 +53,7 @@ export class PanelManager {
 
     const structurePanel = new StructurePanel();
 
-    parentFlexPanel.addFlexItem('left', structurePanel, {
+    parentFlexPanel.addFlexItem(structurePanel, {
       width: 220,
       minWidth: 200,
       maxWidth: 5000,
@@ -62,7 +66,7 @@ export class PanelManager {
     const flexPanel = new FlexPanel();
     flexPanel.htmlElement.style.flexGrow = '1';
 
-    parentFlexPanel.addFlexItem('main', flexPanel, {
+    parentFlexPanel.addFlexItem(flexPanel, {
       width: 1000,
       minWidth: 200,
       maxWidth: 5000,
@@ -73,7 +77,7 @@ export class PanelManager {
     const graphEditor = new GraphElement();
     graphEditor.htmlElement.style.flexGrow = '1';
 
-    centerFlex.addFlexItem('top', graphEditor, {
+    centerFlex.addFlexItem(graphEditor, {
       height: 600,
       minHeight: 100,
       maxHeight: 5000,
@@ -87,13 +91,13 @@ export class PanelManager {
     this._contextualTabbedPanel = tabbedPanel;
     this._contextualTabbedPanel.htmlElement.style.flexGrow = '1';
 
-    centerFlex.addFlexItem('bottom', tabbedPanel, {
+    centerFlex.addFlexItem(tabbedPanel, {
       height: 0,
       minHeight: 100,
       maxHeight: 5000,
     });
 
-    flexPanel.addFlexItem('center', centerFlex, {
+    flexPanel.addFlexItem(centerFlex, {
       width: 600,
       minWidth: 200,
       maxWidth: 5000,

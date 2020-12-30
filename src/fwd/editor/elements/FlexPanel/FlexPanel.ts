@@ -65,7 +65,7 @@ export class FlexPanel implements EditorElement {
     this.htmlElement.style.flexDirection = _direction;
   }
 
-  public addFlexItem(key: string, element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
+  public addFlexItem(element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
     const container = document.createElement('div');
     container.append(element.htmlElement);
     container.classList.add(WRAPPER_CLASS);

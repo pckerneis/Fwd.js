@@ -28,11 +28,7 @@ export class PropertyPanel implements EditorElement {
   }
 
   public addNumberInput(defaultValue: number, min?: number, max?: number): HTMLInputElement {
-    const e = document.createElement('input');
-    e.type = 'number';
-    e.value = defaultValue.toString();
-    if (! isNaN(min)) e.min = min.toString();
-    if (! isNaN(max)) e.max = max.toString();
+    const e = this.createNumberInput(defaultValue, min, max);
     this.htmlElement.append(e);
     return e;
   }
@@ -54,6 +50,15 @@ export class PropertyPanel implements EditorElement {
     this.htmlElement.append(btn);
     return btn;
   }
+
+  public createNumberInput(defaultValue: number, min?: number, max?: number): HTMLInputElement {
+    const e = document.createElement('input');
+    e.type = 'number';
+    e.value = defaultValue.toString();
+    if (! isNaN(min)) e.min = min.toString();
+    if (! isNaN(max)) e.max = max.toString();
+    return e;
+  }
 }
 
 injectStyle('PropertyPanel', `
@@ -63,7 +68,10 @@ injectStyle('PropertyPanel', `
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-auto-rows: 1.8rem;
+  grid-auto-rows: 1.5rem;
+  grid-gap: 2px;
+  align-items: center;
+  font-size: 12px;
 }
 
 .fwd-property-panel input {
@@ -77,7 +85,6 @@ injectStyle('PropertyPanel', `
 
 .fwd-property-panel * {
   display: block;
-  margin-top: 4px;
 }
 
 .fwd-runner-dark-mode .text-button {

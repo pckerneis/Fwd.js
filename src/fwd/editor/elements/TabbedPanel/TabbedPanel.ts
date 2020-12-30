@@ -23,7 +23,11 @@ export class TabbedPanel implements EditorElement {
   }
 
   public addTab(tabOptions: TabItemOptions): void {
-    const button = new TabButtonElement(this, tabOptions.tabName, tabOptions.closeable);
+    if (this._tabItems.map(item => item.tabOptions.id).includes(tabOptions.id)) {
+      throw new Error('Cannot add tab with same ID');
+    }
+
+    const button = new TabButtonElement(this, tabOptions, tabOptions.closeable);
     this._buttonsContainer.append(button.htmlElement);
 
     this._tabItems.push({
@@ -32,15 +36,15 @@ export class TabbedPanel implements EditorElement {
     });
 
     if (this._viewport.innerHTML === '') {
-      this.setCurrentTab(tabOptions.tabName);
+      this.setCurrentTab(tabOptions.id);
     }
   }
 
-  public setCurrentTab(tabName: string): void {
-    const tabs = this._tabItems.filter((tab) => tabName === tab.tabOptions.tabName);
+  public setCurrentTab(tabId: any): void {
+    const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
 
     if (tabs.length === 0) {
-      throw new Error('Cannot find tab with name ' + tabName);
+      throw new Error('Cannot find tab with id ' + tabId);
     }
 
     const tab = tabs[0];
@@ -51,9 +55,22 @@ export class TabbedPanel implements EditorElement {
     this._tabItems.forEach(tab => tab.button.htmlElement.classList.remove('current-tab'));
     tab.button.htmlElement.classList.add('current-tab');
   }
+
+  public renameTab(tabId: any, label: string): void {
+    const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
+
+    if (tabs.length === 0) {
+      throw new Error('Cannot find tab with id ' + tabId);
+    }
+
+    const tab = tabs[0];
+    tab.tabOptions.tabName = label;
+    tab.button.refresh();
+  }
 }
 
 interface TabItemOptions {
+  readonly id: any;
   tabName: string;
   tabContent: EditorElement;
   closeable: boolean;
@@ -68,16 +85,20 @@ export class TabButtonElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
   constructor(public readonly tabbedPanel: TabbedPanel,
-              public readonly tabName: string,
+              public readonly tabOptions: TabItemOptions,
               public readonly closeable: boolean) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-tabbed-panel-button');
-    this.htmlElement.innerText = tabName;
+    this.htmlElement.innerText = tabOptions.tabName;
 
     this.htmlElement.onclick = (evt) => {
-      this.tabbedPanel.setCurrentTab(this.tabName);
+      this.tabbedPanel.setCurrentTab(tabOptions.id);
       evt.preventDefault();
     }
+  }
+
+  public refresh(): void {
+    this.htmlElement.innerText = this.tabOptions.tabName;
   }
 }
 
@@ -93,10 +114,16 @@ injectStyle('TabbedPanel', `
   overflow: auto;
 }
 
+.fwd-tabbed-panel-buttons:after {
+    content: " ";
+    flex-grow: 1;
+    border-bottom: 1px solid lightgrey;
+}
+
 .fwd-tabbed-panel-button {
   border-bottom: 1px solid ${defaultTheme.bgPrimary};
-  border-right: 1px solid ${defaultTheme.bgPrimary};
-  background: ${defaultTheme.bgSecondary};
+  border-right: 1px solid lightgrey;
+  background: ${defaultTheme.bgPrimary};
   padding: 2px 5px;
   cursor: pointer;
   user-select: none;
@@ -109,7 +136,8 @@ injectStyle('TabbedPanel', `
 }
 
 .fwd-tabbed-panel-button:not(.current-tab) {
-  filter: brightness(80%);
+  filter: brightness(90%);
+  border-bottom: 1px solid lightgrey;
 }
 
 .fwd-tabbed-panel-button:hover {

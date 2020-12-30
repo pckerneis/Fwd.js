@@ -1,15 +1,16 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import FwdWebRunner from '../../FwdWebRunner';
+import { TimeSignature } from '../../NoteSequencer/note-sequencer';
+import { ObservableState } from '../../state/observable-state';
+import { MidiClipNodeState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
-export class GraphNode extends Component {
+export abstract class GraphNode<T extends NodeState = any> extends Component {
 
-  public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>()
-  public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>()
-
-  public label: string;
+  public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>();
+  public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>();
 
   protected backgroundColor: string = '#eeeeee';
   protected borderColor: string = '#444444';
@@ -21,13 +22,38 @@ export class GraphNode extends Component {
   protected readonly defaultHeight: number = 24;
   protected readonly defaultWidth: number = 120;
 
+  protected readonly _state: T;
+  protected readonly _stateObserver: ObservableState<T>;
+
   private _boundsAtMouseDown: ComponentBounds;
 
-  constructor(public readonly parentGraph: GraphRoot) {
+  protected constructor(public readonly parentGraph: GraphRoot) {
     super();
 
     this.width = this.defaultWidth;
     this.height = this.defaultHeight;
+
+    this._state = this.getInitialState();
+    this._stateObserver = new ObservableState<T>(this._state);
+  }
+
+  public get label(): string {
+    return this._state.label;
+  }
+
+  public set label(newLabel: string) {
+    if (this._state.label != newLabel) {
+      console.log({newLabel});
+      this._state.label = newLabel;
+      this._stateObserver.changed('label');
+      this.repaint();
+    }
+  }
+
+  public abstract getInitialState(): T;
+
+  public observeLabel(callback: (value: string) => void): void {
+    this._stateObserver.observe(callback, 'label');
   }
 
   public addInlet(): void {
@@ -127,12 +153,25 @@ export class GraphNode extends Component {
   }
 }
 
-export class InitNode extends GraphNode {
+export class InitNode extends GraphNode<NodeState> {
   constructor(parentGraph: GraphRoot) {
     super(parentGraph);
 
     this.addOutlet();
     this.label = 'init';
+  }
+
+  public getInitialState(): NodeState {
+    return {
+      bounds: undefined,
+      flags: [],
+      id: '',
+      kind: 'MidiClip',
+      label: '',
+      notes: [],
+      duration: 0,
+      timeSignature: {upper: 4, lower:4},
+    };
   }
 }
 
@@ -146,7 +185,11 @@ export interface MidiOutlet {
   name: string;
 }
 
-export class MidiClipNode extends GraphNode {
+let latestId = 0;
+
+export class MidiClipNode extends GraphNode<MidiClipNodeState> {
+  public readonly id: any;
+
   protected readonly defaultHeight: number = 30;
   private labelHeight: number = 18;
 
@@ -158,6 +201,66 @@ export class MidiClipNode extends GraphNode {
 
     this.addMidiInlet({name: 'in', time: 0});
     this.addMidiOutlet({name: 'out', time: 4});
+
+    this.id = ++latestId;
+    this.duration = 16;
+  }
+
+  public set duration(duration: number) {
+    this._state.duration = duration;
+    this._stateObserver.changed('duration');
+  }
+
+  public get duration(): number {
+    return this._state.duration;
+  }
+
+  public set signature(signature: TimeSignature) {
+    this._state.timeSignature = signature;
+    this._stateObserver.changed('timeSignature');
+  }
+
+  public get signature(): TimeSignature {
+    return this._state.timeSignature;
+  }
+
+  public observeDuration(cb: (newDuration: number) => any): void {
+    this._stateObserver.observe(cb, 'duration');
+  }
+
+  public setSignatureUpper(newValue: number): any {
+    if (this.signature.upper !== newValue) {
+      this._state.timeSignature.upper = newValue;
+      this._stateObserver.changed(['timeSignature', 'upper']);
+    }
+  }
+
+  public setSignatureLower(newValue: number): any {
+    if (this.signature.lower !== newValue) {
+      this._state.timeSignature.lower = newValue;
+      this._stateObserver.changed(['timeSignature', 'lower']);
+    }
+  }
+
+  public observeSignatureLower(cb: (newSignLower: number) => any): void {
+    this._stateObserver.observe(cb, ['timeSignature', 'lower']);
+  }
+
+  public observeSignatureUpper(cb: (newSignLower: number) => any): void {
+    this._stateObserver.observe(cb, ['timeSignature', 'upper']);
+  }
+
+  public getInitialState(): NodeState {
+    return {
+      bounds: undefined,
+      flags: [],
+      id: '',
+      kind: 'MidiClip',
+      label: '',
+      notes: [],
+      duration: 0,
+      timeSignature: {upper: 4, lower:4},
+    };
   }
 
   public doubleClicked(event: ComponentMouseEvent): void {
