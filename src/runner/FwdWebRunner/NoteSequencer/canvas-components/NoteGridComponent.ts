@@ -17,6 +17,19 @@ export interface Note {
   initialVelocity: number;
 }
 
+export enum FlagDirection {
+  left,
+  right,
+}
+
+export interface Flag {
+  time: number;
+  label: string;
+  selected: boolean;
+  color: string;
+  direction: FlagDirection;
+}
+
 interface NotePosition {
   time: number,
   pitch: number,
@@ -34,6 +47,7 @@ export class NoteGridComponent extends Component {
   public fixedIndex: number = 5;
 
   private _notes: Note[] = [];
+  private _flags: Flag[] = [];
   private readonly _selectedSet: SelectedItemSet<Note>;
   private readonly _lasso: LassoSelector<Note>;
 
@@ -76,6 +90,10 @@ export class NoteGridComponent extends Component {
     return this._notes;
   }
 
+  public get flags(): Flag[] {
+    return this._flags;
+  };
+
   public get selectedSet(): SelectedItemSet<Note> {
     return this._selectedSet;
   }
@@ -106,6 +124,7 @@ export class NoteGridComponent extends Component {
     this._lasso.drawLasso(g);
 
     this.drawNotes(g, semiHeight, sixteenth);
+    this.renderFlags(g);
   }
 
   public resized(): void {
@@ -141,6 +160,15 @@ export class NoteGridComponent extends Component {
 
     this.getParentComponent().repaint();
   }
+
+  //===============================================================================
+  // Flag management
+  public addFlag(flag: Flag): void {
+    this._flags.push(flag);
+
+    this.getParentComponent().repaint();
+  }
+
 
   //===============================================================================
 
@@ -193,6 +221,8 @@ export class NoteGridComponent extends Component {
   // Mouse event handlers
 
   public doublePressed(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
+
     const pos = this.getPosition();
 
     const local = {
@@ -238,6 +268,8 @@ export class NoteGridComponent extends Component {
   }
 
   public mouseMoved(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
+
     super.mouseMoved(event);
 
     if (event.isDragging)
@@ -271,6 +303,8 @@ export class NoteGridComponent extends Component {
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
+
     const pos = this.getPosition();
 
     const local = {
@@ -301,6 +335,8 @@ export class NoteGridComponent extends Component {
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
+    event.consumeNativeEvent();
+
     this._dragAction = 'NONE';
     this.setMouseCursor(this._dragAction);
 
@@ -329,8 +365,7 @@ export class NoteGridComponent extends Component {
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {
-    event.nativeEvent.preventDefault();
-    event.nativeEvent.stopPropagation();
+    event.consumeNativeEvent();
 
     if (this._dragAction == 'NONE') {
       this._lasso.dragLasso(event);
@@ -749,5 +784,13 @@ export class NoteGridComponent extends Component {
       default:
         this.mouseCursor = 'default';
     }
+  }
+
+  private renderFlags(g: CanvasRenderingContext2D): void {
+    this.flags.forEach((flag) => {
+      const pos = this.getPositionForTime(flag.time);
+      g.fillStyle = flag.color;
+      g.fillRect(pos, 0, 1, this.height);
+    });
   }
 }

@@ -117,6 +117,8 @@ export class VelocityTrack extends Component {
     this.lasso.drawLasso(g);
 
     this.drawVelocityHandles(g);
+
+    this.renderFlags(g);
   }
 
   protected resized(): void {
@@ -179,5 +181,13 @@ export class VelocityTrack extends Component {
     }
 
     return null;
+  }
+
+  private renderFlags(g: CanvasRenderingContext2D): void {
+    this.grid.flags.forEach((flag) => {
+      const pos = this.grid.getPositionForTime(flag.time);
+      g.fillStyle = flag.color;
+      g.fillRect(pos, 0, 1, this.height);
+    });
   }
 }

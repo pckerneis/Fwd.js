@@ -1,7 +1,7 @@
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { Range, SequencerDisplayModel } from '../note-sequencer';
 import { clamp } from '../utils';
-import { NoteGridComponent } from './NoteGridComponent';
+import { FlagDirection, NoteGridComponent } from './NoteGridComponent';
 
 export class TimeRuler extends Component {
   private timeAtMouseDown: number;
@@ -122,5 +122,30 @@ export class TimeRuler extends Component {
     // Bottom border
     g.fillStyle = this.model.colors.strokeDark;
     g.fillRect(0, bounds.height - 1, bounds.width, 1);
+
+    this.renderFlags(g);
+  }
+
+  private renderFlags(g: CanvasRenderingContext2D): void {
+    this.grid.flags.forEach((flag) => {
+      const left = flag.direction === FlagDirection.left;
+      const pos = this.grid.getPositionForTime(flag.time);
+      g.fillStyle = flag.color;
+
+      g.fillRect(pos, 0, 1, this.height);
+
+      const arrowWidth =  left ? -10 : 10;
+      const arrowHeight = 12;
+      g.beginPath();
+      g.moveTo(pos, 0);
+      g.lineTo(pos + arrowWidth, arrowHeight / 2);
+      g.lineTo(pos, arrowHeight);
+      g.fill();
+
+      const textPosition = pos + arrowWidth + (left ? -2 : 2);
+      g.textBaseline = 'hanging';
+      g.textAlign = flag.direction === FlagDirection.left ? 'right' : 'left';
+      g.fillText(flag.label, textPosition, 2, 100);
+    });
   }
 }
