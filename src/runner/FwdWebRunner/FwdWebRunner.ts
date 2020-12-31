@@ -3,7 +3,6 @@ import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
 import { Logger } from '../../fwd/utils/Logger';
 import { formatTime } from '../../fwd/utils/time';
-import { DevClient } from '../../server/DevClient';
 import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
@@ -32,12 +31,8 @@ export default class FwdWebRunner implements FwdRunner {
 
   private static _sharedServices: SharedServices;
 
-  private _devClient: DevClient;
-  private _reconnectionTimeout: number = 5000;
-
   private _header: RunnerHeader;
   private _footer: RunnerFooter;
-  private _clientState: RunnerClientState;
 
   private readonly projectModel: ProjectModel;
 
@@ -55,7 +50,6 @@ export default class FwdWebRunner implements FwdRunner {
       panelManager: new PanelManager(),
     };
 
-    this.initDevClient();
     this.buildRunner();
     this.prepareConsoleWrappers();
 
@@ -78,13 +72,13 @@ export default class FwdWebRunner implements FwdRunner {
       duration: 4,
       timeSignature: {upper: 4, lower: 4},
       notes: [
-        { time: 0, duration: 1, pitch: 65, velocity: 120 },
-        { time: 1, duration: 1, pitch: 67, velocity: 110 },
-        { time: 2, duration: 1, pitch: 69, velocity: 100 },
+        {time: 0, duration: 1, pitch: 65, velocity: 120},
+        {time: 1, duration: 1, pitch: 67, velocity: 110},
+        {time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
-        { kind: 'inlet', time: 0, color: 'grey', name: 'in' },
-        { kind: 'outlet', time: 4, color: 'grey', name: 'out' },
+        {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
+        {kind: 'outlet', time: 4, color: 'grey', name: 'out'},
       ],
       label: 'node1',
       bounds: {x: 210, y: 4, width: 120, height: 20},
@@ -96,13 +90,13 @@ export default class FwdWebRunner implements FwdRunner {
       duration: 4,
       timeSignature: {upper: 4, lower: 4},
       notes: [
-        { time: 0, duration: 1, pitch: 65, velocity: 120 },
-        { time: 1, duration: 1, pitch: 67, velocity: 110 },
-        { time: 2, duration: 1, pitch: 69, velocity: 100 },
+        {time: 0, duration: 1, pitch: 65, velocity: 120},
+        {time: 1, duration: 1, pitch: 67, velocity: 110},
+        {time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
-        { kind: 'inlet', time: 0, color: 'grey', name: 'in' },
-        { kind: 'outlet', time: 4, color: 'grey', name: 'out' },
+        {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
+        {kind: 'outlet', time: 4, color: 'grey', name: 'out'},
       ],
       label: 'node2',
       bounds: {x: 210, y: 50, width: 120, height: 20},
@@ -257,33 +251,8 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private prepareHeader(): void {
-    this._header = new RunnerHeader(this, this._devClient);
+    this._header = new RunnerHeader(this);
     document.body.prepend(this._header.htmlElement)
-  }
-
-  private initDevClient(): void {
-    let retryCounter = 0;
-
-    this._devClient = new DevClient();
-
-    this._devClient.onServerError = (errors: string[]) => {
-      this.reportErrors(...errors);
-      this.setClientState(RunnerClientState.codeErrors);
-    };
-
-    this._devClient.onServerLost = () => {
-      this.reportErrors(`Cannot reach server. Retrying in ${this._reconnectionTimeout / 1000} seconds (attempt ${++retryCounter}).`);
-      this.setClientState(RunnerClientState.disconnected);
-
-      setTimeout(() => this._devClient.connect(), this._reconnectionTimeout);
-    };
-
-    this._devClient.connect();
-  }
-
-  private setClientState(newState: RunnerClientState): void {
-    this._clientState = newState;
-    this._footer.setRunnerClientState(newState);
   }
 
   private checkSketchCanBeStarted(): void {

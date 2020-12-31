@@ -1,5 +1,6 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
+import { defaultTheme } from '../../style.constants';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
 import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { FlagDirection, Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
@@ -159,6 +160,11 @@ injectStyle('MidiClipPanel - SettingsPanel', `
   flex-shrink: 0;
   flex-grow: 0;
   border-right: 1px lightgrey solid;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: ${defaultTheme.bgSecondary};
 }
 
 .fwd-runner-midi-clip-signature {
