@@ -174,19 +174,9 @@ export class InitNode extends GraphNode<NodeState> {
       label: '',
       notes: [],
       duration: 0,
-      timeSignature: {upper: 4, lower:4},
+      timeSignature: {upper: 4, lower: 4},
     };
   }
-}
-
-export interface MidiInlet {
-  time: number;
-  name: string;
-}
-
-export interface MidiOutlet {
-  time: number;
-  name: string;
 }
 
 let latestId = 0;
@@ -197,17 +187,16 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
   protected readonly defaultHeight: number = 30;
   private labelHeight: number = 18;
 
-  private midiInlets: ArrayList<MidiInlet> = new ArrayList<MidiInlet>();
-  private midiOutlets: ArrayList<MidiOutlet> = new ArrayList<MidiOutlet>();
-
   constructor(parentGraph: GraphRoot) {
     super(parentGraph);
 
-    this.addMidiInlet({name: 'in', time: 0});
-    this.addMidiOutlet({name: 'out', time: 4});
+    this.addMidiInlet(0, 'in');
+    this.addMidiOutlet(16, 'out');
 
     this.id = ++latestId;
     this.duration = 16;
+
+    this.observeFlags(() => this.repaint());
   }
 
   public set duration(duration: number) {
@@ -271,7 +260,7 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
       label: '',
       notes: [],
       duration: 0,
-      timeSignature: {upper: 4, lower:4},
+      timeSignature: {upper: 4, lower: 4},
     };
   }
 
@@ -280,26 +269,15 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
     pm.showMidiEditor(this);
   }
 
-  public addMidiInlet(midiInlet: MidiInlet): void {
-    this.midiInlets.add(midiInlet);
+  public addMidiInlet(time: number, name: string): void {
     this.addInlet();
-    this._state.flags.push({
-      name: midiInlet.name,
-      time: midiInlet.time,
-      color: 'grey',
-    });
-
+    this._state.flags.push({ name, time, color: 'grey', kind: 'inlet' });
     this._stateObserver.changed('flags');
   }
 
-  public addMidiOutlet(midiOutlet: MidiOutlet): void {
-    this.midiOutlets.add(midiOutlet);
+  public addMidiOutlet(time: number, name: string): void {
     this.addOutlet();
-    this._state.flags.push({
-      name: midiOutlet.name,
-      time: midiOutlet.time,
-      color: 'grey',
-    });
+    this._state.flags.push({ name, time, color: 'grey', kind: 'outlet' });
     this._stateObserver.changed('flags');
   }
 
@@ -330,19 +308,23 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
 
     const availableHeight = this.height - this.labelHeight;
 
-    const inletOffsetY = this.labelHeight +
-      (availableHeight - this.midiInlets.size() * this.pinHeight) / 2;
+    const midiInlets = this._state.flags.filter(flag => flag.kind === 'inlet');
 
-    this.midiInlets.array.forEach((inlet, index) => {
+    const inletOffsetY = this.labelHeight +
+      (availableHeight - midiInlets.length * this.pinHeight) / 2;
+
+    midiInlets.forEach((inlet, index) => {
       g.fillText(inlet.name, this.pinWidth, inletOffsetY + index * this.pinHeight, this.width / 0.6);
     });
 
     g.textAlign = 'right';
 
-    const outletOffsetY = this.labelHeight +
-      (availableHeight - this.midiOutlets.size() * this.pinHeight) / 2;
+    const midiOutlets = this._state.flags.filter(flag => flag.kind === 'outlet');
 
-    this.midiOutlets.array.forEach((outlet, index) => {
+    const outletOffsetY = this.labelHeight +
+      (availableHeight - midiOutlets.length * this.pinHeight) / 2;
+
+    midiOutlets.forEach((outlet, index) => {
       g.fillText(outlet.name, this.width - this.pinWidth, outletOffsetY + index * this.pinHeight, this.width / 0.6);
     });
   }

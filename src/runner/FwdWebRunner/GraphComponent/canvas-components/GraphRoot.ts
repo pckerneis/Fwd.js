@@ -35,8 +35,7 @@ export class GraphRoot extends Component {
     this.addNode(node1);
     this.addNode(node2);
 
-    node2.addMidiOutlet({name: 'out2', time: 3});
-    node2.addMidiOutlet({name: 'out3', time: 6});
+    node2.addMidiOutlet(3, 'out2');
 
     const node3 = new MidiClipNode(this);
     node3.label = 'node 3';

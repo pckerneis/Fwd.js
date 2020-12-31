@@ -103,7 +103,7 @@ class SettingsPanel implements EditorElement {
       markerPanel.addLabel('Name');
       const nameField = markerPanel.addTextInput(flag.name);
       nameField.onchange = () => {
-        const updatedFlags = [...flags];
+        const updatedFlags = [...this.midiClipPanel.node.state.flags];
         updatedFlags[idx] = {...updatedFlags[idx], name: nameField.value};
         this.midiClipPanel.node.updateFlags(updatedFlags);
       };
@@ -111,7 +111,7 @@ class SettingsPanel implements EditorElement {
       markerPanel.addLabel('Time');
       const timeField = markerPanel.addNumberInput(flag.time, 0);
       timeField.oninput = () => {
-        const updatedFlags = [...flags];
+        const updatedFlags = [...this.midiClipPanel.node.state.flags];
         updatedFlags[idx] = {...updatedFlags[idx], time: timeField.valueAsNumber};
         this.midiClipPanel.node.updateFlags(updatedFlags);
       };
@@ -177,7 +177,7 @@ export class MidiClipPanel implements EditorElement {
 
   private refreshFlags(flags: MidiFlagState[]): void {
     this.clipEditor.noteSequencer.setFlags(flags.map(f => ({
-      direction: FlagDirection.right,
+      direction: f.kind === 'inlet' ? FlagDirection.right : FlagDirection.left,
       label: f.name,
       color: f.color,
       time: f.time,

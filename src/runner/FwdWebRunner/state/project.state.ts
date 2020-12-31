@@ -1,4 +1,5 @@
 import { IBounds } from '../canvas/BaseComponent';
+import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
 export interface BaseNodeState {
@@ -17,6 +18,7 @@ export interface MidiFlagState {
   time: number;
   name: string;
   color: string;
+  kind: 'inlet' | 'outlet';
 }
 
 export interface MidiClipNodeState extends BaseNodeState {
