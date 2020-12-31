@@ -6,6 +6,7 @@ import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { GraphElement } from '../GraphComponent/graph-element';
 import { ProjectModel } from '../state/project.model';
 import { MidiClipPanel } from './MidiClipPanel';
+import { StructurePanel } from './StructurePanel';
 
 const DBG = new Logger('PanelManager', parentLogger);
 
@@ -56,17 +57,17 @@ export class PanelManager {
       DBG.error('Cannot find runner\'s container element.')
     }
 
-    // const structurePanel = new StructurePanel();
-    //
-    // parentFlexPanel.addFlexItem(structurePanel, {
-    //   width: 220,
-    //   minWidth: 200,
-    //   maxWidth: 5000,
-    // });
-    //
-    // const separator = parentFlexPanel.addSeparator(0, true);
-    // separator.separatorSize = 10;
-    // separator.htmlElement.classList.add('fwd-runner-large-separator');
+    const structurePanel = new StructurePanel();
+
+    parentFlexPanel.addFlexItem(structurePanel, {
+      width: 220,
+      minWidth: 200,
+      maxWidth: 5000,
+    });
+
+    const separator = parentFlexPanel.addSeparator(true);
+    separator.separatorSize = 5;
+    separator.htmlElement.classList.add('fwd-runner-large-separator');
 
     const flexPanel = new FlexPanel();
     flexPanel.htmlElement.style.flexGrow = '1';
@@ -78,18 +79,25 @@ export class PanelManager {
     });
 
     const centerFlex = new FlexPanel('column');
+    centerFlex.setAlignment('end');
+
+    flexPanel.addFlexItem(centerFlex, {
+      width: 600,
+      minWidth: 200,
+      maxWidth: 5000,
+    });
 
     const graphEditor = new GraphElement(projectModel);
     graphEditor.htmlElement.style.flexGrow = '1';
     this._graphEditor = graphEditor;
 
     centerFlex.addFlexItem(graphEditor, {
-      height: 600,
+      height: 400,
       minHeight: 100,
       maxHeight: 5000,
     });
 
-    const hSeparator = centerFlex.addSeparator(0, true);
+    const hSeparator = centerFlex.addSeparator(true);
     hSeparator.separatorSize = 10;
     hSeparator.htmlElement.classList.add('fwd-runner-large-hseparator');
 
@@ -98,15 +106,9 @@ export class PanelManager {
     this._contextualTabbedPanel.htmlElement.style.flexGrow = '1';
 
     centerFlex.addFlexItem(tabbedPanel, {
-      height: 0,
-      minHeight: 100,
+      height: 400,
+      minHeight: 200,
       maxHeight: 5000,
-    });
-
-    flexPanel.addFlexItem(centerFlex, {
-      width: 600,
-      minWidth: 200,
-      maxWidth: 5000,
     });
   }
 }

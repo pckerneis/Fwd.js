@@ -1,6 +1,6 @@
-import { injectStyle } from "../../../../runner/FwdWebRunner/StyleInjector";
-import { clamp } from "../../../utils/numbers";
-import audit from "../../../utils/time-filters/audit";
+import { injectStyle } from '../../../../runner/FwdWebRunner/StyleInjector';
+import { clamp } from '../../../utils/numbers';
+import audit from '../../../utils/time-filters/audit';
 import { EditorElement } from '../EditorElement';
 
 interface FlexItemOptions {
@@ -63,6 +63,7 @@ export class FlexPanel implements EditorElement {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add(FLEX_PANEL_CLASS);
     this.htmlElement.style.flexDirection = _direction;
+    this.setAlignment('start');
   }
 
   public addFlexItem(element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
@@ -102,23 +103,26 @@ export class FlexPanel implements EditorElement {
 
     const containerBounds = container.getBoundingClientRect();
 
-    const desiredSize = this.isVerticalAlignment() ?
-      (flexItemOptions.height || flexItemOptions.minHeight || containerBounds.height) :
-      (flexItemOptions.width || flexItemOptions.minWidth || containerBounds.width);
+    const getDesiredOrDefault = (options: FlexItemOptions) =>
+      this.isVerticalAlignment() ?
+        (options.height || options.minHeight || containerBounds.height) :
+        (options.width || options.minWidth || containerBounds.width);
 
+    const desiredSize = getDesiredOrDefault(flexItemOptions);
     for (const e of this._elementStack) {
       this.setDesiredSize(e, e === newItem ? desiredSize :
-        containerBounds[this.isVerticalAlignment() ? 'height' : 'width']);
+        getDesiredOrDefault(e.flexItemOptions));
     }
 
     return element;
   }
 
-  public addSeparator(index: number, draggable?: boolean): SeparatorElement {
-    if (this.getSeparatorWithIndex(index) != null) {
-      throw new Error(`There\'s already a separator with the index ${index}.`);
-    }
+  public setAlignment(alignment: 'start' | 'end'): void {
+    this.htmlElement.classList.add(alignment);
+    this.htmlElement.classList.remove(alignment === 'start' ? 'end' : 'start');
+  }
 
+  public addSeparator(draggable?: boolean): SeparatorElement {
     const separator = this.createSeparatorElement(this._elementStack.length - 1, draggable);
     this.htmlElement.append(separator.htmlElement);
     this._separators.push(separator);
@@ -184,11 +188,6 @@ export class FlexPanel implements EditorElement {
     return this._direction === 'column';
   }
 
-  private getSeparatorWithIndex(index: number): SeparatorElement {
-    const results = this._separators.filter(sep => sep.index === index);
-    return results[0];
-  }
-
   private setDesiredSize(item: FlexItem, desiredSize: number): void {
     const vertical = this.isVerticalAlignment();
 
@@ -251,10 +250,13 @@ injectStyle('FlexPanel', `
   flex-shrink: 0;
 }
 
-.${FLEX_PANEL_CLASS} > .${WRAPPER_CLASS}:last-child {
+.${FLEX_PANEL_CLASS}.end > .${WRAPPER_CLASS}:first-child {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.${FLEX_PANEL_CLASS}.start > .${WRAPPER_CLASS}:last-child {
   flex-grow: 1;
   flex-shrink: 1;
 }
 `);
-
-

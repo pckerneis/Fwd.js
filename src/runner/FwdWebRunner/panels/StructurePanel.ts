@@ -1,4 +1,5 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
+import { defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
 
 export class StructurePanel implements EditorElement {
@@ -14,7 +15,7 @@ const PANEL_CLASS = 'fwd-runner-structure-panel';
 
 injectStyle('StructurePanel', `
 .${PANEL_CLASS} {
-  border-right: 1px lightgrey solid;
-  border-left: 1px lightgrey solid;
+  flex-grow: 1;
+  background-color: ${defaultTheme.bgSecondary};
 }
 `);
