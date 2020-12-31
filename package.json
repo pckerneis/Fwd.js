@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "license": "GPL-3.0",
   "main": "api/fwd/index.js",
-  "files": ["api/**/*"],
+  "files": [
+    "api/**/*"
+  ],
   "scripts": {
     "doc": "typedoc",
     "docs": "docsify serve ./docs",
@@ -43,6 +45,7 @@
     "serve-index": "^1.9.1",
     "serve-static": "^1.14.1",
     "simplex-noise": "^2.4.0",
+    "webmidi": "^2.5.1",
     "ws": "^7.3.0"
   }
 }

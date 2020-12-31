@@ -1,8 +1,11 @@
 import { Logger, LoggerLevel } from '../fwd/utils/Logger';
 import {
-  HANDSHAKE_MESSAGE, MessageType,
+  FileResource,
+  HANDSHAKE_MESSAGE,
+  MessageType,
   PING_MESSAGE,
-  PONG_MESSAGE, Program, ServerMessage,
+  PONG_MESSAGE,
+  ServerMessage,
 } from './DevServer.constants';
 
 const DBG = new Logger('DevClient', null, LoggerLevel.error);
@@ -10,20 +13,21 @@ const DBG = new Logger('DevClient', null, LoggerLevel.error);
 export class DevClient {
 
   public onFilesAvailable: (files: string[]) => void;
-  public onFileChange: (file: string, program: Program) => void;
-  public onServerError: (errors: string[], program: Program) => void;
+  public onFileChange: (file: string, program: FileResource) => void;
+  public onServerError: (errors: string[], program: FileResource) => void;
   public onServerLost: () => void;
 
   private _ws: WebSocket;
 
-  constructor() {}
-  
+  constructor() {
+  }
+
   public connect(): void {
     this._ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
     this._ws.onmessage = msg => this.handleMessage(msg);
     this._ws.onopen = () => this._ws.send(HANDSHAKE_MESSAGE);
 
-    this.checkStatusPeriodically();    
+    this.checkStatusPeriodically();
   }
 
   public watchFile(file: string): void {
@@ -65,7 +69,7 @@ export class DevClient {
         DBG.debug('Sketch received.');
 
         if (typeof this.onFileChange === 'function') {
-          this.onFileChange(message.program.file, message.program);
+          this.onFileChange(message.program.filename, message.program);
         }
       } else if (message.type === MessageType.CSS_TYPE) {
         DBG.debug('Stylesheet received.');

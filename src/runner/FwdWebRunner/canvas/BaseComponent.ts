@@ -25,6 +25,14 @@ export class ComponentBounds implements IBounds {
     this.height = Math.ceil(height);
   }
 
+  public static fromIBounds(bounds: IBounds): ComponentBounds {
+    if (! Boolean(bounds)) {
+      return new ComponentBounds();
+    }
+
+    return new ComponentBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+  }
+
   public get topLeft(): ComponentPosition {
     return {
       x: this.x,

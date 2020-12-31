@@ -2,20 +2,25 @@ import { FlexPanel } from '../../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Logger } from '../../../fwd/utils/Logger';
 import parentLogger from '../../logger.runner';
-import { MidiClipNode } from '../GraphComponent/canvas-components/GraphNode';
+import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { GraphElement } from '../GraphComponent/graph-element';
+import { ProjectModel } from '../state/project.model';
 import { MidiClipPanel } from './MidiClipPanel';
-import { StructurePanel } from './StructurePanel';
 
 const DBG = new Logger('PanelManager', parentLogger);
 
 export class PanelManager {
+  private _graphEditor: GraphElement;
   private _contextualTabbedPanel: TabbedPanel;
 
   private readonly noteSequencerPanels: Map<MidiClipNode, MidiClipPanel>;
 
   constructor() {
     this.noteSequencerPanels = new Map();
+  }
+
+  public get graphSequencerPanel(): GraphElement {
+    return this._graphEditor;
   }
 
   public showMidiEditor(node: MidiClipNode): void {
@@ -40,7 +45,7 @@ export class PanelManager {
     }
   }
 
-  public buildMainSection(): void {
+  public buildMainSection(projectModel: ProjectModel): void {
     const parentFlexPanel = new FlexPanel();
     parentFlexPanel.htmlElement.style.justifyContent = 'flex-end';
     const container = document.getElementById('fwd-runner-container');
@@ -51,17 +56,17 @@ export class PanelManager {
       DBG.error('Cannot find runner\'s container element.')
     }
 
-    const structurePanel = new StructurePanel();
-
-    parentFlexPanel.addFlexItem(structurePanel, {
-      width: 220,
-      minWidth: 200,
-      maxWidth: 5000,
-    });
-
-    const separator = parentFlexPanel.addSeparator(0, true);
-    separator.separatorSize = 10;
-    separator.htmlElement.classList.add('fwd-runner-large-separator');
+    // const structurePanel = new StructurePanel();
+    //
+    // parentFlexPanel.addFlexItem(structurePanel, {
+    //   width: 220,
+    //   minWidth: 200,
+    //   maxWidth: 5000,
+    // });
+    //
+    // const separator = parentFlexPanel.addSeparator(0, true);
+    // separator.separatorSize = 10;
+    // separator.htmlElement.classList.add('fwd-runner-large-separator');
 
     const flexPanel = new FlexPanel();
     flexPanel.htmlElement.style.flexGrow = '1';
@@ -74,8 +79,9 @@ export class PanelManager {
 
     const centerFlex = new FlexPanel('column');
 
-    const graphEditor = new GraphElement();
+    const graphEditor = new GraphElement(projectModel);
     graphEditor.htmlElement.style.flexGrow = '1';
+    this._graphEditor = graphEditor;
 
     centerFlex.addFlexItem(graphEditor, {
       height: 600,

@@ -13,14 +13,14 @@ export enum MessageType {
   CSS_TYPE = 'css',
 }
 
-export interface Program {
-  file: string,
-  code: string,
+export interface FileResource {
+  filename: string,
+  content: string,
 }
 
 export interface ServerMessage {
   type: MessageType,
-  program?: Program,
+  program?: FileResource,
   error?: any,
   files?: string[];
 }

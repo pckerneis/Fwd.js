@@ -35,4 +35,8 @@ export class ArrayList<T> {
   public size(): number {
     return this._array.length;
   }
+
+  public get(idx: number): T | undefined {
+    return this._array[idx];
+  }
 }

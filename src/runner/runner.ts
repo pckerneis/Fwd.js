@@ -1,5 +1,6 @@
 import * as FwdRuntime from '../fwd/FwdRuntime';
 import rootLogger from '../fwd/logger.fwd';
+import { enableMidi } from '../fwd/midi/FwdMidi';
 import { Logger, LoggerLevel } from "../fwd/utils/Logger";
 import FwdRunner from './FwdRunner';
 import { Overlay } from "./FwdWebRunner/components/Overlay";
@@ -36,9 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   overlay.onclose = () => {
-    DBG.info('Starting audio context.');
+    DBG.info('Start audio context.');
     runner.fwd.audio.start();
-    runner.runCode();
+    DBG.info('Enable MIDI access.');
+    enableMidi();
     document.removeEventListener('keydown', closeListener);
   };
 

@@ -46,8 +46,8 @@ export class DevServer {
       this.sendMessage(client.ws, {
         type: MessageType.SKETCH_TYPE,
         program: {
-          file,
-          code: textContent,
+          filename: file,
+          content: textContent,
         },
       });
     } catch (e) {

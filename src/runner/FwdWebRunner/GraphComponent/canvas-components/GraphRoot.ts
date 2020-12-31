@@ -1,7 +1,7 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
-import { GraphNode, InitNode, MidiClipNode } from './GraphNode';
+import { GraphNode } from './GraphNode';
 import { Pin } from './Pin';
 import { ViewportArea } from './ViewportArea';
 
@@ -28,24 +28,14 @@ export class GraphRoot extends Component {
 
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
-
-    const node1 = new InitNode(this);
-    const node2 = new MidiClipNode(this);
-    node2.label = 'node 2 with long name that will overflow for sure';
-    this.addNode(node1);
-    this.addNode(node2);
-
-    node2.addMidiOutlet(3, 'out2');
-
-    const node3 = new MidiClipNode(this);
-    node3.label = 'node 3';
-    this.addNode(node3);
-
-    node3.setBounds(node3.getBounds().withX(120));
   }
 
   public get temporaryConnection(): TemporaryConnection {
     return this._temporaryConnection;
+  }
+
+  public get nodes(): ArrayList<GraphNode> {
+    return this._nodes;
   }
 
   public get connections(): ArrayList<Connection> {
@@ -92,12 +82,18 @@ export class GraphRoot extends Component {
   public arePinsConnected(first: Pin, second: Pin): Boolean {
     for (let connection of this._connections.array) {
       if ((connection.first === first && connection.second === second)
-      || (connection.second === first && connection.first === second)) {
+        || (connection.second === first && connection.first === second)) {
         return true;
       }
     }
-    
+
     return false;
+  }
+
+  public addConnection(first: Pin, second: Pin): void {
+    if (! this.arePinsConnected(first, second)) {
+      this._connections.add(new Connection(first, second));
+    }
   }
 
   public resized(): void {
@@ -134,9 +130,5 @@ export class GraphRoot extends Component {
     }
 
     return null;
-  }
-
-  private addConnection(first: Pin, second: Pin): void {
-    this._connections.add(new Connection(first, second));
   }
 }

@@ -38,7 +38,8 @@ export class RunnerHeader {
     };
 
     this._newProgramButton = new IconButton('add');
-    this._newProgramButton.htmlElement.onclick = () => this.runner.createNewProgram();
+    // TODO
+    // this._newProgramButton.htmlElement.onclick = () => this.runner.createNewProgram();
 
     const spacer = () => {
       const elem = document.createElement('span');

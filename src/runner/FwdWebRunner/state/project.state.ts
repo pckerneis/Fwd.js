@@ -1,10 +1,14 @@
 import { IBounds } from '../canvas/BaseComponent';
-import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
 export interface BaseNodeState {
   id: string;
   bounds: IBounds;
+}
+
+export interface InitNodeState extends BaseNodeState {
+  kind: 'Init';
+  label: string;
 }
 
 export interface MidiNoteState {
@@ -30,7 +34,7 @@ export interface MidiClipNodeState extends BaseNodeState {
   timeSignature: TimeSignature;
 }
 
-export type NodeState = MidiClipNodeState;
+export type NodeState = MidiClipNodeState | InitNodeState;
 
 export interface ConnectionState {
   sourceNode: string;

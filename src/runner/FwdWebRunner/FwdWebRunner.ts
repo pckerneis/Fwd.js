@@ -1,19 +1,17 @@
 import { bufferToWave, downloadFile } from '../../fwd/audio/utils';
 import { Fwd } from '../../fwd/Fwd';
 import * as FwdRuntime from '../../fwd/FwdRuntime';
-import { createDomElement } from '../../fwd/utils/dom-utils';
 import { Logger } from '../../fwd/utils/Logger';
 import { formatTime } from '../../fwd/utils/time';
 import { DevClient } from '../../server/DevClient';
-import { Program } from '../../server/DevServer.constants';
 import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
-import { Overlay } from './components/Overlay';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
+import { ProjectModel } from './state/project.model';
 import { injectStyle } from './StyleInjector';
 
 interface SharedServices {
@@ -37,103 +35,103 @@ export default class FwdWebRunner implements FwdRunner {
   private _devClient: DevClient;
   private _reconnectionTimeout: number = 5000;
 
-  private readonly _header: RunnerHeader;
-  private readonly _footer: RunnerFooter;
+  private _header: RunnerHeader;
+  private _footer: RunnerFooter;
   private _clientState: RunnerClientState;
 
-  private _program: Program;
-  private _executedCode: string;
-  private _sketchIsDirty: boolean = false;
-  private _codeHasErrors: boolean;
-
-  private _postStopAction: Function;
-  private _availableFiles: string[] = [];
+  private readonly projectModel: ProjectModel;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
+    const model: ProjectModel = new ProjectModel();
+    model.loadProject({
+      graphSequencer: {
+        nodes: [],
+        connections: [],
+      },
+    })
+    this.projectModel = model;
+
     FwdWebRunner._sharedServices = {
       panelManager: new PanelManager(),
     };
 
     this.initDevClient();
-
-    this._header = new RunnerHeader(this, this._devClient);
-    this._footer = new RunnerFooter(this);
-
     this.buildRunner();
-
     this.prepareConsoleWrappers();
 
     if (config.darkMode) {
       this.setDarkMode(true);
     }
+
+    // TEST INIT
+
+    model.addInitNode({
+      kind: 'Init',
+      id: '1',
+      bounds: {x: 2, y: 2, width: 120, height: 24},
+      label: 'start',
+    });
+
+    model.addMidiClipNode({
+      id: '2',
+      kind: 'MidiClip',
+      duration: 4,
+      timeSignature: {upper: 4, lower: 4},
+      notes: [
+        { time: 0, duration: 1, pitch: 65, velocity: 120 },
+        { time: 1, duration: 1, pitch: 67, velocity: 110 },
+        { time: 2, duration: 1, pitch: 69, velocity: 100 },
+      ],
+      flags: [
+        { kind: 'inlet', time: 0, color: 'grey', name: 'in' },
+        { kind: 'outlet', time: 4, color: 'grey', name: 'out' },
+      ],
+      label: 'node1',
+      bounds: {x: 210, y: 4, width: 120, height: 20},
+    });
+
+    model.addMidiClipNode({
+      id: '3',
+      kind: 'MidiClip',
+      duration: 4,
+      timeSignature: {upper: 4, lower: 4},
+      notes: [
+        { time: 0, duration: 1, pitch: 65, velocity: 120 },
+        { time: 1, duration: 1, pitch: 67, velocity: 110 },
+        { time: 2, duration: 1, pitch: 69, velocity: 100 },
+      ],
+      flags: [
+        { kind: 'inlet', time: 0, color: 'grey', name: 'in' },
+        { kind: 'outlet', time: 4, color: 'grey', name: 'out' },
+      ],
+      label: 'node2',
+      bounds: {x: 210, y: 50, width: 120, height: 20},
+    });
+
+    model.addConnection({
+      sourceNode: '1',
+      sourcePinIndex: 0,
+      targetNode: '2',
+      targetPinIndex: 0,
+    });
+
+    model.addConnection({
+      sourceNode: '2',
+      sourcePinIndex: 0,
+      targetNode: '3',
+      targetPinIndex: 0,
+    });
+
+    model.addConnection({
+      sourceNode: '3',
+      sourcePinIndex: 0,
+      targetNode: '2',
+      targetPinIndex: 0,
+    });
   }
 
   public static get sharedServices(): SharedServices {
     return FwdWebRunner._sharedServices;
-  }
-
-  public setProgram(program: Program): void {
-    const fileChanged = program.file !== this._program?.file;
-
-    if (fileChanged && this.isSchedulerRunning()) {
-      this.handleProgramFileChangeWhileRunning(program);
-    } else {
-      this._program = program;
-
-      this._header.setSelectedFile(program.file);
-
-      if (fileChanged) {
-        this.resetAndRun();
-      } else if (this.isAudioReady()) {
-        this.runCode();
-      }
-    }
-  }
-
-  public setFiles(files: string[]): void {
-    this._availableFiles = files;
-    this._header.setFiles(files);
-  }
-
-  public createNewProgram(): void {
-    if (this.isSchedulerRunning()) {
-      this.stopAndShowForceQuitOverlay().then(() => this.createNewProgram());
-      return;
-    }
-
-    const message = createDomElement('span', {innerText: 'Create a new program'});
-    const pathInput = createDomElement('input', {
-      type: 'text',
-      placeholder: 'program.js',
-      style: {margin: '8px', display: 'block', padding: '5px'},
-    });
-    const confirmButton = createDomElement('button', {innerText: 'Confirm'});
-
-    const overlay = new Overlay({hideWhenBackdropClicked: true, hideWhenContainerClicked: false});
-    overlay.container.classList.add('fwd-runner-new-program-overlay');
-    overlay.container.append(message, pathInput, confirmButton);
-    overlay.show();
-
-    confirmButton.onclick = () => {
-      let path = pathInput.value.trim();
-
-      if (path != '') {
-        if (! path.endsWith('.js')) {
-          path += '.js';
-        }
-
-        console.log('Create new file ' + path);
-
-        const allFiles = [...this._availableFiles];
-        allFiles.push(path);
-        allFiles.sort();
-
-        this._devClient.saveFile(path, '');
-        this.setFiles(allFiles);
-        this._devClient.watchFile(path);
-        overlay.hide();
-      }
-    };
   }
 
   public start(): void {
@@ -144,6 +142,9 @@ export default class FwdWebRunner implements FwdRunner {
     this._header.onRunnerStart();
     this._footer.masterSlider.meter.audioSource = this.fwd.audio.master;
     this._footer.applyMasterValue();
+
+    DBG.debug('Starting playback');
+    this.projectModel.startPlayback(this.fwd.scheduler);
   }
 
   public render(duration: number, sampleRate: number, fileName: string): void {
@@ -162,29 +163,7 @@ export default class FwdWebRunner implements FwdRunner {
   public stop(): void {
     FwdRuntime.stopContext(this.fwd, () => {
       this._header.onRunnerStop();
-
-      if (this._postStopAction != null) {
-        this._postStopAction();
-        this._postStopAction = null;
-      }
     });
-  }
-
-  public runCode(): void {
-    // if (this._program?.code == null) {
-    //   throw new Error('There\'s no program to run.');
-    // }
-    //
-    // try {
-    //   new Function(this._program.code)(window);
-    //   this._codeHasErrors = false;
-    // } catch (e) {
-    //   this._codeHasErrors = true;
-    //   this.reportErrors(e);
-    // } finally {
-    //   this._executedCode = this._program.code;
-    //   this.refreshState();
-    // }
   }
 
   public isDarkMode(): boolean {
@@ -205,23 +184,10 @@ export default class FwdWebRunner implements FwdRunner {
     this.setDarkMode(! this.config.darkMode);
   }
 
-  private isAudioReady(): boolean {
-    return this.fwd.audio.context != null;
-  }
-
   private buildRunner(): void {
     this.prepareHeader();
     this.prepareFooter();
     this.buildMainSection();
-  }
-
-  private reportInfos(...infos: string[]): void {
-    if (this.config.useConsoleRedirection) {
-      console.info(...infos);
-    } else {
-      console.info(...infos);
-      this._footer.print(null, ...infos);
-    }
   }
 
   private reportErrors(...errors: string[]): void {
@@ -285,11 +251,13 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private prepareFooter(): void {
+    this._footer = new RunnerFooter(this);
     document.body.append(this._footer.terminalDrawer);
     document.body.append(this._footer.htmlElement);
   }
 
   private prepareHeader(): void {
+    this._header = new RunnerHeader(this, this._devClient);
     document.body.prepend(this._header.htmlElement)
   }
 
@@ -298,30 +266,9 @@ export default class FwdWebRunner implements FwdRunner {
 
     this._devClient = new DevClient();
 
-    this._devClient.onFilesAvailable = (files) => {
-      this.reportInfos(`Successfully connected to dev server.`);
-
-      retryCounter = 0;
-
-      this.setFiles(files);
-
-      if (this._program == null) {
-        this._devClient.watchFile(files[0]);
-      } else {
-        this._devClient.watchFile(this._program.file);
-        this._header.setSelectedFile(this._program.file);
-      }
-    };
-
-    this._devClient.onServerError = (errors: string[], program: Program) => {
+    this._devClient.onServerError = (errors: string[]) => {
       this.reportErrors(...errors);
-
-      this.setProgram(program);
       this.setClientState(RunnerClientState.codeErrors);
-    };
-
-    this._devClient.onFileChange = (file: string, program: Program) => {
-      this.setProgram(program);
     };
 
     this._devClient.onServerLost = () => {
@@ -339,83 +286,15 @@ export default class FwdWebRunner implements FwdRunner {
     this._footer.setRunnerClientState(newState);
   }
 
-  private setDirty(isDirty: boolean): void {
-    if (isDirty === this._sketchIsDirty) {
-      return;
-    }
-
-    this._sketchIsDirty = isDirty;
-    this._header.setDirty(isDirty);
-
-    this.refreshState();
-  }
-
   private checkSketchCanBeStarted(): void {
-    if (this._executedCode == null) {
-      throw new Error('The sketch was not initialized');
-    }
   }
 
   private buildMainSection(): void {
-    FwdWebRunner.sharedServices.panelManager.buildMainSection();
-  }
-
-  private refreshState(): void {
-    this.setClientState(this._sketchIsDirty ? RunnerClientState.outOfDate :
-      (this._codeHasErrors ? RunnerClientState.codeErrors : RunnerClientState.upToDate))
+    FwdWebRunner.sharedServices.panelManager.buildMainSection(this.projectModel);
   }
 
   private isSchedulerRunning(): boolean {
     return this.fwd.scheduler.state === 'running' || this.fwd.scheduler.state === 'stopping';
-  }
-
-  private resetAndRun(): void {
-    FwdRuntime.resetContext(this.fwd);
-    this._executedCode = null;
-    this.setDirty(false);
-
-    if (this.isAudioReady()) {
-      this.runCode();
-    }
-  }
-
-  private handleProgramFileChangeWhileRunning(program: Program): void {
-    DBG.debug('Waiting for program to stop before changing file', program.file);
-
-    this.stopAndShowForceQuitOverlay().then(() => this.setProgram(program));
-  }
-
-  private stopAndShowForceQuitOverlay(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      const message = createDomElement('span', {innerText: 'Waiting for the program to stop...'});
-      const quitButton = createDomElement('button', {
-        innerText: 'Force quit',
-        classList: ['text-button'],
-        style: {marginTop: '10px'},
-      });
-
-      quitButton.onclick = () => {
-        if (this.isSchedulerRunning()) {
-          this.fwd.audio.master.disconnect();
-          this._header.onRunnerStop();
-          resolve();
-        }
-
-        overlay.hide();
-      };
-
-      const overlay = new Overlay();
-      overlay.container.classList.add('fwd-runner-force-quit-overlay');
-      overlay.container.append(message, quitButton);
-      overlay.show();
-
-      this._postStopAction = () => {
-        resolve();
-        overlay.hide();
-      };
-
-      this.stop();
-    })
   }
 }
 

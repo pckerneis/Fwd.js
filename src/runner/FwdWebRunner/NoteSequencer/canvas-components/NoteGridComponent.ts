@@ -1,7 +1,7 @@
 import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
 import { LassoSelector } from '../../canvas/shared/LassoSelector';
 import { SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
-import { MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, SequencerDisplayModel } from '../note-sequencer'
+import { MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, NoteSequencer, SequencerDisplayModel } from '../note-sequencer'
 
 export interface Note {
   time: number,
@@ -65,7 +65,8 @@ export class NoteGridComponent extends Component {
   private _minDragOffset: NotePosition = null;
   private _maxDragOffset: NotePosition = null;
 
-  constructor(private readonly model: SequencerDisplayModel) {
+  constructor(private readonly model: SequencerDisplayModel,
+              private readonly noteSequencer: NoteSequencer) {
     super();
 
     this._selectedSet = new SelectedItemSet<Note>();
@@ -88,6 +89,11 @@ export class NoteGridComponent extends Component {
 
   public get notes(): Note[] {
     return this._notes;
+  }
+
+  public set notes(newNotes: Note[]) {
+    this._notes = newNotes;
+    this.getParentComponent().repaint();
   }
 
   public get flags(): Flag[] {
@@ -141,6 +147,7 @@ export class NoteGridComponent extends Component {
   public removeNote(note: Note, repaint: boolean = true): void {
     this._selectedSet.removeFromSelection(note);
     this._notes = this._notes.filter(n => n !== note);
+    this.changed();
 
     if (repaint) {
       this.getParentComponent().repaint();
@@ -365,7 +372,7 @@ export class NoteGridComponent extends Component {
     });
 
     this._draggedItem = null;
-
+    this.changed();
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {
@@ -796,5 +803,9 @@ export class NoteGridComponent extends Component {
       g.fillStyle = flag.color;
       g.fillRect(pos, 0, 1, this.height);
     });
+  }
+
+  private changed(): void {
+    this.noteSequencer.listeners.forEach(listener => listener.notesChanged(this.notes));
   }
 }

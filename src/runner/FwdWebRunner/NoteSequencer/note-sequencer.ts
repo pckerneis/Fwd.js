@@ -1,6 +1,6 @@
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { injectStyle } from '../StyleInjector';
-import { Flag } from './canvas-components/NoteGridComponent';
+import { Flag, Note } from './canvas-components/NoteGridComponent';
 import { SequencerRoot } from './canvas-components/SequencerRoot';
 import { LookAndFeel, LookAndFeel_Default, LookAndFeel_Live } from './themes/LookAndFeel';
 
@@ -31,6 +31,10 @@ export interface SequencerDisplayModel {
   adaptiveMode: boolean,
   colors: Colors,
   theme: LookAndFeel,
+}
+
+export interface NoteSequencerListener {
+  notesChanged: (notes: Note[]) => void;
 }
 
 export interface Colors {
@@ -77,6 +81,8 @@ const defaultColors: Colors = {
 
 export class NoteSequencer {
   public readonly container: HTMLElement;
+  public readonly listeners: NoteSequencerListener[] = [];
+
   private _rootHolder: RootComponentHolder<SequencerRoot>;
   private readonly _model: SequencerDisplayModel;
   private readonly _sequencerRoot: SequencerRoot;
@@ -96,7 +102,7 @@ export class NoteSequencer {
 
     this.container = document.createElement('div');
 
-    this._sequencerRoot = new SequencerRoot(this._model);
+    this._sequencerRoot = new SequencerRoot(this._model, this);
     this._rootHolder = new RootComponentHolder<SequencerRoot>(100, 100, this._sequencerRoot);
 
     this.container.append(this._rootHolder.canvas);
@@ -104,6 +110,14 @@ export class NoteSequencer {
 
     this._rootHolder.attachMouseEventListeners();
     this._rootHolder.attachResizeObserver(this.container);
+  }
+
+  public get notes(): Note[] {
+    return this._sequencerRoot.notes;
+  }
+
+  public set notes(newNotes: Note[]) {
+    this._sequencerRoot.setNotes(newNotes);
   }
 
   public get colors(): Colors {
@@ -184,6 +198,10 @@ export class NoteSequencer {
 
   public setFlags(flags: Flag[]): void {
     this._sequencerRoot.setFlags(flags);
+  }
+
+  public addListener(listener: NoteSequencerListener): void {
+    this.listeners.push(listener);
   }
 }
 

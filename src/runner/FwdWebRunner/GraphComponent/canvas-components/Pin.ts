@@ -2,10 +2,9 @@ import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/Ba
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
 
-
 export abstract class Pin extends Component {
 
-  constructor(public readonly parentNode: GraphNode<any>,
+  constructor(public readonly parentNode: GraphNode,
               public readonly parentGraph: GraphRoot) {
     super();
   }
