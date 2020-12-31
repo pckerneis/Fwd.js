@@ -75,7 +75,7 @@ export class FlexPanel implements EditorElement {
     // Default values
     container.style.position = 'relative';
 
-    if (this.isVerticalAlignment()) {
+    if (this.isVertical()) {
       container.style.overflowX = 'auto';
       container.style.overflowY = 'hidden';
     } else {
@@ -104,7 +104,7 @@ export class FlexPanel implements EditorElement {
     const containerBounds = container.getBoundingClientRect();
 
     const getDesiredOrDefault = (options: FlexItemOptions) =>
-      this.isVerticalAlignment() ?
+      this.isVertical() ?
         (options.height || options.minHeight || containerBounds.height) :
         (options.width || options.minWidth || containerBounds.width);
 
@@ -122,8 +122,14 @@ export class FlexPanel implements EditorElement {
     this.htmlElement.classList.remove(alignment === 'start' ? 'end' : 'start');
   }
 
+  public getAlignment(): 'start' | 'end' {
+    return this.htmlElement.classList.contains('start') ? 'start' : 'end';
+  }
+
   public addSeparator(draggable?: boolean): SeparatorElement {
-    const separator = this.createSeparatorElement(this._elementStack.length - 1, draggable);
+    const draggedElementIndex = this.getAlignment() === 'start' ?
+      this._elementStack.length - 1 : this._elementStack.length;
+    const separator = this.createSeparatorElement(draggedElementIndex, draggable);
     this.htmlElement.append(separator.htmlElement);
     this._separators.push(separator);
 
@@ -142,7 +148,7 @@ export class FlexPanel implements EditorElement {
     // Dragging while having something selected in the dom leads to weird behaviours
     getSelection().removeAllRanges();
 
-    const vertical = this.isVerticalAlignment();
+    const vertical = this.isVertical();
     const mouseDownPos = vertical ? event.clientY : event.clientX;
     const item = this._elementStack[separator.index];
 
@@ -170,7 +176,8 @@ export class FlexPanel implements EditorElement {
 
       const containerOffset = Math.min(0, containerPos - containerPosAtMouseDown);
       const diff = mouseDownPos - (vertical ? evt.clientY : evt.clientX) + containerOffset;
-      const desiredSize = sizeAtMouseDown - diff;
+      const desiredSize = this.getAlignment() === 'start' ?
+        sizeAtMouseDown - diff : sizeAtMouseDown + diff;
 
       this.setDesiredSize(item, desiredSize);
     });
@@ -184,12 +191,12 @@ export class FlexPanel implements EditorElement {
     document.addEventListener('mouseup', mouseUpHandler);
   }
 
-  private isVerticalAlignment(): boolean {
+  private isVertical(): boolean {
     return this._direction === 'column';
   }
 
   private setDesiredSize(item: FlexItem, desiredSize: number): void {
-    const vertical = this.isVerticalAlignment();
+    const vertical = this.isVertical();
 
     // Determine max size based on space left available by other elements
     const otherMinSize = this._elementStack
