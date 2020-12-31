@@ -1,9 +1,7 @@
 type Callback = (value: any) => void;
 
-type Path<T> = keyof T | [keyof T, { [K in keyof T]: Path<T[K]> }[keyof T]];
-
 interface Listener<T> {
-  path: Path<T>;
+  path: keyof T;
   callback: Callback;
 }
 
@@ -16,11 +14,15 @@ export class ObservableState<T> {
     this._state = state;
   }
 
-  public observe(callback: Callback, path: Path<T>): void {
+  public get(): T {
+    return this._state;
+  }
+
+  public observe(callback: Callback, path: keyof T): void {
     this.listeners.push({ path, callback });
   }
 
-  public changed(path: Path<T>): void {
+  public changed(path: keyof T): void {
     this.listeners
       .filter(listener => this.isObserving(listener, path))
       .forEach(listener => {
@@ -28,37 +30,17 @@ export class ObservableState<T> {
       });
   }
 
-  private isObserving(listener: Listener<T>, path: Path<T>): boolean {
-    return arePathEquals(listener.path, path);
+  public update<R>(value: any, path: keyof T): R {
+    this._state[path] = value;
+    this.changed(path);
+    return this.pluck(path);
   }
 
-  private pluck(path: Path<T>): any {
-    if (! Array.isArray(path)) {
-      return this._state[path];
-    } else {
-      // We get an typing error on next line because of potentially infinite recursion
-      // @ts-ignore
-      return path.reduce((acc, curr) => acc[curr], this._state);
-    }
-  }
-}
-
-function arePathEquals<T>(first: Path<T>, second: Path<T>): boolean {
-  if (! Array.isArray(first)) {
-    return first === second;
-  } else if (Array.isArray(second)) {
-    if (first.length !== second.length) {
-      return false;
-    }
-
-    for (let idx = 0; idx < first.length; ++idx) {
-      if (first[idx] != second[idx]) {
-        return false;
-      }
-    }
-  } else {
-    return false;
+  private isObserving(listener: Listener<T>, path: keyof T): boolean {
+    return listener.path === path;
   }
 
-  return true;
+  private pluck(path: keyof T): any {
+    return this._state[path];
+  }
 }

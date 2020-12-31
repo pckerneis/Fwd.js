@@ -1,26 +1,34 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
 import { MidiClipNode } from '../GraphComponent/canvas-components/GraphNode';
+import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
+import { MidiFlagState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { PropertyPanel } from './PropertyPanel';
 
-class SettingsPanel extends PropertyPanel {
+class SettingsPanel implements EditorElement {
+
+  public readonly htmlElement: HTMLElement;
+
+  private readonly propertyPanel: PropertyPanel = new PropertyPanel();
 
   constructor(public readonly midiClipPanel: MidiClipPanel) {
-    super();
+    this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add(SETTINGS_CLASS);
 
-    this.addTitle('Clip');
+    this.htmlElement.append(this.propertyPanel.htmlElement);
 
-    this.addLabel('Name');
-    const nameField = this.addTextInput(midiClipPanel.node.label);
+    this.propertyPanel.addTitle('Clip');
+
+    this.propertyPanel.addLabel('Name');
+    const nameField = this.propertyPanel.addTextInput(midiClipPanel.node.label);
     nameField.onchange = () => this.midiClipPanel.node.label = nameField.value;
 
-    this.addLabel('Duration');
-    const durationField = this.addNumberInput(midiClipPanel.node.duration, 0);
+    this.propertyPanel.addLabel('Duration');
+    const durationField = this.propertyPanel.addNumberInput(midiClipPanel.node.duration, 0);
     durationField.onchange = () => this.midiClipPanel.node.duration = durationField.valueAsNumber;
 
-    this.addLabel('Signature');
+    this.propertyPanel.addLabel('Signature');
 
     const signature = document.createElement('div');
     signature.classList.add('fwd-runner-midi-clip-signature')
@@ -39,7 +47,10 @@ class SettingsPanel extends PropertyPanel {
     signature.append(span);
     signature.append(lowerField);
 
-    this.htmlElement.append(signature);
+    this.propertyPanel.htmlElement.append(signature);
+
+    this.propertyPanel.addTitle('Markers');
+    this.buildMarkersSection();
   }
 
   private createSelect(options: number[], defaultValue: number, changeHandler: (value: number) => void): HTMLSelectElement {
@@ -51,7 +62,7 @@ class SettingsPanel extends PropertyPanel {
       elem.value = value.toString();
       elem.innerText = value.toString();
       select.append(elem);
-    })
+    });
 
     select.value = defaultValue.toString();
 
@@ -60,6 +71,59 @@ class SettingsPanel extends PropertyPanel {
     };
 
     return select;
+  }
+
+  private buildMarkersSection(): void {
+    const markersContainer = document.createElement('div');
+    this.htmlElement.append(markersContainer);
+
+    let flags = this.midiClipPanel.node.state.flags;
+    let numFlags = this.midiClipPanel.node.state.flags.length;
+
+    this.refreshMarkers(markersContainer, flags);
+
+    // Refresh all markers if size changed
+    this.midiClipPanel.node.observeFlags(
+      (newFlags) => {
+        if (newFlags.length != numFlags) {
+          numFlags = newFlags.length;
+          this.refreshMarkers(markersContainer, newFlags);
+        }
+      });
+  }
+
+  private refreshMarkers(container: HTMLElement, flags: MidiFlagState[]): void {
+    container.innerHTML = '';
+
+    flags.forEach((flag, idx) => {
+      const markerPanel = new PropertyPanel();
+      container.append(markerPanel.htmlElement);
+      const titleElem = markerPanel.addTitle(flag.name);
+
+      markerPanel.addLabel('Name');
+      const nameField = markerPanel.addTextInput(flag.name);
+      nameField.onchange = () => {
+        const updatedFlags = [...flags];
+        updatedFlags[idx] = {...updatedFlags[idx], name: nameField.value};
+        this.midiClipPanel.node.updateFlags(updatedFlags);
+      };
+
+      markerPanel.addLabel('Time');
+      const timeField = markerPanel.addNumberInput(flag.time, 0);
+      timeField.oninput = () => {
+        const updatedFlags = [...flags];
+        updatedFlags[idx] = {...updatedFlags[idx], time: timeField.valueAsNumber};
+        this.midiClipPanel.node.updateFlags(updatedFlags);
+      };
+
+      this.midiClipPanel.node.observeFlags(
+        (flags: MidiFlagState[]) => {
+          const flag = flags[idx];
+          nameField.value = flag.name;
+          timeField.valueAsNumber = flag.time;
+          titleElem.innerText = flag.name;
+        });
+    });
   }
 }
 
@@ -103,6 +167,22 @@ export class MidiClipPanel implements EditorElement {
 
     this.node.observeSignatureLower((newSignLower) => this.clipEditor.noteSequencer.signatureLower = newSignLower);
     this.clipEditor.noteSequencer.signatureLower = this.node.signature.lower;
+
+    this.node.observeFlags((flags) => {
+      this.refreshFlags(flags);
+    });
+
+    this.refreshFlags(this.node.state.flags);
+  }
+
+  private refreshFlags(flags: MidiFlagState[]): void {
+    this.clipEditor.noteSequencer.setFlags(flags.map(f => ({
+      direction: FlagDirection.right,
+      label: f.name,
+      color: f.color,
+      time: f.time,
+      selected: false,
+    })));
   }
 }
 

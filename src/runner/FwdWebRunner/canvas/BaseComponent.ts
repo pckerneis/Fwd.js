@@ -81,6 +81,14 @@ export class ComponentBounds implements IBounds {
       this.y + offset.y,
       this.width, this.height);
   }
+
+  public withX(x: number): ComponentBounds {
+    return this.translated({ x, y: 0 });
+  }
+
+  public withY(y: number): ComponentBounds {
+    return this.translated({ x: 0, y });
+  }
 }
 
 export interface IComponentMouseEvent {

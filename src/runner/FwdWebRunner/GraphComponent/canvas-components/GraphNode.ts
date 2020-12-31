@@ -3,11 +3,11 @@ import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/Ba
 import FwdWebRunner from '../../FwdWebRunner';
 import { TimeSignature } from '../../NoteSequencer/note-sequencer';
 import { ObservableState } from '../../state/observable-state';
-import { MidiClipNodeState, NodeState } from '../../state/project.state';
+import { MidiClipNodeState, MidiFlagState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
-export abstract class GraphNode<T extends NodeState = any> extends Component {
+export abstract class GraphNode<T extends NodeState = NodeState> extends Component {
 
   public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>();
   public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>();
@@ -35,6 +35,10 @@ export abstract class GraphNode<T extends NodeState = any> extends Component {
 
     this._state = this.getInitialState();
     this._stateObserver = new ObservableState<T>(this._state);
+  }
+
+  public get state(): T {
+    return this._state;
   }
 
   public get label(): string {
@@ -231,23 +235,31 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
   public setSignatureUpper(newValue: number): any {
     if (this.signature.upper !== newValue) {
       this._state.timeSignature.upper = newValue;
-      this._stateObserver.changed(['timeSignature', 'upper']);
+      this._stateObserver.changed('timeSignature');
     }
   }
 
   public setSignatureLower(newValue: number): any {
     if (this.signature.lower !== newValue) {
       this._state.timeSignature.lower = newValue;
-      this._stateObserver.changed(['timeSignature', 'lower']);
+      this._stateObserver.changed('timeSignature');
     }
   }
 
   public observeSignatureLower(cb: (newSignLower: number) => any): void {
-    this._stateObserver.observe(cb, ['timeSignature', 'lower']);
+    this._stateObserver.observe((sign) => cb(sign.lower), 'timeSignature');
   }
 
   public observeSignatureUpper(cb: (newSignLower: number) => any): void {
-    this._stateObserver.observe(cb, ['timeSignature', 'upper']);
+    this._stateObserver.observe((sign) => cb(sign.upper), 'timeSignature');
+  }
+
+  public updateFlags(updatedFlags: MidiFlagState[]): void {
+    this._stateObserver.update(updatedFlags, 'flags');
+  }
+
+  public observeFlags(cb: (newFlags: MidiFlagState[]) => any): void {
+    this._stateObserver.observe(cb, 'flags');
   }
 
   public getInitialState(): NodeState {
@@ -271,11 +283,24 @@ export class MidiClipNode extends GraphNode<MidiClipNodeState> {
   public addMidiInlet(midiInlet: MidiInlet): void {
     this.midiInlets.add(midiInlet);
     this.addInlet();
+    this._state.flags.push({
+      name: midiInlet.name,
+      time: midiInlet.time,
+      color: 'grey',
+    });
+
+    this._stateObserver.changed('flags');
   }
 
   public addMidiOutlet(midiOutlet: MidiOutlet): void {
     this.midiOutlets.add(midiOutlet);
     this.addOutlet();
+    this._state.flags.push({
+      name: midiOutlet.name,
+      time: midiOutlet.time,
+      color: 'grey',
+    });
+    this._stateObserver.changed('flags');
   }
 
   protected render(g: CanvasRenderingContext2D): void {

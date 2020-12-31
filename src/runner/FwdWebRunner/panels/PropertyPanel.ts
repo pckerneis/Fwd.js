@@ -63,7 +63,7 @@ export class PropertyPanel implements EditorElement {
 
 injectStyle('PropertyPanel', `
 .fwd-property-panel {
-  padding: 8px;
+  padding: 0 8px;
   background: ${defaultTheme.bgSecondary};
   width: 100%;
   display: grid;

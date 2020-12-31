@@ -94,6 +94,11 @@ export class NoteGridComponent extends Component {
     return this._flags;
   };
 
+  public set flags(newFlags: Flag[]) {
+    this._flags = newFlags;
+    this.getParentComponent().repaint();
+  }
+
   public get selectedSet(): SelectedItemSet<Note> {
     return this._selectedSet;
   }
@@ -168,7 +173,6 @@ export class NoteGridComponent extends Component {
 
     this.getParentComponent().repaint();
   }
-
 
   //===============================================================================
 

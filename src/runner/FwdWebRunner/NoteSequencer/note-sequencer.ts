@@ -1,7 +1,8 @@
-import {RootComponentHolder} from '../canvas/RootComponentHolder';
+import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { injectStyle } from '../StyleInjector';
-import {SequencerRoot} from './canvas-components/SequencerRoot';
-import {LookAndFeel, LookAndFeel_Default, LookAndFeel_Live} from './themes/LookAndFeel';
+import { Flag } from './canvas-components/NoteGridComponent';
+import { SequencerRoot } from './canvas-components/SequencerRoot';
+import { LookAndFeel, LookAndFeel_Default, LookAndFeel_Live } from './themes/LookAndFeel';
 
 export const MIN_SEMI_H: number = 4;
 export const MAX_SEMI_H: number = 30;
@@ -179,6 +180,10 @@ export class NoteSequencer {
 
   public draw(): void {
     this._rootHolder.repaint();
+  }
+
+  public setFlags(flags: Flag[]): void {
+    this._sequencerRoot.setFlags(flags);
   }
 }
 

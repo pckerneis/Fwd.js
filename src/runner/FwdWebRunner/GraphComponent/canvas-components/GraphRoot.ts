@@ -29,19 +29,20 @@ export class GraphRoot extends Component {
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
 
-
     const node1 = new InitNode(this);
     const node2 = new MidiClipNode(this);
     node2.label = 'node 2 with long name that will overflow for sure';
     this.addNode(node1);
     this.addNode(node2);
 
-    node2.addMidiOutlet({name: 'out2', time: 0});
-    node2.addMidiOutlet({name: 'out3', time: 0});
+    node2.addMidiOutlet({name: 'out2', time: 3});
+    node2.addMidiOutlet({name: 'out3', time: 6});
 
     const node3 = new MidiClipNode(this);
     node3.label = 'node 3';
     this.addNode(node3);
+
+    node3.setBounds(node3.getBounds().withX(120));
   }
 
   public get temporaryConnection(): TemporaryConnection {
@@ -117,7 +118,6 @@ export class GraphRoot extends Component {
       const pinCenter = pin.getBoundsInGraph().center;
       return squaredDistance(position.x, position.y, pinCenter.x, pinCenter.y) < allowedSquaredDistance
         && pin.canConnect(other);
-
     };
 
     for (let node of this._nodes.array) {
