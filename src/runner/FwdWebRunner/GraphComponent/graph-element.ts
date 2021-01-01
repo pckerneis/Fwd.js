@@ -7,6 +7,7 @@ import { injectStyle } from '../StyleInjector';
 import { GraphNode, InitNode } from './canvas-components/GraphNode';
 import { GraphRoot } from './canvas-components/GraphRoot';
 import { MidiClipNode } from './canvas-components/MidiClipNode';
+import { InletPin, OutletPin } from './canvas-components/Pin';
 
 export class GraphElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
@@ -64,8 +65,7 @@ export class GraphElement implements EditorElement {
     n.id = state.id;
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
-    n.label = state.label;
-    n.updateFlags(state.flags);
+    n.attachObservers();
 
     return n;
   }
@@ -75,25 +75,32 @@ export class GraphElement implements EditorElement {
   }
 
   private addConnection(connection: ConnectionState): void {
-    const firstPin = this.findNode(connection.sourceNode)?.outlets.get(connection.sourcePinIndex);
-    const secondPin = this.findNode(connection.targetNode)?.inlets.get(connection.targetPinIndex);
+    const { source, target } = this.findPins(connection);
 
-    if (firstPin != null && secondPin != null) {
-      this._graphRoot.addConnection(firstPin, secondPin);
+    console.log({source, target});
+
+    if (source != null && target != null) {
+      this._graphRoot.addConnection(source, target);
     }
   }
 
   private removeConnection(connection: ConnectionState): void {
-    const firstPin = this.findNode(connection.sourceNode)?.outlets.get(connection.sourcePinIndex);
-    const secondPin = this.findNode(connection.targetNode)?.inlets.get(connection.targetPinIndex);
+    const { source, target } = this.findPins(connection);
 
-    if (firstPin != null && secondPin != null) {
-      this._graphRoot.removeConnection(firstPin, secondPin);
+    if (source != null && target != null) {
+      this._graphRoot.removeConnection(source, target);
     }
   }
 
   private findNode(id: string): GraphNode {
     return this.nodes.find(n => n.id === id);
+  }
+
+  private findPins(connection: ConnectionState): { source: OutletPin, target: InletPin } {
+    return {
+      source: this.findNode(connection.sourceNode)?.outlets.array.find(p => p.id === connection.sourcePinId),
+      target: this.findNode(connection.targetNode)?.inlets.array.find(p => p.id === connection.targetPinId),
+    };
   }
 }
 

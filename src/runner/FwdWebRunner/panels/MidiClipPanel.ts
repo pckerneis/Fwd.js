@@ -8,6 +8,9 @@ import { MidiFlagState, MidiNoteState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { PropertyPanel } from './PropertyPanel';
 
+// TODO this can lead to duplicate ids...
+let latestAdded = 0;
+
 class SettingsPanel implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
@@ -46,10 +49,9 @@ class SettingsPanel implements EditorElement {
     const outputs = getMidiOutputNames();
     const defaultValue = outputs[0];
     this.clipPropertyPanel.addLabel('Output');
-    const outputField = this.createSelect(outputs, defaultValue, () => {
+    const outputField = this.clipPropertyPanel.createSelect(outputs, defaultValue, () => {
     });
     this.clipPropertyPanel.htmlElement.append(outputField);
-    outputField.style.width = '100%';
   }
 
   private buildSignatureField(): void {
@@ -61,12 +63,16 @@ class SettingsPanel implements EditorElement {
     span.textContent = '/';
 
     const upperOptions = new Array(99).fill(0).map((_, i) => i + 1).map(n => n.toString());
-    const upperField = this.createSelect(upperOptions, this.service.snapshot.timeSignature.upper.toString(),
+    const upperField = this.clipPropertyPanel.createSelect(upperOptions,
+      this.service.snapshot.timeSignature.upper.toString(),
       (value) => this.service.setSignatureUpper(Number(value)).subscribe());
+    upperField.style.width = '40px';
 
     const lowerOptions = [1, 2, 4, 8, 16, 32].map(n => n.toString());
-    const lowerField = this.createSelect(lowerOptions, this.service.snapshot.timeSignature.lower.toString(),
+    const lowerField = this.clipPropertyPanel.createSelect(lowerOptions,
+      this.service.snapshot.timeSignature.lower.toString(),
       (value) => this.service.setSignatureLower(Number(value)).subscribe());
+    lowerField.style.width = '40px';
 
     signature.append(upperField);
     signature.append(span);
@@ -99,6 +105,7 @@ class SettingsPanel implements EditorElement {
     addMarkerButton.textContent = '+ Add marker';
     addMarkerButton.onclick = () => {
       this.service.addFlag({
+        id: (latestAdded++).toString(),
         kind: 'inlet',
         name: 'flag',
         time: 0,
@@ -111,7 +118,7 @@ class SettingsPanel implements EditorElement {
   private refreshMarkers(container: HTMLElement, flags: MidiFlagState[]): void {
     container.innerHTML = '';
 
-    flags.forEach((flag, idx) => {
+    flags.forEach((flag) => {
       const markerPanel = new PropertyPanel();
       container.append(markerPanel.htmlElement);
 
@@ -125,50 +132,34 @@ class SettingsPanel implements EditorElement {
       const removeButton = document.createElement('div');
       removeButton.innerText = 'x';
       removeButton.style.padding = '0 4px';
-      removeButton.onclick = () => this.service.removeFlagAt(idx).subscribe();
+      removeButton.onclick = () => this.service.removeFlag(flag.id).subscribe();
 
       titleContainer.append(titleElem, removeButton);
       markerPanel.htmlElement.append(titleContainer);
 
       markerPanel.addLabel('Name');
       const nameField = markerPanel.addTextInput(flag.name);
-      nameField.onchange = () => this.service.renameFlagAt(idx, nameField.value).subscribe();
+      nameField.onchange = () => this.service.renameFlag(flag.id, nameField.value).subscribe();
 
       markerPanel.addLabel('Time');
       const timeField = markerPanel.addNumberInput(flag.time, 0);
-      timeField.onchange = () => this.service.setFlagTime(idx, timeField.valueAsNumber).subscribe();
+      timeField.onchange = () => this.service.setFlagTime(flag.id, timeField.valueAsNumber).subscribe();
+
+      markerPanel.addLabel('Action');
+      markerPanel.addSelect(['inlet', 'outlet'], flag.kind,
+        (v) => this.service.setFlagKind(flag.id, v).subscribe());
 
       this.service.flags$.subscribe(
         (flags: MidiFlagState[]) => {
-          const flag = flags[idx];
+          const newFlatState = flags.find(f => f.id === flag.id);
 
-          if (flag != null) {
-            nameField.value = flag.name;
-            timeField.valueAsNumber = flag.time;
-            titleElem.innerText = flag.name;
+          if (newFlatState != null) {
+            nameField.value = newFlatState.name;
+            timeField.valueAsNumber = newFlatState.time;
+            titleElem.innerText = newFlatState.name;
           }
         });
     });
-  }
-
-  private createSelect(options: string[], defaultValue: string, changeHandler: (value: string) => void): HTMLSelectElement {
-    const select = document.createElement('select');
-    select.style.width = '40px';
-
-    options.forEach((value) => {
-      const elem = document.createElement('option');
-      elem.value = value;
-      elem.innerText = value;
-      select.append(elem);
-    });
-
-    select.value = defaultValue;
-
-    select.oninput = () => {
-      changeHandler(options[select.selectedIndex]);
-    };
-
-    return select;
   }
 }
 

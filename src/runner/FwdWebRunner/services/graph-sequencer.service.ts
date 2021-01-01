@@ -27,7 +27,8 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   public getNodeStates(): NodeState[] {
     return super.snapshot.nodes.map(n => {
       switch (n.kind) {
-        case 'Init': return n;
+        case 'Init':
+          return n;
         case 'MidiClip':
           return this._midiClipNodeServices.get(n.id).snapshot;
       }
@@ -63,16 +64,22 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
 
   public getMidiClipNodeService(id: string, initialState: MidiClipNodeState): MidiClipNodeService {
     if (! Boolean(this._midiClipNodeServices.get(id))) {
-      this._midiClipNodeServices.set(id, new MidiClipNodeService(initialState));
+      this._midiClipNodeServices.set(id, new MidiClipNodeService(initialState, this));
     }
-    
+
     return this._midiClipNodeServices.get(id);
+  }
+
+  public disconnectPin(id: string): Observable<GraphSequencerState> {
+    const updatedConnections = this.snapshot.connections
+      .filter(c => c.targetPinId !== id  && c.sourcePinId !== id);
+    return this.update('connections', updatedConnections);
   }
 }
 
 function areConnectionsEqual(first: ConnectionState, second: ConnectionState): boolean {
   return first.targetNode === second.targetNode
     && first.sourceNode === second.sourceNode
-    && first.sourcePinIndex === second.sourcePinIndex
-    && first.targetPinIndex === second.sourcePinIndex
+    && first.sourcePinId === second.sourcePinId
+    && first.targetPinId === second.sourcePinId
 }

@@ -20,6 +20,7 @@ export interface MidiNoteState extends Note {
 }
 
 export interface MidiFlagState {
+  id: string;
   time: number;
   name: string;
   color: string;
@@ -39,9 +40,9 @@ export type NodeState = MidiClipNodeState | InitNodeState;
 
 export interface ConnectionState {
   sourceNode: string;
-  sourcePinIndex: number;
+  sourcePinId: string;
   targetNode: string;
-  targetPinIndex: number;
+  targetPinId: string;
 }
 
 export interface GraphSequencerState {

@@ -41,27 +41,31 @@ export abstract class GraphNode extends Component {
     }
   }
 
-  public addInlet(): InletPin {
-    const pin = new InletPin(this, this.parentGraph);
+  public addInlet(id: string): InletPin {
+    const pin = new InletPin(this, this.parentGraph, id);
     this.addAndMakeVisible(pin);
     this.inlets.add(pin);
     this.adaptSizeToPins();
     return pin;
   }
 
-  public addOutlet(): OutletPin {
-    const pin = new OutletPin(this, this.parentGraph);
+  public addOutlet(id: string): OutletPin {
+    const pin = new OutletPin(this, this.parentGraph, id);
     this.addAndMakeVisible(pin);
     this.outlets.add(pin);
     this.adaptSizeToPins();
     return pin;
   }
 
-  public clearPins(): void {
-    this.inlets.array.forEach(pin => this.removeChild(pin));
-    this.inlets.clear();
+  public clearOutlets(): void {
     this.outlets.array.forEach(pin => this.removeChild(pin));
     this.outlets.clear();
+    this.adaptSizeToPins();
+  }
+
+  public clearInlets(): void {
+    this.inlets.array.forEach(pin => this.removeChild(pin));
+    this.inlets.clear();
     this.adaptSizeToPins();
   }
 
@@ -153,7 +157,7 @@ export class InitNode extends GraphNode {
   constructor(parentGraph: GraphRoot) {
     super(parentGraph);
 
-    this.addOutlet();
+    this.addOutlet('0');
     this.label = 'init';
   }
 }

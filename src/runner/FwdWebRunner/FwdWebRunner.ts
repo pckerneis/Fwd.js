@@ -90,8 +90,8 @@ export default class FwdWebRunner implements FwdRunner {
         {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
-        {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
-        {kind: 'outlet', time: 4, color: 'grey', name: 'out'},
+        {id: '1', kind: 'inlet', time: 0, color: 'grey', name: 'in'},
+        {id: '2', kind: 'outlet', time: 4, color: 'grey', name: 'out'},
       ],
       label: 'node1',
       bounds: {x: 210, y: 4, width: 120, height: 20},
@@ -108,8 +108,8 @@ export default class FwdWebRunner implements FwdRunner {
         {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
-        {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
-        {kind: 'outlet', time: 4, color: 'grey', name: 'out'},
+        {id: '3', kind: 'inlet', time: 0, color: 'grey', name: 'in'},
+        {id: '4', kind: 'outlet', time: 4, color: 'grey', name: 'out'},
       ],
       label: 'node2',
       bounds: {x: 210, y: 50, width: 120, height: 20},
@@ -117,23 +117,23 @@ export default class FwdWebRunner implements FwdRunner {
 
     commandManager.perform(addConnection({
       sourceNode: '1',
-      sourcePinIndex: 0,
+      sourcePinId: '0',
       targetNode: '2',
-      targetPinIndex: 0,
+      targetPinId: '1',
     }));
 
     commandManager.perform(addConnection({
       sourceNode: '2',
-      sourcePinIndex: 0,
+      sourcePinId: '2',
       targetNode: '3',
-      targetPinIndex: 0,
+      targetPinId: '3',
     }));
 
     commandManager.perform(addConnection({
       sourceNode: '3',
-      sourcePinIndex: 0,
+      sourcePinId: '4',
       targetNode: '2',
-      targetPinIndex: 0,
+      targetPinId: '1',
     }));
   }
 

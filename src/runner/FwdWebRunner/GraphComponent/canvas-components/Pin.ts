@@ -5,7 +5,8 @@ import { GraphRoot } from './GraphRoot';
 export abstract class Pin extends Component {
 
   constructor(public readonly parentNode: GraphNode,
-              public readonly parentGraph: GraphRoot) {
+              public readonly parentGraph: GraphRoot,
+              public readonly id: string) {
     super();
   }
 

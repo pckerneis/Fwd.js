@@ -51,6 +51,32 @@ export class PropertyPanel implements EditorElement {
     return btn;
   }
 
+
+  public addSelect(options: string[], defaultValue: string, changeHandler: (value: string) => void): HTMLSelectElement {
+    const e = this.createSelect(options, defaultValue, changeHandler);
+    this.htmlElement.append(e);
+    return e;
+  }
+
+  public createSelect(options: string[], defaultValue: string, changeHandler: (value: string) => void): HTMLSelectElement {
+    const select = document.createElement('select');
+
+    options.forEach((value) => {
+      const elem = document.createElement('option');
+      elem.value = value;
+      elem.innerText = value;
+      select.append(elem);
+    });
+
+    select.value = defaultValue;
+
+    select.oninput = () => {
+      changeHandler(options[select.selectedIndex]);
+    };
+
+    return select;
+  }
+
   public createNumberInput(defaultValue: number, min?: number, max?: number): HTMLInputElement {
     const e = document.createElement('input');
     e.type = 'number';
@@ -74,7 +100,11 @@ injectStyle('PropertyPanel', `
   font-size: 12px;
 }
 
-.fwd-property-panel input {
+.fwd-property-panel>input {
+  width: 100%;
+}
+
+.fwd-property-panel>select {
   width: 100%;
 }
 

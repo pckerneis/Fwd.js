@@ -1,7 +1,6 @@
-import { filter } from 'rxjs/operators';
 import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import FwdWebRunner from '../../FwdWebRunner';
-import { MidiClipNodeService } from '../../services/midi-clip-node.service';
+import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
 import { MidiFlagState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
@@ -10,14 +9,25 @@ export class MidiClipNode extends GraphNode {
   protected readonly defaultHeight: number = 30;
   private labelHeight: number = 18;
 
-  private _flags: MidiFlagState[] = [];
+  private _flags: MidiFlagState[] = []; // Cached state
 
   constructor(parentGraph: GraphRoot,
               public readonly midiClipNodeService: MidiClipNodeService) {
     super(parentGraph);
+  }
+
+  public attachObservers(): void {
+    this.midiClipNodeService.inlets$
+      .subscribe((inlets) => {
+        this.updateInlets(inlets);
+      });
+
+    this.midiClipNodeService.outlets$
+      .subscribe((inlets) => {
+        this.updateOutlets(inlets);
+      });
 
     this.midiClipNodeService.flags$
-      .pipe(filter(() => this.hasParentComponent()))
       .subscribe((flags) => {
         this.updateFlags(flags);
       });
@@ -28,22 +38,7 @@ export class MidiClipNode extends GraphNode {
   }
 
   public updateFlags(updatedFlags: MidiFlagState[]): void {
-    if (this._flags.length != updatedFlags.length) {
-      this.clearPins();
-
-      updatedFlags.forEach(f => {
-        switch (f.kind) {
-          case 'inlet':
-            this.addInlet();
-            break;
-          case 'outlet':
-            this.addOutlet();
-            break;
-        }
-      });
-    }
-
-    this._flags = updatedFlags;
+    this._flags = [...updatedFlags];
     this.repaint();
   }
 
@@ -128,5 +123,19 @@ export class MidiClipNode extends GraphNode {
 
     this.resized();
     this.refreshParent();
+  }
+
+  private updateInlets(inlets: MidiInlet[]): void {
+    this.clearInlets();
+    inlets.forEach(inlet => {
+      this.addInlet(inlet.id);
+    });
+  }
+
+  private updateOutlets(outlets: MidiOutlet[]): void {
+    this.clearOutlets();
+    outlets.forEach(outlet => {
+      this.addOutlet(outlet.id);
+    });
   }
 }
