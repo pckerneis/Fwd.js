@@ -1,6 +1,8 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { ComponentBounds } from '../canvas/BaseComponent';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
+import { commandManager } from '../commands/command-manager';
+import { addConnection } from '../commands/graph-sequencer.commands';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
@@ -11,6 +13,7 @@ import { InletPin, OutletPin } from './canvas-components/Pin';
 
 export class GraphElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
+
   private readonly _rootHolder: RootComponentHolder<GraphRoot>;
   private readonly _graphRoot: GraphRoot;
 
@@ -44,6 +47,10 @@ export class GraphElement implements EditorElement {
       this._graphRoot.setConnections([]);
       newConnections.forEach(c => this.addConnection(c));
     });
+
+    this._graphRoot.connectionAdded$.subscribe((connection) => {
+      commandManager.perform(addConnection(connection));
+    });
   }
 
   public get nodes(): readonly GraphNode[] {
@@ -75,7 +82,7 @@ export class GraphElement implements EditorElement {
   }
 
   private addConnection(connection: ConnectionState): void {
-    const { source, target } = this.findPins(connection);
+    const {source, target} = this.findPins(connection);
 
     if (source != null && target != null) {
       this._graphRoot.addConnection(source, target);
@@ -83,7 +90,7 @@ export class GraphElement implements EditorElement {
   }
 
   private removeConnection(connection: ConnectionState): void {
-    const { source, target } = this.findPins(connection);
+    const {source, target} = this.findPins(connection);
 
     if (source != null && target != null) {
       this._graphRoot.removeConnection(source, target);

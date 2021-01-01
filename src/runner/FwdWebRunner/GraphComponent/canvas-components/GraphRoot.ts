@@ -1,8 +1,10 @@
+import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
+import { ConnectionState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
-import { Pin } from './Pin';
+import { OutletPin, Pin } from './Pin';
 import { ViewportArea } from './ViewportArea';
 
 interface TemporaryConnection {
@@ -16,6 +18,9 @@ class Connection {
 }
 
 export class GraphRoot extends Component {
+  public readonly connectionAdded$: Observable<ConnectionState>;
+  private readonly _connectionAddedSubject$: Subject<ConnectionState>;
+
   private readonly _viewportArea: ViewportArea;
 
   private _temporaryConnection: TemporaryConnection = null;
@@ -28,6 +33,9 @@ export class GraphRoot extends Component {
 
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
+
+    this._connectionAddedSubject$ = new Subject<ConnectionState>();
+    this.connectionAdded$ = this._connectionAddedSubject$.asObservable();
   }
 
   public get temporaryConnection(): TemporaryConnection {
@@ -66,7 +74,7 @@ export class GraphRoot extends Component {
       const suitablePin = this.findSuitablePinNearby(event.position, this._temporaryConnection.sourcePin);
 
       if (suitablePin != null) {
-        this.addConnection(this._temporaryConnection.sourcePin, suitablePin);
+        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin);
       }
 
       this._temporaryConnection = null;
@@ -192,5 +200,23 @@ export class GraphRoot extends Component {
 
   private findConnection(first: Pin, second: Pin): Connection {
     return this._connections.array.find(c => c.first === first.id && c.second === second.id);
+  }
+
+  private connectionAdded(first: Pin, second: Pin): void {
+    if (first instanceof OutletPin) {
+      this._connectionAddedSubject$.next({
+        sourceNode: first.parentNode.id,
+        sourcePinId: first.id,
+        targetNode: second.parentNode.id,
+        targetPinId: second.id,
+      });
+    } else {
+      this._connectionAddedSubject$.next({
+        targetNode: first.parentNode.id,
+        targetPinId: first.id,
+        sourceNode: second.parentNode.id,
+        sourcePinId: second.id,
+      });
+    }
   }
 }

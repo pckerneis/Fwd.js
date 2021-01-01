@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, pluck, switchMap, take } from 'rxjs/operators';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
-import { MidiClipNodeState, MidiFlagState, MidiNoteState } from '../state/project.state';
+import { FlagKind, MidiClipNodeState, MidiFlagState, MidiNoteState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
 import { StoreBasedService } from './store-based.service';
 
@@ -63,8 +63,8 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
       .map(f => ({time: f.time, name: f.name, id: f.id}))));
   }
 
-  private static checkFlagKind(kind: string): kind is 'inlet' | 'outlet' {
-    const knownFlags = ['none', 'inlet', 'outlet'];
+  private static checkFlagKind(kind: string): kind is FlagKind {
+    const knownFlags = ['none', 'inlet', 'outlet', 'jump'];
 
     if (! knownFlags.includes(kind)) {
       throw new Error('Unknown flag kind ' + kind);
@@ -134,6 +134,11 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
       const updatedFlags = this.updateOneFlag(id, 'kind', kind);
       return this.update('flags', updatedFlags);
     }
+  }
+
+  public setFlagJumpDestination(id: string, destination: string): any {
+    const updatedFlags = this.updateOneFlag(id, 'jumpDestination', destination);
+    return this.update('flags', updatedFlags);
   }
 
   public setNotes(notes: MidiNoteState[]): Observable<MidiClipNodeState> {

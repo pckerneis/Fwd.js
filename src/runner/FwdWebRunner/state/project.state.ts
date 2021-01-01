@@ -19,7 +19,7 @@ export interface MidiNoteState extends Note {
   velocity: number;
 }
 
-export type FlagKind = 'inlet' | 'outlet' | 'none';
+export type FlagKind = 'inlet' | 'outlet' | 'none' | 'jump';
 
 export interface MidiFlagState {
   id: string;
@@ -27,6 +27,7 @@ export interface MidiFlagState {
   name: string;
   color: string;
   kind: FlagKind;
+  jumpDestination?: string;
 }
 
 export interface MidiClipNodeState extends BaseNodeState {

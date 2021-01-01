@@ -146,8 +146,12 @@ class SettingsPanel implements EditorElement {
       timeField.onchange = () => this.service.setFlagTime(flag.id, timeField.valueAsNumber).subscribe();
 
       markerPanel.addLabel('Action');
-      markerPanel.addSelect(['none', 'inlet', 'outlet'], flag.kind,
+      markerPanel.addSelect(['none', 'inlet', 'outlet', 'jump'], flag.kind,
         (v) => this.service.setFlagKind(flag.id, v).subscribe());
+
+      const jumpLabel = markerPanel.addLabel('Destination');
+      let jumpSelect = markerPanel.addSelect([''], '',
+        (v) => this.service.setFlagJumpDestination(flag.id, v).subscribe());
 
       this.service.flags$.subscribe(
         (flags: MidiFlagState[]) => {
@@ -157,6 +161,14 @@ class SettingsPanel implements EditorElement {
             nameField.value = newFlatState.name;
             timeField.valueAsNumber = newFlatState.time;
             titleElem.innerText = newFlatState.name;
+
+            const newJumpSelect = markerPanel.createSelect(flags.map(f => f.id), newFlatState.jumpDestination,
+              (v) => this.service.setFlagJumpDestination(flag.id, v).subscribe());
+            jumpSelect.replaceWith(newJumpSelect);
+            jumpSelect = newJumpSelect;
+
+            jumpLabel.style.display = newFlatState.kind === 'jump' ? 'inline' : 'none';
+            jumpSelect.style.display = newFlatState.kind === 'jump' ? 'inline' : 'none';
           }
         });
     });

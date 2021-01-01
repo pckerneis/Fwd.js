@@ -1,6 +1,6 @@
 import { getMidiOutputNames, getOutputByName } from '../../../fwd/midi/FwdMidi';
 import { FwdScheduler } from '../../../fwd/scheduler/FwdScheduler';
-import { ConnectionState, MidiClipNodeState, NodeState } from '../state/project.state';
+import { ConnectionState, MidiClipNodeState, MidiFlagState, NodeState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
 
 export class PlaybackService {
@@ -19,45 +19,74 @@ export class PlaybackService {
     const initNodes = this.nodes.filter(n => n.kind === 'Init');
 
     initNodes.forEach(initNode => {
-      this.fireNextNodes(scheduler, initNode, 0);
+      this.fireNextNodes(scheduler, initNode, '0', 0); // TODO: remove this magic '0'...
     });
   }
 
   private fireNextNodes(scheduler: FwdScheduler,
                         startNode: NodeState,
+                        startPin: string,
                         when: number): void {
-    const connectedClips = this.connections.map((connection) => {
-      if (connection.sourceNode === startNode.id) {
-        return connection.targetNode;
-      } else {
-        return undefined;
-      }
-    })
-      .filter(n => Boolean(n))
-      .map(id => this.nodes.find(n => n.id === id));
+    const connectedClips = this.connections
+      .map((connection) => {
+        if (connection.sourceNode === startNode.id && connection.sourcePinId === startPin) {
+          const targetNode = this.nodes.find(n => n.id === connection.targetNode);
+          return {targetNode, targetPin: connection.targetPinId};
+        } else {
+          return undefined;
+        }
+      })
+      .filter(n => Boolean(n));
 
     scheduler.scheduleAhead(when, () => {
-      connectedClips.forEach(clip => {
-        if (clip.kind === 'MidiClip') {
-          this.fireMidiClip(scheduler, clip);
+      connectedClips.forEach(clipNodeAndPin => {
+        if (clipNodeAndPin.targetNode.kind === 'MidiClip') {
+          this.fireMidiClip(scheduler, clipNodeAndPin.targetNode, clipNodeAndPin.targetPin);
         }
       });
     });
   }
 
-  private fireMidiClip(scheduler: FwdScheduler, clip: MidiClipNodeState): void {
-    const startTime = clip.flags.find(c => c.kind === 'inlet')?.time || 0;
-    const endTime = clip.flags.find(c => c.kind === 'outlet')?.time || 0;
-    const notesToPlay = clip.notes
-      .map((note) => ({...note, time: note.time - startTime}))
-      .filter(n => n.time >= 0)
-      .filter(n => n.time < endTime);
+  private fireMidiClip(scheduler: FwdScheduler, clip: MidiClipNodeState, inletPin: string): void {
+    const startTime = clip.flags.find(c => c.id === inletPin)?.time || 0;
+    this.playMidiClipSlice(scheduler, clip, startTime);
+  }
+
+
+  private playMidiClipSlice(scheduler: FwdScheduler, clip: MidiClipNodeState, startTime: number): void {
+    console.log('play slice');
+    // Get fresh reference...
+    clip = this.nodes.find(c => c.kind === 'MidiClip' && c.id === clip.id) as MidiClipNodeState;
+
+    const sliceDuration = 0.1;
+
+    const flagsSlice = clip.flags
+      .map(f => ({...f, time: f.time - startTime}))
+      .filter(f => f.time > 0 && f.time < sliceDuration);
+
+    let foundJump: MidiFlagState = null;
+    let flagIdx = 0;
+
+    while (flagIdx < flagsSlice.length) {
+      const flag = flagsSlice[flagIdx];
+      if (flag.kind === 'outlet' || flag.kind === 'jump') {
+        foundJump = flag;
+        break;
+      }
+
+      flagIdx++;
+    }
+
+    const endOfNoteSlice = foundJump?.time || sliceDuration;
+
+    const notesSlice = clip.notes
+      .map(note => ({...note, time: note.time - startTime}))
+      .filter(n => n.time >= 0 && n.time < endOfNoteSlice);
 
     const output = getOutputByName(getMidiOutputNames()[1]);
 
-    notesToPlay.forEach((note) => {
+    notesSlice.forEach((note) => {
       scheduler.scheduleAhead(note.time, () => {
-        console.log(note);
         output.playNote(note.pitch, 1, {
           velocity: note.velocity,
           duration: note.duration * 1000,
@@ -65,6 +94,23 @@ export class PlaybackService {
       });
     });
 
-    this.fireNextNodes(scheduler, clip, endTime - startTime);
+    if (foundJump != null) {
+      switch (foundJump.kind) {
+        case 'outlet':
+          this.fireNextNodes(scheduler, clip, foundJump.id, endOfNoteSlice);
+          break;
+        case 'jump':
+          scheduler.scheduleAhead(endOfNoteSlice, () => {
+            if (foundJump.jumpDestination != null) {
+              this.fireMidiClip(scheduler, clip, foundJump.jumpDestination);
+            }
+          });
+          break;
+      }
+    } else {
+      scheduler.scheduleAhead(endOfNoteSlice, () => {
+        this.playMidiClipSlice(scheduler, clip, startTime + endOfNoteSlice);
+      });
+    }
   }
 }

@@ -14,7 +14,7 @@ export class PanelManager {
   private _graphEditor: GraphElement;
   private _contextualTabbedPanel: TabbedPanel;
 
-  private readonly noteSequencerPanels: Map<MidiClipNode, MidiClipPanel>;
+  private readonly noteSequencerPanels: Map<string, MidiClipPanel>;
 
   constructor() {
     this.noteSequencerPanels = new Map();
@@ -25,7 +25,7 @@ export class PanelManager {
   }
 
   public showMidiEditor(node: MidiClipNode): void {
-    if (this.noteSequencerPanels.get(node)) {
+    if (this.noteSequencerPanels.get(node.id)) {
       this._contextualTabbedPanel.setCurrentTab(node.id);
     } else {
       const panel = new MidiClipPanel(node.midiClipNodeService);
@@ -37,7 +37,7 @@ export class PanelManager {
       });
 
       this._contextualTabbedPanel.setCurrentTab(node.id);
-      this.noteSequencerPanels.set(node, panel);
+      this.noteSequencerPanels.set(node.id, panel);
 
       node.midiClipNodeService.label$.subscribe((newLabel) => {
         this._contextualTabbedPanel.renameTab(node.id, newLabel);
