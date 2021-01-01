@@ -109,6 +109,7 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
       throw new Error('Cannot find flag with id ' + id);
     }
 
+    this.graphSequencerService.disconnectPin(id).subscribe();
     return this.update('flags', this.snapshot.flags.filter(f => f.id !== id));
   }
 
