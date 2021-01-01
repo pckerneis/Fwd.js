@@ -19,12 +19,14 @@ export interface MidiNoteState extends Note {
   velocity: number;
 }
 
+export type FlagKind = 'inlet' | 'outlet' | 'none';
+
 export interface MidiFlagState {
   id: string;
   time: number;
   name: string;
   color: string;
-  kind: 'inlet' | 'outlet';
+  kind: FlagKind;
 }
 
 export interface MidiClipNodeState extends BaseNodeState {

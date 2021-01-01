@@ -64,7 +64,7 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
   }
 
   private static checkFlagKind(kind: string): kind is 'inlet' | 'outlet' {
-    const knownFlags = ['inlet', 'outlet'];
+    const knownFlags = ['none', 'inlet', 'outlet'];
 
     if (! knownFlags.includes(kind)) {
       throw new Error('Unknown flag kind ' + kind);

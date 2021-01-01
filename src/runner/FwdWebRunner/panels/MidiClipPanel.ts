@@ -9,7 +9,7 @@ import { injectStyle } from '../StyleInjector';
 import { PropertyPanel } from './PropertyPanel';
 
 // TODO this can lead to duplicate ids...
-let latestAdded = 0;
+let latestAdded = 100;
 
 class SettingsPanel implements EditorElement {
   public readonly htmlElement: HTMLElement;
@@ -106,7 +106,7 @@ class SettingsPanel implements EditorElement {
     addMarkerButton.onclick = () => {
       this.service.addFlag({
         id: (latestAdded++).toString(),
-        kind: 'inlet',
+        kind: 'none',
         name: 'flag',
         time: 0,
         color: 'grey',
@@ -146,7 +146,7 @@ class SettingsPanel implements EditorElement {
       timeField.onchange = () => this.service.setFlagTime(flag.id, timeField.valueAsNumber).subscribe();
 
       markerPanel.addLabel('Action');
-      markerPanel.addSelect(['inlet', 'outlet'], flag.kind,
+      markerPanel.addSelect(['none', 'inlet', 'outlet'], flag.kind,
         (v) => this.service.setFlagKind(flag.id, v).subscribe());
 
       this.service.flags$.subscribe(

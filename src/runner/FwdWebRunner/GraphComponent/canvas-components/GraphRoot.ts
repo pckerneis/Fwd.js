@@ -11,7 +11,7 @@ interface TemporaryConnection {
 }
 
 class Connection {
-  constructor(public readonly first: Pin, public readonly second: Pin) {
+  constructor(public readonly first: string, public readonly second: string) {
   }
 }
 
@@ -93,8 +93,8 @@ export class GraphRoot extends Component {
 
   public arePinsConnected(first: Pin, second: Pin): Boolean {
     for (let connection of this._connections.array) {
-      if ((connection.first === first && connection.second === second)
-        || (connection.second === first && connection.first === second)) {
+      if ((connection.first === first.id && connection.second === second.id)
+        || (connection.second === first.id && connection.first === second.id)) {
         return true;
       }
     }
@@ -104,7 +104,7 @@ export class GraphRoot extends Component {
 
   public addConnection(first: Pin, second: Pin): void {
     if (! this.arePinsConnected(first, second)) {
-      this._connections.add(new Connection(first, second));
+      this._connections.add(new Connection(first.id, second.id));
       this.repaint();
     }
   }
@@ -120,11 +120,31 @@ export class GraphRoot extends Component {
   }
 
   public disconnect(node: GraphNode): void {
-    this._connections.reset(this.connections.array.filter(
-      c => c.first.parentNode === node
-        || c.second.parentNode === node));
+    const isConnectionAffected = (c: Connection) => node.inlets.array.map(p => p.id).includes(c.first)
+      || node.outlets.array.map(p => p.id).includes(c.first)
+      || node.inlets.array.map(p => p.id).includes(c.second)
+      || node.outlets.array.map(p => p.id).includes(c.second);
+
+    this._connections.reset(this.connections.array.filter(c => ! isConnectionAffected(c)));
 
     this.repaint();
+  }
+
+  public findPin(id: string): Pin {
+    for (let node of this.nodes.array) {
+      for (let pin of node.inlets.array) {
+        if (pin.id === id) {
+          return pin;
+        }
+      }
+      for (let pin of node.outlets.array) {
+        if (pin.id === id) {
+          return pin;
+        }
+      }
+    }
+
+    return null;
   }
 
   public clearAll(): void {
@@ -171,6 +191,6 @@ export class GraphRoot extends Component {
   }
 
   private findConnection(first: Pin, second: Pin): Connection {
-    return this._connections.array.find(c => c.first === first && c.second === second);
+    return this._connections.array.find(c => c.first === first.id && c.second === second.id);
   }
 }

@@ -1,3 +1,4 @@
+import { distinctUntilChanged } from 'rxjs/operators';
 import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import FwdWebRunner from '../../FwdWebRunner';
 import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
@@ -18,11 +19,13 @@ export class MidiClipNode extends GraphNode {
 
   public attachObservers(): void {
     this.midiClipNodeService.inlets$
+      .pipe(distinctUntilChanged((a, b) => a.length === b.length))
       .subscribe((inlets) => {
         this.updateInlets(inlets);
       });
 
     this.midiClipNodeService.outlets$
+      .pipe(distinctUntilChanged((a, b) => a.length === b.length))
       .subscribe((inlets) => {
         this.updateOutlets(inlets);
       });

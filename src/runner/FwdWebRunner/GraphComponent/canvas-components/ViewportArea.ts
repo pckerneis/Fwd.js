@@ -21,9 +21,14 @@ export class ViewportArea extends Component {
     }
 
     this.graphRoot.connections.array.forEach(connection => {
-      const startPos = connection.first.getBoundsInGraph().center;
-      const endPos = connection.second.getBoundsInGraph().center;
-      drawConnection(g, startPos, endPos);
+      const firstPin = this.graphRoot.findPin(connection.first);
+      const secondPin = this.graphRoot.findPin(connection.second);
+
+      if (firstPin != null && secondPin != null) {
+        const startPos = firstPin.getBoundsInGraph().center;
+        const endPos = secondPin.getBoundsInGraph().center;
+        drawConnection(g, startPos, endPos);
+      }
     });
   }
 
