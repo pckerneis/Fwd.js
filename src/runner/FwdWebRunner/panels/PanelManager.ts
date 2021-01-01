@@ -4,7 +4,7 @@ import { Logger } from '../../../fwd/utils/Logger';
 import parentLogger from '../../logger.runner';
 import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { GraphElement } from '../GraphComponent/graph-element';
-import { ProjectModel } from '../state/project.model';
+import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { MidiClipPanel } from './MidiClipPanel';
 import { StructurePanel } from './StructurePanel';
 
@@ -28,7 +28,7 @@ export class PanelManager {
     if (this.noteSequencerPanels.get(node)) {
       this._contextualTabbedPanel.setCurrentTab(node.id);
     } else {
-      const panel = new MidiClipPanel(node);
+      const panel = new MidiClipPanel(node.midiClipNodeService);
       this._contextualTabbedPanel.addTab({
         id: node.id,
         tabName: node.label,
@@ -39,14 +39,13 @@ export class PanelManager {
       this._contextualTabbedPanel.setCurrentTab(node.id);
       this.noteSequencerPanels.set(node, panel);
 
-      node.observeLabel((newLabel) => {
-        console.log(newLabel);
+      node.midiClipNodeService.label$.subscribe((newLabel) => {
         this._contextualTabbedPanel.renameTab(node.id, newLabel);
       });
     }
   }
 
-  public buildMainSection(projectModel: ProjectModel): void {
+  public buildMainSection(graphSequencerService: GraphSequencerService): void {
     const parentFlexPanel = new FlexPanel();
     parentFlexPanel.htmlElement.style.justifyContent = 'flex-end';
     const container = document.getElementById('fwd-runner-container');
@@ -87,7 +86,7 @@ export class PanelManager {
       maxWidth: 5000,
     });
 
-    const graphEditor = new GraphElement(projectModel);
+    const graphEditor = new GraphElement(graphSequencerService);
     graphEditor.htmlElement.style.flexGrow = '1';
     this._graphEditor = graphEditor;
 

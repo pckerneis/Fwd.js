@@ -99,4 +99,4 @@ class CommandManager {
 }
 
 export const commandManager = new CommandManager();
-// window['commandManager'] = commandManager;
+window['commandManager'] = commandManager;

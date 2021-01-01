@@ -1,4 +1,4 @@
-import { ProjectModel } from '../state/project.model';
+import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState } from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
 
@@ -15,11 +15,11 @@ export const createAndAddInitNode: CommandFactory<InitNodeState> = (state: InitN
   };
 };
 
-function createAndAddInitNodePerformer(model: ProjectModel): CommandPerformer<InitNodeState> {
+function createAndAddInitNodePerformer(service: GraphSequencerService): CommandPerformer<InitNodeState> {
   return {
     canPerform: command => command.id === CommandIds.createAndAddInitNode,
-    perform: command => model.addInitNode(command.payload),
-    undo: command => model.removeNodeById(command.payload.id),
+    perform: command => service.addInitNode(command.payload).subscribe(),
+    undo: command => service.removeNodeById(command.payload.id).subscribe(),
   };
 }
 
@@ -30,11 +30,11 @@ export const createAndAddMidiClipNode: CommandFactory<MidiClipNodeState> = (stat
   };
 };
 
-function createAndAddMidiClipNodePerformer(model: ProjectModel): CommandPerformer<MidiClipNodeState> {
+function createAndAddMidiClipNodePerformer(service: GraphSequencerService): CommandPerformer<MidiClipNodeState> {
   return {
     canPerform: command => command.id === CommandIds.createAndAddMidiClipNode,
-    perform: command => model.addMidiClipNode(command.payload),
-    undo: command => model.removeNodeById(command.payload.id),
+    perform: command => service.addMidiClipNode(command.payload).subscribe(),
+    undo: command => service.removeNodeById(command.payload.id).subscribe(),
   };
 }
 
@@ -45,16 +45,16 @@ export const addConnection: CommandFactory<ConnectionState> = (state) => {
   };
 };
 
-function addConnectionPerformer(model: ProjectModel): CommandPerformer<ConnectionState> {
+function addConnectionPerformer(service: GraphSequencerService): CommandPerformer<ConnectionState> {
   return {
     canPerform: command => command.id === CommandIds.addConnection,
-    perform: command => model.addConnection(command.payload),
-    undo: command => model.removeConnection(command.payload),
+    perform: command => service.addConnection(command.payload).subscribe(),
+    undo: command => service.removeConnection(command.payload).subscribe(),
   };
 }
 
-export function registerGraphSequencerCommands(model: ProjectModel): void {
-  commandManager.addPerformer(createAndAddInitNodePerformer(model));
-  commandManager.addPerformer(createAndAddMidiClipNodePerformer(model));
-  commandManager.addPerformer(addConnectionPerformer(model));
+export function registerGraphSequencerCommands(service: GraphSequencerService): void {
+  commandManager.addPerformer(createAndAddInitNodePerformer(service));
+  commandManager.addPerformer(createAndAddMidiClipNodePerformer(service));
+  commandManager.addPerformer(addConnectionPerformer(service));
 }

@@ -84,6 +84,7 @@ export class GraphRoot extends Component {
     const node = this._nodes.array.find(n => n.id === id);
 
     if (node != null) {
+      this.disconnect(node);
       this._nodes.remove(node);
       this._viewportArea.removeChild(node);
       this.resized();
@@ -108,8 +109,28 @@ export class GraphRoot extends Component {
     }
   }
 
+  public setConnections(newConnections: Connection[]): void {
+    this._connections.reset(newConnections);
+    this.repaint();
+  }
+
   public removeConnection(first: Pin, second: Pin): void {
     this._connections.remove(this.findConnection(first, second));
+    this.repaint();
+  }
+
+  public disconnect(node: GraphNode): void {
+    this._connections.reset(this.connections.array.filter(
+      c => c.first.parentNode === node
+        || c.second.parentNode === node));
+
+    this.repaint();
+  }
+
+  public clearAll(): void {
+    this._connections.clear();
+    this._nodes.array.forEach(n => this._viewportArea.removeChild(n));
+    this._nodes.clear();
     this.repaint();
   }
 

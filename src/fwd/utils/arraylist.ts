@@ -47,4 +47,8 @@ export class ArrayList<T> {
   public get(idx: number): T | undefined {
     return this._array[idx];
   }
+
+  public reset(newArray: T[]): void {
+    this._array = [...newArray];
+  }
 }

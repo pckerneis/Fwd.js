@@ -1,9 +1,8 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { ComponentBounds } from '../canvas/BaseComponent';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
-import { ObservableState } from '../state/observable-state';
-import { ProjectModel } from '../state/project.model';
-import { ConnectionState, MidiClipNodeState, NodeState } from '../state/project.state';
+import { GraphSequencerService } from '../services/graph-sequencer.service';
+import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { GraphNode, InitNode } from './canvas-components/GraphNode';
 import { GraphRoot } from './canvas-components/GraphRoot';
@@ -14,7 +13,7 @@ export class GraphElement implements EditorElement {
   private readonly _rootHolder: RootComponentHolder<GraphRoot>;
   private readonly _graphRoot: GraphRoot;
 
-  constructor(projectModel: ProjectModel) {
+  constructor(public readonly graphSequencerService: GraphSequencerService) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add(CONTAINER_CLASS)
 
@@ -25,28 +24,24 @@ export class GraphElement implements EditorElement {
     this._rootHolder.attachResizeObserver(this.htmlElement);
     this._rootHolder.attachMouseEventListeners();
 
-    projectModel.nodes.observeAdd((nodeState: ObservableState<NodeState>) => {
-      switch (nodeState.get().kind) {
-        case 'MidiClip':
-          this.addMidiClipNode(nodeState);
-          break;
-        case 'Init':
-          this.addInitNode(nodeState);
-          break;
-      }
+    graphSequencerService.nodes$.subscribe((newNodes: NodeState[]) => {
+      this._graphRoot.clearAll();
+
+      newNodes.forEach(n => {
+        switch (n.kind) {
+          case 'MidiClip':
+            this.addMidiClipNode(n);
+            break;
+          case 'Init':
+            this.addInitNode(n);
+            break;
+        }
+      });
     });
 
-    projectModel.nodes.observeRemove((nodeState: NodeState) => {
-      this._graphRoot.removeNode(nodeState.id);
-      console.log(this._graphRoot.nodes.array);
-    });
-
-    projectModel.connections.observeAdd((connection: ObservableState<ConnectionState>) => {
-      this.addConnection(connection.get());
-    });
-
-    projectModel.connections.observeRemove((connection: ConnectionState) => {
-      this.removeConnection(connection);
+    graphSequencerService.connections$.subscribe((newConnections: ConnectionState[]) => {
+      this._graphRoot.setConnections([]);
+      newConnections.forEach(c => this.addConnection(c));
     });
   }
 
@@ -54,9 +49,8 @@ export class GraphElement implements EditorElement {
     return this._graphRoot.nodes.array;
   }
 
-  private addInitNode(nodeState: ObservableState<NodeState>): InitNode {
-    const n = new InitNode(this._graphRoot, nodeState);
-    const state = nodeState.get();
+  private addInitNode(state: InitNodeState): InitNode {
+    const n = new InitNode(this._graphRoot);
     n.id = state.id;
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
@@ -64,25 +58,15 @@ export class GraphElement implements EditorElement {
     return n;
   }
 
-  private addMidiClipNode(nodeState: ObservableState<NodeState>): MidiClipNode {
-    let state = nodeState.get() as MidiClipNodeState;
-    const n = new MidiClipNode(this._graphRoot, nodeState);
+  private addMidiClipNode(state: MidiClipNodeState): MidiClipNode {
+    const nodeService = this.graphSequencerService.getMidiClipNodeService(state.id, state);
+    const n = new MidiClipNode(this._graphRoot, nodeService);
     n.id = state.id;
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
     n.label = state.label;
+    n.updateFlags(state.flags);
 
-    state.flags.forEach((flag) => {
-      if (flag.kind === 'inlet') {
-        n.addInlet();
-      } else if (flag.kind === 'outlet') {
-        n.addOutlet();
-      }
-    });
-
-    n.signature = state.timeSignature;
-    n.duration = state.duration;
-    n.notes = state.notes;
     return n;
   }
 

@@ -2,14 +2,13 @@ import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
 import { defaultTheme } from '../../style.constants';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
-import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { FlagDirection, Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
+import { MidiClipNodeService } from '../services/midi-clip-node.service';
 import { MidiFlagState, MidiNoteState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { PropertyPanel } from './PropertyPanel';
 
 class SettingsPanel implements EditorElement {
-
   public readonly htmlElement: HTMLElement;
 
   private readonly clipPropertyPanel: PropertyPanel = new PropertyPanel();
@@ -27,20 +26,20 @@ class SettingsPanel implements EditorElement {
     this.buildMarkersSection();
   }
 
-  public get node(): MidiClipNode {
-    return this.midiClipPanel.node;
+  public get service(): MidiClipNodeService {
+    return this.midiClipPanel.service;
   }
 
   private buildNameField(): void {
     this.clipPropertyPanel.addLabel('Name');
-    const nameField = this.clipPropertyPanel.addTextInput(this.node.label);
-    nameField.onchange = () => this.node.label = nameField.value;
+    const nameField = this.clipPropertyPanel.addTextInput(this.service.snapshot.label);
+    nameField.onchange = () => this.service.setLabel(nameField.value).subscribe();
   }
 
   private buildDurationField(): void {
     this.clipPropertyPanel.addLabel('Duration');
-    const durationField = this.clipPropertyPanel.addNumberInput(this.node.duration, 0);
-    durationField.onchange = () => this.node.duration = durationField.valueAsNumber;
+    const durationField = this.clipPropertyPanel.addNumberInput(this.service.snapshot.duration, 0);
+    durationField.onchange = () => this.service.setDuration(durationField.valueAsNumber).subscribe();
   }
 
   private buildOutputField(): void {
@@ -62,12 +61,12 @@ class SettingsPanel implements EditorElement {
     span.textContent = '/';
 
     const upperOptions = new Array(99).fill(0).map((_, i) => i + 1).map(n => n.toString());
-    const upperField = this.createSelect(upperOptions, this.node.signature.upper.toString(),
-      (value) => this.node.setSignatureUpper(Number(value)));
+    const upperField = this.createSelect(upperOptions, this.service.snapshot.timeSignature.upper.toString(),
+      (value) => this.service.setSignatureUpper(Number(value)).subscribe());
 
     const lowerOptions = [1, 2, 4, 8, 16, 32].map(n => n.toString());
-    const lowerField = this.createSelect(lowerOptions, this.node.signature.lower.toString(),
-      (value) => this.node.setSignatureLower(Number(value)));
+    const lowerField = this.createSelect(lowerOptions, this.service.snapshot.timeSignature.lower.toString(),
+      (value) => this.service.setSignatureLower(Number(value)).subscribe());
 
     signature.append(upperField);
     signature.append(span);
@@ -82,13 +81,13 @@ class SettingsPanel implements EditorElement {
     const markersContainer = document.createElement('div');
     this.htmlElement.append(markersContainer);
 
-    let flags = this.node.state.flags;
-    let numFlags = this.node.state.flags.length;
+    let flags = this.service.snapshot.flags;
+    let numFlags = this.service.snapshot.flags.length;
 
     this.refreshMarkers(markersContainer, flags);
 
     // Refresh all markers if size changed
-    this.node.observeFlags(
+    this.service.flags$.subscribe(
       (newFlags) => {
         if (newFlags.length != numFlags) {
           numFlags = newFlags.length;
@@ -99,12 +98,12 @@ class SettingsPanel implements EditorElement {
     const addMarkerButton = document.createElement('div');
     addMarkerButton.textContent = '+ Add marker';
     addMarkerButton.onclick = () => {
-      this.node.addFlag({
+      this.service.addFlag({
         kind: 'inlet',
         name: 'flag',
         time: 0,
         color: 'grey',
-      });
+      }).subscribe();
     };
     this.htmlElement.append(addMarkerButton);
   }
@@ -126,37 +125,28 @@ class SettingsPanel implements EditorElement {
       const removeButton = document.createElement('div');
       removeButton.innerText = 'x';
       removeButton.style.padding = '0 4px';
-      removeButton.onclick = () => {
-        const updatedFlags = [...this.node.state.flags];
-        updatedFlags.splice(idx, 1);
-        this.node.updateFlags(updatedFlags);
-      };
+      removeButton.onclick = () => this.service.removeFlagAt(idx).subscribe();
 
       titleContainer.append(titleElem, removeButton);
       markerPanel.htmlElement.append(titleContainer);
 
       markerPanel.addLabel('Name');
       const nameField = markerPanel.addTextInput(flag.name);
-      nameField.onchange = () => {
-        const updatedFlags = [...this.node.state.flags];
-        updatedFlags[idx] = {...updatedFlags[idx], name: nameField.value};
-        this.node.updateFlags(updatedFlags);
-      };
+      nameField.onchange = () => this.service.renameFlagAt(idx, nameField.value).subscribe();
 
       markerPanel.addLabel('Time');
       const timeField = markerPanel.addNumberInput(flag.time, 0);
-      timeField.oninput = () => {
-        const updatedFlags = [...this.node.state.flags];
-        updatedFlags[idx] = {...updatedFlags[idx], time: timeField.valueAsNumber};
-        this.node.updateFlags(updatedFlags);
-      };
+      timeField.onchange = () => this.service.setFlagTime(idx, timeField.valueAsNumber).subscribe();
 
-      this.node.observeFlags(
+      this.service.flags$.subscribe(
         (flags: MidiFlagState[]) => {
           const flag = flags[idx];
-          nameField.value = flag.name;
-          timeField.valueAsNumber = flag.time;
-          titleElem.innerText = flag.name;
+
+          if (flag != null) {
+            nameField.value = flag.name;
+            timeField.valueAsNumber = flag.time;
+            titleElem.innerText = flag.name;
+          }
         });
     });
   }
@@ -208,7 +198,7 @@ export class MidiClipPanel implements EditorElement {
   public readonly clipSettings: SettingsPanel;
   public readonly clipEditor: NoteSequencerElement;
 
-  constructor(public readonly node: MidiClipNode) {
+  constructor(public readonly service: MidiClipNodeService) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add(CONTAINER_CLASS);
 
@@ -219,28 +209,20 @@ export class MidiClipPanel implements EditorElement {
     this.clipEditor.htmlElement.classList.add(CLIP_EDITOR_CLASS);
     this.htmlElement.append(this.clipEditor.htmlElement);
 
-    this.node.observeDuration((newDuration) => this.clipEditor.noteSequencer.duration = newDuration);
-    this.clipEditor.noteSequencer.duration = this.node.duration;
-
-    this.node.observeSignatureUpper((newSignUpper) => this.clipEditor.noteSequencer.signatureUpper = newSignUpper);
-    this.clipEditor.noteSequencer.signatureUpper = this.node.signature.upper;
-
-    this.node.observeSignatureLower((newSignLower) => this.clipEditor.noteSequencer.signatureLower = newSignLower);
-    this.clipEditor.noteSequencer.signatureLower = this.node.signature.lower;
-
-    this.refreshFlags(this.node.state.flags);
-    this.node.observeFlags((flags) => {
-      this.refreshFlags(flags);
+    service.duration$.subscribe((duration) => this.clipEditor.noteSequencer.duration = duration);
+    service.signature$.subscribe((signature) => {
+      console.log('signature changed', signature);
+      this.clipEditor.noteSequencer.signatureLower = signature.lower;
+      this.clipEditor.noteSequencer.signatureUpper = signature.upper;
     });
+    service.flags$.subscribe((flags) => this.refreshFlags(flags));
 
-    this.refreshNotes(this.node.state.notes);
-    this.node.observeNotes((notes) => {
-      this.refreshNotes(notes);
-    });
+    // Only load notes at startup
+    this.refreshNotes(service.snapshot.notes);
 
     this.clipEditor.noteSequencer.addListener({
       notesChanged: (notes: Note[]) => {
-        this.node.notes = notes;
+        this.service.setNotes(notes.map(n => ({...n}))).subscribe();
       },
     })
   }
@@ -256,14 +238,7 @@ export class MidiClipPanel implements EditorElement {
   }
 
   private refreshNotes(notes: MidiNoteState[]): void {
-    this.clipEditor.noteSequencer.notes = notes.map(n => ({
-      ...n,
-      selected: false,
-      tempDuration: undefined,
-      hidden: undefined,
-      initialStart: undefined,
-      initialVelocity: undefined,
-    }));
+    this.clipEditor.noteSequencer.notes = notes.map(n => ({...n}));
   }
 }
 

@@ -214,6 +214,10 @@ export abstract class Component {
     return this._parent;
   }
 
+  public hasParentComponent(): boolean {
+    return this._parent != null;
+  }
+
   public addAndMakeVisible(childComp: Component): void {
     if (childComp._parent != null) {
       throw new Error('A component cannot be added to multiple parents. ' +

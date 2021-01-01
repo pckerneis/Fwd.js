@@ -1,8 +1,8 @@
+import { filter } from 'rxjs/operators';
 import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import FwdWebRunner from '../../FwdWebRunner';
-import { TimeSignature } from '../../NoteSequencer/note-sequencer';
-import { ObservableState } from '../../state/observable-state';
-import { MidiClipNodeState, MidiFlagState, MidiNoteState, NodeState } from '../../state/project.state';
+import { MidiClipNodeService } from '../../services/midi-clip-node.service';
+import { MidiFlagState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
 
@@ -10,87 +10,41 @@ export class MidiClipNode extends GraphNode {
   protected readonly defaultHeight: number = 30;
   private labelHeight: number = 18;
 
-  constructor(parentGraph: GraphRoot, stateObserver: ObservableState<NodeState>) {
-    super(parentGraph, stateObserver);
-    this.observeFlags(() => this.repaint());
-  }
+  private _flags: MidiFlagState[] = [];
 
-  public get state(): MidiClipNodeState {
-    return this.stateObserver.get() as MidiClipNodeState;
-  }
+  constructor(parentGraph: GraphRoot,
+              public readonly midiClipNodeService: MidiClipNodeService) {
+    super(parentGraph);
 
-  public get stateObserver(): ObservableState<MidiClipNodeState> {
-    return super.stateObserver as ObservableState<MidiClipNodeState>;
-  }
+    this.midiClipNodeService.flags$
+      .pipe(filter(() => this.hasParentComponent()))
+      .subscribe((flags) => {
+        this.updateFlags(flags);
+      });
 
-  public set stateObserver(newObserver: ObservableState<MidiClipNodeState>) {
-    super.stateObserver = newObserver;
-  }
-
-  public set notes(notes: MidiNoteState[]) {
-    this.state.notes = notes;
-    this.stateObserver.changed('notes');
-  }
-
-  public set duration(duration: number) {
-    this.state.duration = duration;
-    this.stateObserver.changed('duration');
-  }
-
-  public get duration(): number {
-    return this.state.duration;
-  }
-
-  public set signature(signature: TimeSignature) {
-    this.state.timeSignature = signature;
-    this.stateObserver.changed('timeSignature');
-  }
-
-  public get signature(): TimeSignature {
-    return this.state.timeSignature;
-  }
-
-  public observeDuration(cb: (newDuration: number) => any): void {
-    this.stateObserver.observe(cb, 'duration');
-  }
-
-  public setSignatureUpper(newValue: number): any {
-    if (this.signature.upper !== newValue) {
-      this.state.timeSignature.upper = newValue;
-      this.stateObserver.changed('timeSignature');
-    }
-  }
-
-  public setSignatureLower(newValue: number): any {
-    if (this.signature.lower !== newValue) {
-      this.state.timeSignature.lower = newValue;
-      this.stateObserver.changed('timeSignature');
-    }
-  }
-
-  public observeSignatureLower(cb: (newSignLower: number) => any): void {
-    this.stateObserver.observe((sign) => cb(sign.lower), 'timeSignature');
-  }
-
-  public observeSignatureUpper(cb: (newSignLower: number) => any): void {
-    this.stateObserver.observe((sign) => cb(sign.upper), 'timeSignature');
+    this.midiClipNodeService.label$.subscribe((newLabel) => {
+      this.label = newLabel;
+    });
   }
 
   public updateFlags(updatedFlags: MidiFlagState[]): void {
-    this.stateObserver.update(updatedFlags, 'flags');
-  }
+    if (this._flags.length != updatedFlags.length) {
+      this.clearPins();
 
-  public addFlag(newFlag: MidiFlagState): void {
-    const updatedFlags = [...this.state.flags, {...newFlag}];
-    this.stateObserver.update(updatedFlags, 'flags');
-  }
+      updatedFlags.forEach(f => {
+        switch (f.kind) {
+          case 'inlet':
+            this.addInlet();
+            break;
+          case 'outlet':
+            this.addOutlet();
+            break;
+        }
+      });
+    }
 
-  public observeFlags(cb: (newFlags: MidiFlagState[]) => any): void {
-    this.stateObserver.observe(cb, 'flags');
-  }
-
-  public observeNotes(cb: (newNotes: MidiNoteState[]) => any): void {
-    this.stateObserver.observe(cb, 'notes');
+    this._flags = updatedFlags;
+    this.repaint();
   }
 
   public doubleClicked(event: ComponentMouseEvent): void {
@@ -125,7 +79,7 @@ export class MidiClipNode extends GraphNode {
 
     const availableHeight = this.height - this.labelHeight;
 
-    const midiInlets = this.state.flags.filter(flag => flag.kind === 'inlet');
+    const midiInlets = this._flags.filter(flag => flag.kind === 'inlet');
 
     const inletOffsetY = this.labelHeight +
       (availableHeight - midiInlets.length * this.pinHeight) / 2;
@@ -136,7 +90,7 @@ export class MidiClipNode extends GraphNode {
 
     g.textAlign = 'right';
 
-    const midiOutlets = this.state.flags.filter(flag => flag.kind === 'outlet');
+    const midiOutlets = this._flags.filter(flag => flag.kind === 'outlet');
 
     const outletOffsetY = this.labelHeight +
       (availableHeight - midiOutlets.length * this.pinHeight) / 2;
@@ -171,5 +125,8 @@ export class MidiClipNode extends GraphNode {
     this.height = Math.max(this.defaultHeight,
       this.inlets.size() * this.pinHeight + this.labelHeight,
       this.outlets.size() * this.pinHeight + this.labelHeight);
+
+    this.resized();
+    this.refreshParent();
   }
 }

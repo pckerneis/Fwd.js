@@ -143,6 +143,7 @@ export class NoteSequencer {
   }
 
   public set signatureUpper(value: number) {
+    console.log(value);
     this._model.signature.upper = value;
     this._sequencerRoot.repaint();
   }

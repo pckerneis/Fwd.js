@@ -17,7 +17,9 @@ import {
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
-import { ProjectModel } from './state/project.model';
+import { GraphSequencerService } from './services/graph-sequencer.service';
+import { PlaybackService } from './services/playback.service';
+import { MidiNoteState } from './state/project.state';
 import { injectStyle } from './StyleInjector';
 
 interface SharedServices {
@@ -40,18 +42,16 @@ export default class FwdWebRunner implements FwdRunner {
 
   private _header: RunnerHeader;
   private _footer: RunnerFooter;
-
-  private readonly projectModel: ProjectModel;
+  private _playbackService: PlaybackService;
+  private _graphSequencerService: GraphSequencerService;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
-    const model: ProjectModel = new ProjectModel();
-    model.loadProject({
-      graphSequencer: {
-        nodes: [],
-        connections: [],
-      },
-    })
-    this.projectModel = model;
+    this._graphSequencerService = new GraphSequencerService({
+      connections: [],
+      nodes: [],
+    });
+
+    this._playbackService = new PlaybackService(this._graphSequencerService);
 
     FwdWebRunner._sharedServices = {
       panelManager: new PanelManager(),
@@ -65,7 +65,7 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     // TEST INIT
-    registerGraphSequencerCommands(model);
+    registerGraphSequencerCommands(this._graphSequencerService);
 
     commandManager.perform(createAndAddInitNode({
       kind: 'Init',
@@ -74,15 +74,20 @@ export default class FwdWebRunner implements FwdRunner {
       label: 'start',
     }));
 
+    const noteDefault: MidiNoteState = {
+      initialVelocity: 0, initialStart: 0, hidden: false, tempDuration: null, selected: false,
+      time: 0, duration: 0, velocity: 0, pitch: 0,
+    };
+
     commandManager.perform(createAndAddMidiClipNode({
       id: '2',
       kind: 'MidiClip',
       duration: 4,
       timeSignature: {upper: 4, lower: 4},
       notes: [
-        {time: 0, duration: 1, pitch: 65, velocity: 120},
-        {time: 1, duration: 1, pitch: 67, velocity: 110},
-        {time: 2, duration: 1, pitch: 69, velocity: 100},
+        {...noteDefault, time: 0, duration: 1, pitch: 65, velocity: 120},
+        {...noteDefault, time: 1, duration: 1, pitch: 67, velocity: 110},
+        {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
         {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
@@ -98,9 +103,9 @@ export default class FwdWebRunner implements FwdRunner {
       duration: 4,
       timeSignature: {upper: 4, lower: 4},
       notes: [
-        {time: 0, duration: 1, pitch: 65, velocity: 120},
-        {time: 1, duration: 1, pitch: 67, velocity: 110},
-        {time: 2, duration: 1, pitch: 69, velocity: 100},
+        {...noteDefault, time: 0, duration: 1, pitch: 65, velocity: 120},
+        {...noteDefault, time: 1, duration: 1, pitch: 67, velocity: 110},
+        {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
       ],
       flags: [
         {kind: 'inlet', time: 0, color: 'grey', name: 'in'},
@@ -146,7 +151,7 @@ export default class FwdWebRunner implements FwdRunner {
     this._footer.applyMasterValue();
 
     DBG.debug('Starting playback');
-    this.projectModel.startPlayback(this.fwd.scheduler);
+    this._playbackService.startPlayback(this.fwd.scheduler);
   }
 
   public render(duration: number, sampleRate: number, fileName: string): void {
@@ -267,7 +272,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private buildMainSection(): void {
-    FwdWebRunner.sharedServices.panelManager.buildMainSection(this.projectModel);
+    FwdWebRunner.sharedServices.panelManager.buildMainSection(this._graphSequencerService);
   }
 
   private isSchedulerRunning(): boolean {

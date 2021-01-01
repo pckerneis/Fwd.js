@@ -1,4 +1,5 @@
 import { IBounds } from '../canvas/BaseComponent';
+import { Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
 export interface BaseNodeState {
@@ -11,7 +12,7 @@ export interface InitNodeState extends BaseNodeState {
   label: string;
 }
 
-export interface MidiNoteState {
+export interface MidiNoteState extends Note {
   time: number;
   pitch: number;
   duration: number;

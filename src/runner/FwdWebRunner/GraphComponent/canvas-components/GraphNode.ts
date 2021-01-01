@@ -1,7 +1,5 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { ObservableState } from '../../state/observable-state';
-import { NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
@@ -10,6 +8,8 @@ export abstract class GraphNode extends Component {
 
   public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>();
   public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>();
+
+  protected _label: string;
 
   protected backgroundColor: string = '#eeeeee';
   protected borderColor: string = '#444444';
@@ -23,33 +23,22 @@ export abstract class GraphNode extends Component {
 
   private _boundsAtMouseDown: ComponentBounds;
 
-  protected constructor(public readonly parentGraph: GraphRoot,
-                        public stateObserver: ObservableState<any>) {
+  protected constructor(public readonly parentGraph: GraphRoot) {
     super();
 
     this.width = this.defaultWidth;
     this.height = this.defaultHeight;
   }
 
-  public get state(): NodeState {
-    return this.stateObserver.get();
-  }
-
   public get label(): string {
-    return this.state.label;
+    return this._label;
   }
 
   public set label(newLabel: string) {
-    if (this.state.label != newLabel) {
-      console.log({newLabel});
-      this.state.label = newLabel;
-      this.stateObserver.changed('label');
+    if (this._label != newLabel) {
+      this._label = newLabel;
       this.repaint();
     }
-  }
-
-  public observeLabel(callback: (value: string) => void): void {
-    this.stateObserver.observe(callback, 'label');
   }
 
   public addInlet(): InletPin {
@@ -57,7 +46,6 @@ export abstract class GraphNode extends Component {
     this.addAndMakeVisible(pin);
     this.inlets.add(pin);
     this.adaptSizeToPins();
-    this.resized();
     return pin;
   }
 
@@ -66,8 +54,15 @@ export abstract class GraphNode extends Component {
     this.addAndMakeVisible(pin);
     this.outlets.add(pin);
     this.adaptSizeToPins();
-    this.resized();
     return pin;
+  }
+
+  public clearPins(): void {
+    this.inlets.array.forEach(pin => this.removeChild(pin));
+    this.inlets.clear();
+    this.outlets.array.forEach(pin => this.removeChild(pin));
+    this.outlets.clear();
+    this.adaptSizeToPins();
   }
 
   public canConnect(inlet: InletPin, outlet: OutletPin): boolean {
@@ -138,9 +133,12 @@ export abstract class GraphNode extends Component {
     this.height = Math.max(this.defaultHeight,
       this.inlets.size() * this.pinHeight,
       this.outlets.size() * this.pinHeight);
+
+    this.resized();
+    this.refreshParent();
   }
 
-  private refreshParent(): void {
+  protected refreshParent(): void {
     if (this.getParentComponent() != null) {
       this.getParentComponent().repaint();
     }
@@ -152,8 +150,8 @@ export abstract class GraphNode extends Component {
 }
 
 export class InitNode extends GraphNode {
-  constructor(parentGraph: GraphRoot, stateObserver: ObservableState<NodeState>) {
-    super(parentGraph, stateObserver);
+  constructor(parentGraph: GraphRoot) {
+    super(parentGraph);
 
     this.addOutlet();
     this.label = 'init';
