@@ -202,7 +202,6 @@ export class MidiClipPanel implements EditorElement {
 
     service.duration$.subscribe((duration) => this.clipEditor.noteSequencer.duration = duration);
     service.signature$.subscribe((signature) => {
-      console.log('signature changed', signature);
       this.clipEditor.noteSequencer.signatureLower = signature.lower;
       this.clipEditor.noteSequencer.signatureUpper = signature.upper;
     });

@@ -77,8 +77,6 @@ export class GraphElement implements EditorElement {
   private addConnection(connection: ConnectionState): void {
     const { source, target } = this.findPins(connection);
 
-    console.log({source, target});
-
     if (source != null && target != null) {
       this._graphRoot.addConnection(source, target);
     }

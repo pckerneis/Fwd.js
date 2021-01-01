@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { map, pluck, switchMap, take } from 'rxjs/operators';
+import { distinctUntilChanged, map, pluck, switchMap, take } from 'rxjs/operators';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 import { MidiClipNodeState, MidiFlagState, MidiNoteState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
@@ -17,6 +17,24 @@ export interface MidiOutlet {
   name: string;
 }
 
+function areArraysEqual(first: Array<any>, second: Array<any>): boolean {
+  if (! Array.isArray(first) || ! Array.isArray(second)) {
+    return false;
+  }
+
+  if (first.length != second.length) {
+    return false;
+  }
+
+  for (let i = 0; i < first.length; ++i) {
+    if (first[i] != second[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
   public readonly label$: Observable<string>;
   public readonly duration$: Observable<number>;
@@ -30,11 +48,11 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
               public readonly graphSequencerService: GraphSequencerService) {
     super(state);
 
-    this.label$ = this._state$.pipe(pluck('label'));
-    this.duration$ = this._state$.pipe(pluck('duration'));
-    this.signature$ = this._state$.pipe(pluck('timeSignature'));
-    this.flags$ = this._state$.pipe(pluck('flags'));
-    this.notes$ = this._state$.pipe(pluck('notes'));
+    this.label$ = this._state$.pipe(pluck('label'), distinctUntilChanged());
+    this.duration$ = this._state$.pipe(pluck('duration'), distinctUntilChanged());
+    this.signature$ = this._state$.pipe(pluck('timeSignature'), distinctUntilChanged());
+    this.flags$ = this._state$.pipe(pluck('flags'), distinctUntilChanged(areArraysEqual));
+    this.notes$ = this._state$.pipe(pluck('notes'), distinctUntilChanged(areArraysEqual));
 
     this.inlets$ = this.flags$.pipe(map(flags => flags
       .filter(f => f.kind === 'inlet')
