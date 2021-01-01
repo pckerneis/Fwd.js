@@ -62,6 +62,7 @@ export class ObservableState<T> {
 
 export class ObservableListState<I> extends ObservableState<I[]> {
   protected readonly addItemListeners: Callback[] = [];
+  protected readonly removeItemListeners: Callback[] = [];
 
   constructor(listAccessor: () => any) {
     super(listAccessor);
@@ -76,5 +77,21 @@ export class ObservableListState<I> extends ObservableState<I[]> {
 
   public observeAdd(callback: Callback): void {
     this.addItemListeners.push(callback)
+  }
+
+  public observeRemove(callback: Callback): void {
+    this.removeItemListeners.push(callback)
+  }
+
+  public removeIfMatch(predicate: (item: I) => boolean): void {
+    const toRemove = this.get().filter(item => predicate(item));
+    console.log(toRemove);
+    this.removeAll(toRemove);
+  }
+
+  public removeAll(items: I[]): void {
+    const arr = this.get();
+    items.forEach((i) => arr.splice(arr.indexOf(i)));
+    items.forEach((i) => this.removeItemListeners.forEach(cb => cb(i)));
   }
 }

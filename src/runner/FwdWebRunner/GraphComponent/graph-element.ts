@@ -36,9 +36,18 @@ export class GraphElement implements EditorElement {
       }
     });
 
+    projectModel.nodes.observeRemove((nodeState: NodeState) => {
+      this._graphRoot.removeNode(nodeState.id);
+      console.log(this._graphRoot.nodes.array);
+    });
+
     projectModel.connections.observeAdd((connection: ObservableState<ConnectionState>) => {
       this.addConnection(connection.get());
-    })
+    });
+
+    projectModel.connections.observeRemove((connection: ConnectionState) => {
+      this.removeConnection(connection);
+    });
   }
 
   public get nodes(): readonly GraphNode[] {
@@ -87,6 +96,15 @@ export class GraphElement implements EditorElement {
 
     if (firstPin != null && secondPin != null) {
       this._graphRoot.addConnection(firstPin, secondPin);
+    }
+  }
+
+  private removeConnection(connection: ConnectionState): void {
+    const firstPin = this.findNode(connection.sourceNode)?.outlets.get(connection.sourcePinIndex);
+    const secondPin = this.findNode(connection.targetNode)?.inlets.get(connection.targetPinIndex);
+
+    if (firstPin != null && secondPin != null) {
+      this._graphRoot.removeConnection(firstPin, secondPin);
     }
   }
 

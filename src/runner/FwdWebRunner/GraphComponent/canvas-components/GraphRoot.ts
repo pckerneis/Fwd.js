@@ -77,6 +77,17 @@ export class GraphRoot extends Component {
   public addNode(node: GraphNode): void {
     this._nodes.add(node);
     this._viewportArea.addAndMakeVisible(node);
+    this.resized();
+  }
+
+  public removeNode(id: string): void {
+    const node = this._nodes.array.find(n => n.id === id);
+
+    if (node != null) {
+      this._nodes.remove(node);
+      this._viewportArea.removeChild(node);
+      this.resized();
+    }
   }
 
   public arePinsConnected(first: Pin, second: Pin): Boolean {
@@ -93,7 +104,13 @@ export class GraphRoot extends Component {
   public addConnection(first: Pin, second: Pin): void {
     if (! this.arePinsConnected(first, second)) {
       this._connections.add(new Connection(first, second));
+      this.repaint();
     }
+  }
+
+  public removeConnection(first: Pin, second: Pin): void {
+    this._connections.remove(this.findConnection(first, second));
+    this.repaint();
   }
 
   public resized(): void {
@@ -130,5 +147,9 @@ export class GraphRoot extends Component {
     }
 
     return null;
+  }
+
+  private findConnection(first: Pin, second: Pin): Connection {
+    return this._connections.array.find(c => c.first === first && c.second === second);
   }
 }

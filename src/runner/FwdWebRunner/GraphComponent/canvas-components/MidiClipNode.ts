@@ -80,6 +80,11 @@ export class MidiClipNode extends GraphNode {
     this.stateObserver.update(updatedFlags, 'flags');
   }
 
+  public addFlag(newFlag: MidiFlagState): void {
+    const updatedFlags = [...this.state.flags, {...newFlag}];
+    this.stateObserver.update(updatedFlags, 'flags');
+  }
+
   public observeFlags(cb: (newFlags: MidiFlagState[]) => any): void {
     this.stateObserver.observe(cb, 'flags');
   }

@@ -7,6 +7,13 @@ import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
+import { commandManager } from './commands/command-manager';
+import {
+  addConnection,
+  createAndAddInitNode,
+  createAndAddMidiClipNode,
+  registerGraphSequencerCommands,
+} from './commands/graph-sequencer.commands';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
@@ -58,15 +65,16 @@ export default class FwdWebRunner implements FwdRunner {
     }
 
     // TEST INIT
+    registerGraphSequencerCommands(model);
 
-    model.addInitNode({
+    commandManager.perform(createAndAddInitNode({
       kind: 'Init',
       id: '1',
       bounds: {x: 2, y: 2, width: 120, height: 24},
       label: 'start',
-    });
+    }));
 
-    model.addMidiClipNode({
+    commandManager.perform(createAndAddMidiClipNode({
       id: '2',
       kind: 'MidiClip',
       duration: 4,
@@ -82,9 +90,9 @@ export default class FwdWebRunner implements FwdRunner {
       ],
       label: 'node1',
       bounds: {x: 210, y: 4, width: 120, height: 20},
-    });
+    }));
 
-    model.addMidiClipNode({
+    commandManager.perform(createAndAddMidiClipNode({
       id: '3',
       kind: 'MidiClip',
       duration: 4,
@@ -100,28 +108,28 @@ export default class FwdWebRunner implements FwdRunner {
       ],
       label: 'node2',
       bounds: {x: 210, y: 50, width: 120, height: 20},
-    });
+    }));
 
-    model.addConnection({
+    commandManager.perform(addConnection({
       sourceNode: '1',
       sourcePinIndex: 0,
       targetNode: '2',
       targetPinIndex: 0,
-    });
+    }));
 
-    model.addConnection({
+    commandManager.perform(addConnection({
       sourceNode: '2',
       sourcePinIndex: 0,
       targetNode: '3',
       targetPinIndex: 0,
-    });
+    }));
 
-    model.addConnection({
+    commandManager.perform(addConnection({
       sourceNode: '3',
       sourcePinIndex: 0,
       targetNode: '2',
       targetPinIndex: 0,
-    });
+    }));
   }
 
   public static get sharedServices(): SharedServices {

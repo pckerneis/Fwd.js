@@ -17,7 +17,15 @@ export class ArrayList<T> {
   }
 
   public remove(item: T): void {
-    this._array.splice(this._array.indexOf(item), 1);
+    this.removeAt(this._array.indexOf(item));
+  }
+
+  public removeAt(index: number): void {
+    this._array.splice(index, 1);
+  }
+
+  public removeIfMatch(predicate: (item: T) => boolean): void {
+    this._array = this._array.filter(item => ! predicate(item));
   }
 
   public insert(index: number, item: T): void {

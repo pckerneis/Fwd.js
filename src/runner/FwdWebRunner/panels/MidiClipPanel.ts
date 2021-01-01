@@ -95,6 +95,18 @@ class SettingsPanel implements EditorElement {
           this.refreshMarkers(markersContainer, newFlags);
         }
       });
+
+    const addMarkerButton = document.createElement('div');
+    addMarkerButton.textContent = '+ Add marker';
+    addMarkerButton.onclick = () => {
+      this.node.addFlag({
+        kind: 'inlet',
+        name: 'flag',
+        time: 0,
+        color: 'grey',
+      });
+    };
+    this.htmlElement.append(addMarkerButton);
   }
 
   private refreshMarkers(container: HTMLElement, flags: MidiFlagState[]): void {
@@ -103,7 +115,25 @@ class SettingsPanel implements EditorElement {
     flags.forEach((flag, idx) => {
       const markerPanel = new PropertyPanel();
       container.append(markerPanel.htmlElement);
-      const titleElem = markerPanel.addTitle(flag.name);
+
+      const titleContainer = document.createElement('div');
+      titleContainer.style.gridColumn = '1 / span 2';
+      titleContainer.style.userSelect = 'none';
+      titleContainer.style.display = 'flex';
+      const titleElem = document.createElement('b');
+      titleElem.style.flexGrow = '1';
+      titleElem.innerText = flag.name;
+      const removeButton = document.createElement('div');
+      removeButton.innerText = 'x';
+      removeButton.style.padding = '0 4px';
+      removeButton.onclick = () => {
+        const updatedFlags = [...this.node.state.flags];
+        updatedFlags.splice(idx, 1);
+        this.node.updateFlags(updatedFlags);
+      };
+
+      titleContainer.append(titleElem, removeButton);
+      markerPanel.htmlElement.append(titleContainer);
 
       markerPanel.addLabel('Name');
       const nameField = markerPanel.addTextInput(flag.name);

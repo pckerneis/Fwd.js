@@ -46,12 +46,20 @@ export class ProjectModel {
     return this.nodes.add(nodeState);
   }
 
+  public addMidiClipNode(midiClipNode: MidiClipNodeState): ObservableState<NodeState> {
+    return this.nodes.add(midiClipNode);
+  }
+
+  public removeNodeById(nodeId: string): void {
+    this.nodes.removeIfMatch(n => n.id === nodeId);
+  }
+
   public addConnection(connection: ConnectionState): void {
     this.connections.add(connection);
   }
 
-  public addMidiClipNode(midiClipNode: MidiClipNodeState): ObservableState<NodeState> {
-    return this.nodes.add(midiClipNode);
+  public removeConnection(payload: ConnectionState): void {
+    this.connections.removeIfMatch(c => areConnectionsEqual(c, payload));
   }
 
   public startPlayback(scheduler: FwdScheduler): void {
@@ -108,4 +116,11 @@ export class ProjectModel {
 
     this.fireNextNodes(scheduler, clip, endTime - startTime);
   }
+}
+
+function areConnectionsEqual(first: ConnectionState, second: ConnectionState): boolean {
+  return first.targetNode === second.targetNode
+    && first.sourceNode === second.sourceNode
+    && first.sourcePinIndex === second.sourcePinIndex
+    && first.targetPinIndex === second.sourcePinIndex
 }
