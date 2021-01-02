@@ -9,6 +9,7 @@ export class TabbedPanel implements EditorElement {
 
   private readonly _tabItems: TabItem[] = [];
   private _currentTab: TabItem;
+  private _elementToShowWhenEmpty: HTMLElement;
 
   constructor() {
     this.htmlElement = document.createElement('div');
@@ -43,7 +44,8 @@ export class TabbedPanel implements EditorElement {
 
   public setCurrentTab(tabId: string | null): void {
     if (tabId == null) {
-      // TODO: show default content
+      this._viewport.innerHTML = '';
+      this._viewport.append(this._elementToShowWhenEmpty);
       return;
     }
 
@@ -66,8 +68,12 @@ export class TabbedPanel implements EditorElement {
 
   public removeTab(tabId: string): void {
     if (this.isCurrentTab(tabId)) {
-      // TODO: show next or previous tab when possible
-      this.setCurrentTab(null);
+      const currentTabIndex = this._tabItems.indexOf(this._currentTab);
+      const nextTab = this._tabItems[currentTabIndex + 1];
+      const previous = this._tabItems[currentTabIndex - 1];
+      this.setCurrentTab(nextTab?.tabOptions.id
+        || previous?.tabOptions.id
+        || null);
     }
 
     const tab = this.findTabOrThrow(tabId);
@@ -82,6 +88,13 @@ export class TabbedPanel implements EditorElement {
 
   public hasTab(id: string): boolean {
     return !! this.findTab(id);
+  }
+  
+  public setElementToShowWhenEmpty(elementToShowWhenEmpty: HTMLElement): void {
+    this._elementToShowWhenEmpty = elementToShowWhenEmpty;
+    if (this._currentTab == null) {
+      this.setCurrentTab(null);
+    }
   }
 
   private findTabOrThrow(tabId: string): TabItem {

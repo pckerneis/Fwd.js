@@ -5,6 +5,7 @@ import parentLogger from '../../logger.runner';
 import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { GraphElement } from '../GraphComponent/graph-element';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
+import { injectStyle } from '../StyleInjector';
 import { MidiClipPanel } from './MidiClipPanel';
 import { StructurePanel } from './StructurePanel';
 
@@ -109,6 +110,7 @@ export class PanelManager {
     hSeparator.htmlElement.classList.add('fwd-runner-large-hseparator');
 
     const tabbedPanel = new TabbedPanel();
+    tabbedPanel.setElementToShowWhenEmpty(getElementToShowWhenEmpty())
     this._contextualTabbedPanel = tabbedPanel;
     this._contextualTabbedPanel.htmlElement.style.flexGrow = '1';
 
@@ -119,3 +121,21 @@ export class PanelManager {
     });
   }
 }
+
+function getElementToShowWhenEmpty(): HTMLElement {
+  const e = document.createElement('div');
+  e.classList.add('fwd-tab-element-to-show-when-empty');
+  e.innerText = 'Nothing to show';
+  return e;
+}
+
+injectStyle('TabElementToShowWhenEmpty', `
+.fwd-tab-element-to-show-when-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: lightgrey;
+  user-select: none;
+  font-size: smaller;
+}
+`);
