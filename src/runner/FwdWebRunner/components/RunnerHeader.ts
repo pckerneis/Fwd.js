@@ -11,6 +11,8 @@ export class RunnerHeader {
   private readonly _toolbar: HTMLElement;
   private readonly _playButton: IconButton;
   private readonly _timeDisplay: TimeDisplay;
+  private _openButton: IconButton;
+  private _saveButton: IconButton;
 
   constructor(private readonly runner: FwdRunner) {
     this.htmlElement = document.createElement('div');
@@ -32,7 +34,14 @@ export class RunnerHeader {
 
     this._timeDisplay = new TimeDisplay(this.runner.fwd.scheduler);
 
+    this._openButton = new IconButton('folder');
+    this._openButton.htmlElement.onclick = () => this.runner.openInteractive();
+    this._saveButton = new IconButton('save');
+    this._saveButton.htmlElement.onclick = () => this.runner.save();
+
     this._toolbar.append(
+      this._openButton.htmlElement,
+      this._saveButton.htmlElement,
       spacer(),
       this._playButton.htmlElement,
       this._timeDisplay.htmlElement,

@@ -1,6 +1,6 @@
 import { distinctUntilChanged } from 'rxjs/operators';
 import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import FwdWebRunner from '../../FwdWebRunner';
+import { PanelManager } from '../../panels/PanelManager';
 import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
 import { MidiFlagState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
@@ -13,7 +13,8 @@ export class MidiClipNode extends GraphNode {
   private _flags: MidiFlagState[] = []; // Cached state
 
   constructor(parentGraph: GraphRoot,
-              public readonly midiClipNodeService: MidiClipNodeService) {
+              public readonly midiClipNodeService: MidiClipNodeService,
+              public readonly panelManager: PanelManager) {
     super(parentGraph);
   }
 
@@ -46,8 +47,7 @@ export class MidiClipNode extends GraphNode {
   }
 
   public doubleClicked(event: ComponentMouseEvent): void {
-    const pm = FwdWebRunner.sharedServices.panelManager;
-    pm.showMidiEditor(this);
+    this.panelManager.showMidiEditor(this);
   }
 
   protected render(g: CanvasRenderingContext2D): void {

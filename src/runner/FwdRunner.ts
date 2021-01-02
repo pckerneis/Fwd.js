@@ -12,4 +12,7 @@ export default interface FwdRunner {
   toggleDarkMode(): void;
   setDarkMode(darkMode: boolean): void;
   isDarkMode(): boolean;
+
+  save(): void;
+  openInteractive(): void;
 }

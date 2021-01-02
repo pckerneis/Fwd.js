@@ -1,12 +1,17 @@
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map, pluck, switchMap, take, tap } from 'rxjs/operators';
 
 export class StoreBasedService<T> {
 
+  public readonly completed$: Observable<void>;
+
   protected readonly _state$: BehaviorSubject<T>;
+  protected readonly _completed$: Subject<void>;
 
   constructor(state: T) {
     this._state$ = new BehaviorSubject<T>(state);
+    this._completed$ = new Subject<void>();
+    this.completed$ = this._completed$.asObservable();
   }
 
   public get snapshot(): T {
@@ -14,6 +19,11 @@ export class StoreBasedService<T> {
   }
 
   public get state$(): Observable<T> { return this._state$.asObservable(); }
+
+  public complete(): void {
+    this._completed$.next();
+    this._completed$.complete();
+  }
 
   protected updateIfChanged<K extends keyof T>(key: K, value: T[K]): Observable<T> {
     return this._state$.pipe(

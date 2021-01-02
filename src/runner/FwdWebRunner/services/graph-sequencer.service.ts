@@ -75,6 +75,12 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
       .filter(c => c.targetPinId !== id  && c.sourcePinId !== id);
     return this.update('connections', updatedConnections);
   }
+
+  public loadState(graphState: GraphSequencerState): void {
+    this._midiClipNodeServices.forEach((service) => service.complete());
+    this._midiClipNodeServices.clear();
+    this._state$.next(graphState);
+  }
 }
 
 function areConnectionsEqual(first: ConnectionState, second: ConnectionState): boolean {

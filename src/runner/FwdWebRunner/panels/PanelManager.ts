@@ -24,6 +24,10 @@ export class PanelManager {
     return this._graphEditor;
   }
 
+  public reset(): void {
+    this.noteSequencerPanels.clear();
+  }
+
   public showMidiEditor(node: MidiClipNode): void {
     if (this.noteSequencerPanels.get(node.id)) {
       this._contextualTabbedPanel.setCurrentTab(node.id);
@@ -41,6 +45,10 @@ export class PanelManager {
 
       node.midiClipNodeService.label$.subscribe((newLabel) => {
         this._contextualTabbedPanel.renameTab(node.id, newLabel);
+      });
+
+      node.midiClipNodeService.completed$.subscribe(() => {
+        this._contextualTabbedPanel.removeTab(node.id);
       });
     }
   }
@@ -86,7 +94,7 @@ export class PanelManager {
       maxWidth: 5000,
     });
 
-    const graphEditor = new GraphElement(graphSequencerService);
+    const graphEditor = new GraphElement(graphSequencerService, this);
     graphEditor.htmlElement.style.flexGrow = '1';
     this._graphEditor = graphEditor;
 

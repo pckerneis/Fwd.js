@@ -8,6 +8,7 @@ export class TabbedPanel implements EditorElement {
   public readonly _viewport: HTMLDivElement;
 
   private readonly _tabItems: TabItem[] = [];
+  private _currentTab: TabItem;
 
   constructor() {
     this.htmlElement = document.createElement('div');
@@ -40,32 +41,53 @@ export class TabbedPanel implements EditorElement {
     }
   }
 
-  public setCurrentTab(tabId: any): void {
-    const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
-
-    if (tabs.length === 0) {
-      throw new Error('Cannot find tab with id ' + tabId);
+  public setCurrentTab(tabId: string | null): void {
+    if (tabId == null) {
+      // TODO: show default content
+      return;
     }
 
-    const tab = tabs[0];
+    const tab = this.findTab(tabId);
 
     this._viewport.innerHTML = '';
     this._viewport.append(tab.tabOptions.tabContent.htmlElement);
 
     this._tabItems.forEach(tab => tab.button.htmlElement.classList.remove('current-tab'));
     tab.button.htmlElement.classList.add('current-tab');
+    
+    this._currentTab = tab;
   }
 
   public renameTab(tabId: any, label: string): void {
+    const tab = this.findTab(tabId);
+    tab.tabOptions.tabName = label;
+    tab.button.refresh();
+  }
+
+  public removeTab(tabId: string): void {
+    if (this.isCurrentTab(tabId)) {
+      // TODO: show next or previous tab when possible
+      this.setCurrentTab(null);
+    }
+
+    const tab = this.findTab(tabId);
+    tab.button.htmlElement.remove();
+    tab.tabOptions.tabContent.htmlElement.remove();
+    this._tabItems.splice(this._tabItems.indexOf(tab), 1);
+  }
+
+  public findTab(tabId: string): TabItem {
     const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
 
     if (tabs.length === 0) {
       throw new Error('Cannot find tab with id ' + tabId);
     }
 
-    const tab = tabs[0];
-    tab.tabOptions.tabName = label;
-    tab.button.refresh();
+    return tabs[0];
+  }
+
+  private isCurrentTab(tabId: string): Boolean {
+    return this._currentTab.tabOptions.id === tabId;
   }
 }
 

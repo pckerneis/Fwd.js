@@ -3,6 +3,7 @@ import { ComponentBounds } from '../canvas/BaseComponent';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { commandManager } from '../commands/command-manager';
 import { addConnection } from '../commands/graph-sequencer.commands';
+import { PanelManager } from '../panels/PanelManager';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
@@ -17,7 +18,8 @@ export class GraphElement implements EditorElement {
   private readonly _rootHolder: RootComponentHolder<GraphRoot>;
   private readonly _graphRoot: GraphRoot;
 
-  constructor(public readonly graphSequencerService: GraphSequencerService) {
+  constructor(public readonly graphSequencerService: GraphSequencerService,
+              public readonly panelManager: PanelManager) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add(CONTAINER_CLASS)
 
@@ -68,7 +70,7 @@ export class GraphElement implements EditorElement {
 
   private addMidiClipNode(state: MidiClipNodeState): MidiClipNode {
     const nodeService = this.graphSequencerService.getMidiClipNodeService(state.id, state);
-    const n = new MidiClipNode(this._graphRoot, nodeService);
+    const n = new MidiClipNode(this._graphRoot, nodeService, this.panelManager);
     n.id = state.id;
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));

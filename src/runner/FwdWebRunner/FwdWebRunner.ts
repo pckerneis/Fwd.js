@@ -19,12 +19,9 @@ import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
 import { GraphSequencerService } from './services/graph-sequencer.service';
 import { PlaybackService } from './services/playback.service';
+import { ProjectFileService } from './services/project-file.service';
 import { MidiNoteState } from './state/project.state';
 import { injectStyle } from './StyleInjector';
-
-interface SharedServices {
-  panelManager: PanelManager;
-}
 
 const DBG = new Logger('FwdWebRunner', parentLogger);
 
@@ -37,13 +34,13 @@ export enum RunnerClientState {
 }
 
 export default class FwdWebRunner implements FwdRunner {
-
-  private static _sharedServices: SharedServices;
-
   private _header: RunnerHeader;
   private _footer: RunnerFooter;
-  private _playbackService: PlaybackService;
-  private _graphSequencerService: GraphSequencerService;
+
+  private readonly _panelManager: PanelManager;
+  private readonly _playbackService: PlaybackService;
+  private readonly _graphSequencerService: GraphSequencerService;
+  private readonly _projectService: ProjectFileService;
 
   constructor(public readonly fwd: Fwd, public readonly config: RunnerConfig) {
     this._graphSequencerService = new GraphSequencerService({
@@ -52,10 +49,8 @@ export default class FwdWebRunner implements FwdRunner {
     });
 
     this._playbackService = new PlaybackService(this._graphSequencerService);
-
-    FwdWebRunner._sharedServices = {
-      panelManager: new PanelManager(),
-    };
+    this._panelManager = new PanelManager();
+    this._projectService = new ProjectFileService(this._graphSequencerService, this._panelManager);
 
     this.buildRunner();
     this.prepareConsoleWrappers();
@@ -137,10 +132,6 @@ export default class FwdWebRunner implements FwdRunner {
     }));
   }
 
-  public static get sharedServices(): SharedServices {
-    return FwdWebRunner._sharedServices;
-  }
-
   public start(): void {
     this.checkSketchCanBeStarted();
 
@@ -171,6 +162,15 @@ export default class FwdWebRunner implements FwdRunner {
     FwdRuntime.stopContext(this.fwd, () => {
       this._header.onRunnerStop();
     });
+  }
+
+  public save(): void {
+    const jsonState = this._projectService.getStateAsJson();
+    this._projectService.saveInteractive(jsonState);
+  }
+
+  public openInteractive(): void {
+    this._projectService.loadInteractive();
   }
 
   public isDarkMode(): boolean {
@@ -272,7 +272,7 @@ export default class FwdWebRunner implements FwdRunner {
   }
 
   private buildMainSection(): void {
-    FwdWebRunner.sharedServices.panelManager.buildMainSection(this._graphSequencerService);
+    this._panelManager.buildMainSection(this._graphSequencerService);
   }
 
   private isSchedulerRunning(): boolean {
