@@ -60,18 +60,15 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
-    const n = new InitNode(this._graphRoot);
-    n.id = state.id;
+    const n = new InitNode(this._graphRoot, state);
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
-    n.label = state.label;
     return n;
   }
 
   private addMidiClipNode(state: MidiClipNodeState): MidiClipNode {
     const nodeService = this.graphSequencerService.getMidiClipNodeService(state.id, state);
-    const n = new MidiClipNode(this._graphRoot, nodeService, this.panelManager);
-    n.id = state.id;
+    const n = new MidiClipNode(this._graphRoot, state, nodeService, this.panelManager);
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
     n.attachObservers();
@@ -87,7 +84,7 @@ export class GraphElement implements EditorElement {
     const {source, target} = this.findPins(connection);
 
     if (source != null && target != null) {
-      this._graphRoot.addConnection(source, target);
+      this._graphRoot.addConnection(source, target, connection.selected);
     }
   }
 

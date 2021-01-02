@@ -5,11 +5,13 @@ import { TimeSignature } from '../NoteSequencer/note-sequencer';
 export interface BaseNodeState {
   id: string;
   bounds: IBounds;
+  selected: boolean;
 }
 
 export interface InitNodeState extends BaseNodeState {
   kind: 'Init';
   label: string;
+  outletId: string;
 }
 
 export interface MidiNoteState extends Note {
@@ -46,6 +48,7 @@ export interface ConnectionState {
   sourcePinId: string;
   targetNode: string;
   targetPinId: string;
+  selected: boolean;
 }
 
 export interface GraphSequencerState {

@@ -1,10 +1,15 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { SelectableItem } from '../../canvas/shared/SelectedItemSet';
+import { InitNodeState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
-export abstract class GraphNode extends Component {
-  public id: string;
+export abstract class GraphNode extends Component implements SelectableItem {
+
+  public readonly id: string;
+
+  public selected: boolean;
 
   public readonly inlets: ArrayList<InletPin> = new ArrayList<InletPin>();
   public readonly outlets: ArrayList<OutletPin> = new ArrayList<OutletPin>();
@@ -14,6 +19,7 @@ export abstract class GraphNode extends Component {
   protected backgroundColor: string = '#eeeeee';
   protected borderColor: string = '#444444';
   protected labelColor: string = '#333333';
+  protected selectedBorderColor: string = '#00a8ff';
 
   protected labelFontSize: number = 13;
   protected pinHeight: number = 15;
@@ -22,10 +28,13 @@ export abstract class GraphNode extends Component {
   protected readonly defaultWidth: number = 120;
 
   private _boundsAtMouseDown: ComponentBounds;
+  private _mouseDownResult: boolean;
 
-  protected constructor(public readonly parentGraph: GraphRoot) {
+  protected constructor(public readonly parentGraph: GraphRoot, state: NodeState) {
     super();
 
+    this.id = state.id;
+    this.selected = state.selected;
     this.width = this.defaultWidth;
     this.height = this.defaultHeight;
   }
@@ -75,28 +84,35 @@ export abstract class GraphNode extends Component {
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
+    this._mouseDownResult = this.parentGraph.selection.addToSelectionMouseDown(this,
+      event.modifiers.shift);
+
     event.consumeNativeEvent();
     this._boundsAtMouseDown = this.getBounds();
     this.toFront();
     this.refreshParent();
   }
 
+  public mouseReleased(event: ComponentMouseEvent): void {
+    super.mouseReleased(event);
+    this.parentGraph.resetComponentDragger();
+    this.parentGraph.selection.addToSelectionMouseUp(event.wasDragged,
+      event.modifiers.shift, this._mouseDownResult);
+
+    this.repaint();
+  }
+
   public mouseDragged(event: ComponentMouseEvent): void {
     event.consumeNativeEvent();
-    const targetBounds = this._boundsAtMouseDown.translated(event.getDragOffset());
-    targetBounds.x = Math.max(0, targetBounds.x);
-    targetBounds.y = Math.max(0, targetBounds.y);
-    this.setBounds(targetBounds);
+    this.parentGraph.moveSelection(event);
     this.refreshParent();
   }
 
-  protected render(g: CanvasRenderingContext2D): void {
-    g.fillStyle = this.backgroundColor;
-    g.fillRect(0, 0, this.width, this.height);
+  public moveSelection(event: ComponentMouseEvent): void {
+  }
 
-    g.strokeStyle = this.borderColor;
-    g.lineWidth = 1;
-    g.strokeRect(0, 0, this.width, this.height);
+  protected render(g: CanvasRenderingContext2D): void {
+    this.drawBackground(g);
 
     if (this.label != null) {
       g.font = `${this.labelFontSize}px monospace`;
@@ -114,6 +130,15 @@ export abstract class GraphNode extends Component {
 
       g.fillText(textToRender, this.width / 2, this.height / 2, allowedWidth);
     }
+  }
+
+  protected drawBackground(g: CanvasRenderingContext2D): void {
+    g.fillStyle = this.backgroundColor;
+    g.fillRect(0, 0, this.width, this.height);
+
+    g.strokeStyle = this.selected ? this.selectedBorderColor : this.borderColor;
+    g.lineWidth = this.selected ? 3 : 1;
+    g.strokeRect(0, 0, this.width, this.height);
   }
 
   protected resized(): void {
@@ -154,10 +179,11 @@ export abstract class GraphNode extends Component {
 }
 
 export class InitNode extends GraphNode {
-  constructor(parentGraph: GraphRoot) {
-    super(parentGraph);
+  constructor(parentGraph: GraphRoot, state: InitNodeState) {
+    super(parentGraph, state);
 
-    this.addOutlet('0');
-    this.label = 'init';
+    this.addOutlet(state.outletId);
+    this.label = state.label;
+    this.selected = state.selected;
   }
 }

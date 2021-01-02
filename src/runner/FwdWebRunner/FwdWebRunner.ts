@@ -67,6 +67,8 @@ export default class FwdWebRunner implements FwdRunner {
       id: '1',
       bounds: {x: 2, y: 2, width: 120, height: 24},
       label: 'start',
+      outletId: '0',
+      selected: false,
     }));
 
     const noteDefault: MidiNoteState = {
@@ -90,6 +92,7 @@ export default class FwdWebRunner implements FwdRunner {
       ],
       label: 'node1',
       bounds: {x: 210, y: 4, width: 120, height: 20},
+      selected: false,
     }));
 
     commandManager.perform(createAndAddMidiClipNode({
@@ -108,6 +111,7 @@ export default class FwdWebRunner implements FwdRunner {
       ],
       label: 'node2',
       bounds: {x: 210, y: 50, width: 120, height: 20},
+      selected: false,
     }));
 
     commandManager.perform(addConnection({
@@ -115,6 +119,7 @@ export default class FwdWebRunner implements FwdRunner {
       sourcePinId: '0',
       targetNode: '2',
       targetPinId: '1',
+      selected: false,
     }));
 
     commandManager.perform(addConnection({
@@ -122,6 +127,7 @@ export default class FwdWebRunner implements FwdRunner {
       sourcePinId: '2',
       targetNode: '3',
       targetPinId: '3',
+      selected: false,
     }));
 
     commandManager.perform(addConnection({
@@ -129,6 +135,7 @@ export default class FwdWebRunner implements FwdRunner {
       sourcePinId: '4',
       targetNode: '2',
       targetPinId: '1',
+      selected: true,
     }));
   }
 

@@ -1,4 +1,4 @@
-import { Component, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
 import { GraphRoot } from './GraphRoot';
 
 export class ViewportArea extends Component {
@@ -9,6 +9,15 @@ export class ViewportArea extends Component {
     super();
   }
 
+  public mousePressed(event: ComponentMouseEvent): void {
+    super.mousePressed(event);
+
+    // TODO detect connections
+
+    this.graphRoot.selection.deselectAll();
+    this.graphRoot.repaint();
+  }
+
   protected render(g: CanvasRenderingContext2D): void {
     g.fillStyle = this._backgroundColor;
     g.fillRect(0, 0, this.width, this.height);
@@ -17,7 +26,7 @@ export class ViewportArea extends Component {
       const sourcePin = this.graphRoot.temporaryConnection.sourcePin;
       const startPos = sourcePin.getBoundsInGraph().center;
       const endPos = this.graphRoot.temporaryConnection.endPosition;
-      drawConnection(g, startPos, endPos);
+      drawConnection(g, startPos, endPos, true);
     }
 
     this.graphRoot.connections.array.forEach(connection => {
@@ -27,21 +36,21 @@ export class ViewportArea extends Component {
       if (firstPin != null && secondPin != null) {
         const startPos = firstPin.getBoundsInGraph().center;
         const endPos = secondPin.getBoundsInGraph().center;
-        drawConnection(g, startPos, endPos);
+        drawConnection(g, startPos, endPos, connection.selected);
       }
     });
   }
 
   protected resized(): void {
   }
-
 }
 
 function drawConnection(g: CanvasRenderingContext2D,
                         startPos: ComponentPosition,
-                        endPos: ComponentPosition): void {
-  g.strokeStyle = 'black';
-  g.lineWidth = 2;
+                        endPos: ComponentPosition,
+                        selected: boolean): void {
+  g.strokeStyle = selected ? '#00a8ff' : 'black';
+  g.lineWidth = selected ? 2 : 1;
 
   g.beginPath();
   g.moveTo(startPos.x, startPos.y);

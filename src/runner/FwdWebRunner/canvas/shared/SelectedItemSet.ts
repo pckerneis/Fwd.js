@@ -11,6 +11,10 @@ export class SelectedItemSet<T extends SelectableItem> {
 
   public getItems(): T[] { return this._selection; }
 
+  public isEmpty(): boolean {
+    return this._selection.length === 0;
+  }
+
   public addToSelection(item: T, deselectAll: boolean = false): void {
     if (deselectAll) {
       this.deselectAll();

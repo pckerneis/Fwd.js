@@ -1,6 +1,6 @@
 import { getMidiOutputNames, getOutputByName } from '../../../fwd/midi/FwdMidi';
 import { FwdScheduler } from '../../../fwd/scheduler/FwdScheduler';
-import { ConnectionState, MidiClipNodeState, MidiFlagState, NodeState } from '../state/project.state';
+import { ConnectionState, InitNodeState, MidiClipNodeState, MidiFlagState, NodeState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
 
 export class PlaybackService {
@@ -16,10 +16,10 @@ export class PlaybackService {
   }
 
   public startPlayback(scheduler: FwdScheduler): void {
-    const initNodes = this.nodes.filter(n => n.kind === 'Init');
+    const initNodes = this.nodes.filter(n => n.kind === 'Init') as InitNodeState[];
 
     initNodes.forEach(initNode => {
-      this.fireNextNodes(scheduler, initNode, '0', 0); // TODO: remove this magic '0'...
+      this.fireNextNodes(scheduler, initNode, initNode.outletId, 0);
     });
   }
 

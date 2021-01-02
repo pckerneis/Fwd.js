@@ -1,6 +1,7 @@
 import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
-import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { ConnectionState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
@@ -12,12 +13,16 @@ interface TemporaryConnection {
   readonly sourcePin: Pin;
 }
 
-class Connection {
-  constructor(public readonly first: string, public readonly second: string) {
+class Connection implements SelectableItem {
+  constructor(public readonly first: string,
+              public readonly second: string,
+              public readonly selected: boolean) {
   }
 }
 
 export class GraphRoot extends Component {
+  public readonly selection: SelectedItemSet<SelectableItem> = new SelectedItemSet();
+
   public readonly connectionAdded$: Observable<ConnectionState>;
   private readonly _connectionAddedSubject$: Subject<ConnectionState>;
 
@@ -27,6 +32,10 @@ export class GraphRoot extends Component {
 
   private readonly _nodes: ArrayList<GraphNode> = new ArrayList<GraphNode>();
   private readonly _connections: ArrayList<Connection> = new ArrayList<Connection>();
+
+  // TODO: move this in utility class ?
+  private componentDragReady: boolean;
+  private positionsAtMouseDown: Map<string, ComponentBounds> = new Map();
 
   constructor() {
     super();
@@ -74,7 +83,7 @@ export class GraphRoot extends Component {
       const suitablePin = this.findSuitablePinNearby(event.position, this._temporaryConnection.sourcePin);
 
       if (suitablePin != null) {
-        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin);
+        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin, true);
       }
 
       this._temporaryConnection = null;
@@ -110,9 +119,9 @@ export class GraphRoot extends Component {
     return false;
   }
 
-  public addConnection(first: Pin, second: Pin): void {
+  public addConnection(first: Pin, second: Pin, selected: boolean): void {
     if (! this.arePinsConnected(first, second)) {
-      this._connections.add(new Connection(first.id, second.id));
+      this._connections.add(new Connection(first.id, second.id, selected));
       this.repaint();
     }
   }
@@ -162,6 +171,64 @@ export class GraphRoot extends Component {
     this.repaint();
   }
 
+  public moveSelection(event: ComponentMouseEvent): void {
+    if (this.selection.isEmpty())
+      return;
+
+    if (! this.componentDragReady) {
+      this.selection.getItems().forEach(item => {
+        if (item instanceof GraphNode) {
+          this.positionsAtMouseDown.set(item.id, item.getBounds());
+        }
+      });
+      this.componentDragReady = true;
+    }
+
+    const dragOffset = event.getDragOffset();
+
+    for (const item of this.selection.getItems()) {
+      if (item instanceof GraphNode) {
+        item.setBounds(this.positionsAtMouseDown.get(item.id).translated(dragOffset));
+      }
+    }
+  }
+
+  public resetComponentDragger(): void {
+    this.componentDragReady = false;
+    this.positionsAtMouseDown.clear();
+  }
+
+  public findSelectionBounds(): { top: number, bottom: number, left: number, right: number } {
+    let left: number = Infinity;
+    let right: number = -Infinity;
+    let top: number = Infinity;
+    let bottom: number = -Infinity;
+
+    this.selection.getItems().forEach((item) => {
+      if (item instanceof Component) {
+        const bounds = item.getBounds();
+
+        if (left == null || bounds.x < left) {
+          left = bounds.x;
+        }
+
+        if (right == null || bounds.x + bounds.width > right) {
+          right = bounds.x + bounds.width;
+        }
+
+        if (top == null || bounds.y < top) {
+          top = bounds.y;
+        }
+
+        if (bottom == null || bounds.y + bounds.height > bottom) {
+          bottom = bounds.y + bounds.height;
+        }
+      }
+    });
+
+    return {left, right, top, bottom};
+  }
+
   public resized(): void {
     const bounds = this.getLocalBounds();
     this._viewportArea.setBounds(bounds);
@@ -202,13 +269,14 @@ export class GraphRoot extends Component {
     return this._connections.array.find(c => c.first === first.id && c.second === second.id);
   }
 
-  private connectionAdded(first: Pin, second: Pin): void {
+  private connectionAdded(first: Pin, second: Pin, selected: boolean): void {
     if (first instanceof OutletPin) {
       this._connectionAddedSubject$.next({
         sourceNode: first.parentNode.id,
         sourcePinId: first.id,
         targetNode: second.parentNode.id,
         targetPinId: second.id,
+        selected: selected,
       });
     } else {
       this._connectionAddedSubject$.next({
@@ -216,6 +284,7 @@ export class GraphRoot extends Component {
         targetPinId: first.id,
         sourceNode: second.parentNode.id,
         sourcePinId: second.id,
+        selected: selected,
       });
     }
   }

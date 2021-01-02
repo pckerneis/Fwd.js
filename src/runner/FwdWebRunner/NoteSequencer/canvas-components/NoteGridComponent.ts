@@ -467,7 +467,7 @@ export class NoteGridComponent extends Component {
   //===============================================================================
 
   public moveSelection(event: ComponentMouseEvent): void {
-    if (this._draggedItem == null || this._selectedSet.getItems().length == 0)
+    if (this._draggedItem == null || this._selectedSet.isEmpty())
       return;
 
     const currentPosition = {
@@ -480,38 +480,13 @@ export class NoteGridComponent extends Component {
       this._initialPosition = currentPosition;
 
       // Find bounding box for selection
-      let selectionLeft: number = Infinity;
-      let selectionRight: number = -Infinity;
-      let selectionTop: number = Infinity;
-      let selectionBottom: number = -Infinity;
-
-      this._selectedSet.getItems().forEach((note) => {
-        if (selectionLeft == null || note.time < selectionLeft) {
-          selectionLeft = note.time;
-        }
-
-        if (selectionRight == null || note.time + note.duration > selectionRight) {
-          selectionRight = note.time + note.duration;
-        }
-
-        if (selectionTop == null || note.pitch - 1 < selectionTop) {
-          selectionTop = note.pitch - 1;
-        }
-
-        if (selectionBottom == null || note.pitch > selectionBottom) {
-          selectionBottom = note.pitch;
-        }
-      });
+      const {left, right, top, bottom} = this.findSelectionBounds();
 
       // Deduce constraints for this box
-      this._minDragOffset = {
-        time: -selectionLeft,
-        pitch: -selectionTop,
-      };
-
+      this._minDragOffset = { time: -left, pitch: -top };
       this._maxDragOffset = {
-        time: this.model.maxTimeRange.end - selectionRight,
-        pitch: MAX_PITCH - selectionBottom,
+        time: this.model.maxTimeRange.end - right,
+        pitch: MAX_PITCH - bottom,
       };
     }
 
@@ -549,6 +524,33 @@ export class NoteGridComponent extends Component {
       s.pitch += gridOffsetY;
       s.time += gridOffsetX;
     }
+  }
+
+  private findSelectionBounds(): { top: number, bottom: number, left: number, right: number } {
+    let left: number = Infinity;
+    let right: number = -Infinity;
+    let top: number = Infinity;
+    let bottom: number = -Infinity;
+
+    this._selectedSet.getItems().forEach((note) => {
+      if (left == null || note.time < left) {
+        left = note.time;
+      }
+
+      if (right == null || note.time + note.duration > right) {
+        right = note.time + note.duration;
+      }
+
+      if (top == null || note.pitch - 1 < top) {
+        top = note.pitch - 1;
+      }
+
+      if (bottom == null || note.pitch > bottom) {
+        bottom = note.pitch;
+      }
+    });
+
+    return {left, right, top, bottom};
   }
 
   private dragEndPoints(event: ComponentMouseEvent): void {

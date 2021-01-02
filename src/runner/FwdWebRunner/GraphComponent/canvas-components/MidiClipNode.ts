@@ -2,7 +2,7 @@ import { distinctUntilChanged } from 'rxjs/operators';
 import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { PanelManager } from '../../panels/PanelManager';
 import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
-import { MidiFlagState } from '../../state/project.state';
+import { MidiClipNodeState, MidiFlagState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
 
@@ -13,9 +13,10 @@ export class MidiClipNode extends GraphNode {
   private _flags: MidiFlagState[] = []; // Cached state
 
   constructor(parentGraph: GraphRoot,
+              state: MidiClipNodeState,
               public readonly midiClipNodeService: MidiClipNodeService,
               public readonly panelManager: PanelManager) {
-    super(parentGraph);
+    super(parentGraph, state);
   }
 
   public attachObservers(): void {
@@ -51,12 +52,7 @@ export class MidiClipNode extends GraphNode {
   }
 
   protected render(g: CanvasRenderingContext2D): void {
-    g.fillStyle = this.backgroundColor;
-    g.fillRect(0, 0, this.width, this.height);
-
-    g.strokeStyle = this.borderColor;
-    g.lineWidth = 1;
-    g.strokeRect(0, 0, this.width, this.height);
+    this.drawBackground(g);
 
     if (this.label != null) {
       g.font = '13px monospace';
