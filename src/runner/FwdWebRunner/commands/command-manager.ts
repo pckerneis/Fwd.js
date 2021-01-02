@@ -1,3 +1,5 @@
+import { Observable, Subject } from 'rxjs';
+
 export interface Command<T = any> {
   id: string,
   payload: T;
@@ -23,11 +25,16 @@ export type CommandAndPerformer<T = any> = {
 }
 
 class CommandManager {
+  public readonly historyChanged$: Observable<void>;
+
+  private readonly _historyChanged$: Subject<void>;
   private _undoStack: CommandAndPerformer[] = [];
   private _redoStack: CommandAndPerformer[] = [];
   private _performerFactories: CommandPerformerFactory[] = [];
 
   constructor() {
+    this._historyChanged$ = new Subject<void>();
+    this.historyChanged$ = this._historyChanged$.asObservable();
   }
 
   public canUndo(): boolean {
@@ -46,6 +53,8 @@ class CommandManager {
       if (performer.canPerform(command)) {
         performer.perform(command);
         this._undoStack.push({command, performer});
+        this.clearRedoStack();
+        this._historyChanged$.next();
         return true;
       }
     }
@@ -60,6 +69,8 @@ class CommandManager {
 
     const {command, performer} = this._undoStack.pop();
     performer.undo(command);
+    this._redoStack.push({command, performer});
+    this._historyChanged$.next();
   }
 
   public redo(): boolean {
@@ -69,6 +80,8 @@ class CommandManager {
 
     const {command, performer} = this._redoStack.pop();
     performer.redo(command);
+    this._undoStack.push({command, performer});
+    this._historyChanged$.next();
   }
 
   public addPerformerFactory(performerFactory: CommandPerformerFactory): void {
@@ -78,6 +91,7 @@ class CommandManager {
   public clearHistory(): void {
     this.clearRedoStack();
     this.clearUndoStack();
+    this._historyChanged$.next();
   }
 
   private clearUndoStack(): void {

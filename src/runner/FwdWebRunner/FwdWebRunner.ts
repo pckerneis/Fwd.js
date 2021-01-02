@@ -7,13 +7,7 @@ import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
-import { commandManager } from './commands/command-manager';
-import {
-  addConnection,
-  createAndAddInitNode,
-  createAndAddMidiClipNode,
-  registerGraphSequencerCommands,
-} from './commands/graph-sequencer.commands';
+import { registerGraphSequencerCommands, } from './commands/graph-sequencer.commands';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
@@ -58,36 +52,7 @@ export default class FwdWebRunner implements FwdRunner {
       this.setDarkMode(true);
     }
 
-    // TEST INIT
     registerGraphSequencerCommands(this._graphSequencerService);
-
-    commandManager.perform(createAndAddInitNode({x: 2, y: 2}));
-    commandManager.perform(createAndAddMidiClipNode({x: 210, y: 4}));
-    commandManager.perform(createAndAddMidiClipNode({x: 210, y: 50}));
-
-    commandManager.perform(addConnection({
-      sourceNode: 1,
-      sourcePinId: 0,
-      targetNode: 2,
-      targetPinId: 1,
-      selected: false,
-    }));
-
-    commandManager.perform(addConnection({
-      sourceNode: 2,
-      sourcePinId: 2,
-      targetNode: 3,
-      targetPinId: 3,
-      selected: false,
-    }));
-
-    commandManager.perform(addConnection({
-      sourceNode: 3,
-      sourcePinId: 4,
-      targetNode: 2,
-      targetPinId: 1,
-      selected: true,
-    }));
   }
 
   public start(): void {

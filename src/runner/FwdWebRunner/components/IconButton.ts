@@ -1,8 +1,11 @@
 import { injectStyle } from "../StyleInjector";
 
 export class IconButton {
+  public onclick: (event: MouseEvent) => boolean;
+
   public readonly htmlElement: HTMLButtonElement;
   private _objectElement: HTMLObjectElement;
+  private _disabled: boolean;
 
   constructor(iconName: string) {
     const button = document.createElement('button');
@@ -11,12 +14,23 @@ export class IconButton {
     this.htmlElement = button;
 
     this.iconName = iconName;
+
+    this.htmlElement.onclick = (e) => {
+      if (! this._disabled && typeof this.onclick === 'function') {
+        this.onclick(e);
+      }
+    };
   }
 
   private static createSvgObject(): HTMLObjectElement {
     const object = document.createElement('object');
     object.type = 'image/svg+xml';
     return object;
+  }
+
+  public set disabled(isDisabled: boolean) {
+    this.htmlElement.classList.toggle('disabled', isDisabled);
+    this._disabled = isDisabled;
   }
 
   public set iconName(iconName: string) {
@@ -46,7 +60,11 @@ injectStyle('IconButton', `
   display: flex;
 }
 
-.fwd-icon-button:hover {
+.fwd-icon-button.disabled {
+  opacity: 0.35;
+}
+
+.fwd-icon-button:hover:not(.disabled) {
   opacity: 1;
 }
 
