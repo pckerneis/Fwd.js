@@ -56,6 +56,14 @@ export class GraphElement implements EditorElement {
     this._graphRoot.connectionAdded$.subscribe((connection) => {
       commandManager.perform(addConnection(connection));
     });
+
+    this._graphRoot.nodeBoundsChanged$.subscribe((nodes) => {
+      this.graphSequencerService.nodeBoundsChanged(nodes);
+    });
+
+    this._graphRoot.selectionChanged$.subscribe((items) => {
+      this.graphSequencerService.selectionChanged(items);
+    });
   }
 
   public get nodes(): readonly GraphNode[] {
@@ -63,6 +71,8 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
+    // Initialize service
+    this.graphSequencerService.getNodeService(state.id, state);
     const n = new InitNode(this._graphRoot, state);
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));
@@ -70,7 +80,7 @@ export class GraphElement implements EditorElement {
   }
 
   private addMidiClipNode(state: MidiClipNodeState): MidiClipNode {
-    const nodeService = this.graphSequencerService.getMidiClipNodeService(state.id, state);
+    const nodeService = this.graphSequencerService.getMidiNodeService(state.id, state);
     const n = new MidiClipNode(this._graphRoot, state, nodeService, this.panelManager);
     this.addNode(n);
     n.setBounds(ComponentBounds.fromIBounds(state.bounds));

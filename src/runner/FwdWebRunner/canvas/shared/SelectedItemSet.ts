@@ -7,7 +7,7 @@ export class SelectedItemSet<T extends SelectableItem> {
   private _selection: T[] = [];
   private _itemAboutToBeSelected: T = null;
 
-  public onchange: Function = () => {};
+  public onchange: (items: T[]) => void = () => {};
 
   public getItems(): T[] { return this._selection; }
 
@@ -68,13 +68,13 @@ export class SelectedItemSet<T extends SelectableItem> {
   public removeFromSelection(item: T): void {
     this._selection = this._selection.filter((selected) => selected !== item);
     item.selected = false;
-    this.onchange();
+    this.onchange(this._selection);
   }
 
   public deselectAll(): void {
     this._selection.forEach(item => item.selected = false);
     this._selection = [];
-    this.onchange();
+    this.onchange(this._selection);
   }
 
   private doAddToSelection(item: T, notify: boolean): void {
@@ -82,7 +82,7 @@ export class SelectedItemSet<T extends SelectableItem> {
     item.selected = true;
 
     if (notify) {
-      this.onchange();
+      this.onchange(this._selection);
     }
   }
 }

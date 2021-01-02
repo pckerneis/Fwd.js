@@ -1,14 +1,18 @@
 import { Observable } from 'rxjs';
 import { map, pluck } from 'rxjs/operators';
+import { ComponentBounds } from '../canvas/BaseComponent';
+import { SelectableItem } from '../canvas/shared/SelectedItemSet';
+import { Connection } from '../GraphComponent/canvas-components/Connection';
+import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
 import { ConnectionState, GraphSequencerState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
-import { MidiClipNodeService } from './midi-clip-node.service';
+import { MidiClipNodeService, NodeService } from './midi-clip-node.service';
 import { StoreBasedService } from './store-based.service';
 
 export class GraphSequencerService extends StoreBasedService<GraphSequencerState> {
 
   public nodes$: Observable<NodeState[]>;
   public connections$: Observable<ConnectionState[]>;
-  private readonly _midiClipNodeServices: Map<String, MidiClipNodeService> = new Map();
+  private readonly _nodeServices: Map<String, NodeService<any>> = new Map();
 
   constructor(state: GraphSequencerState) {
     super(state);
@@ -25,14 +29,9 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   }
 
   public getNodeStates(): NodeState[] {
-    return super.snapshot.nodes.map(n => {
-      switch (n.kind) {
-        case 'Init':
-          return n;
-        case 'MidiClip':
-          return this._midiClipNodeServices.get(n.id).snapshot;
-      }
-    });
+    return super.snapshot.nodes.map(n => ({
+      ...this._nodeServices.get(n.id).snapshot,
+    }));
   }
 
   public addInitNode(nodeState: InitNodeState): Observable<NodeState> {
@@ -62,24 +61,84 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.update('connections', updated);
   }
 
-  public getMidiClipNodeService(id: string, initialState: MidiClipNodeState): MidiClipNodeService {
-    if (! Boolean(this._midiClipNodeServices.get(id))) {
-      this._midiClipNodeServices.set(id, new MidiClipNodeService(initialState, this));
+  public getMidiNodeService<T extends NodeState>(id: string, initialState: MidiClipNodeState): MidiClipNodeService {
+    if (! Boolean(this._nodeServices.get(id))) {
+      this._nodeServices.set(id, new MidiClipNodeService(initialState, this));
     }
 
-    return this._midiClipNodeServices.get(id);
+    const service = this._nodeServices.get(id);
+
+    if (! (service instanceof MidiClipNodeService)) {
+      throw new Error('Bad node service type ! Expected MidiClipNodeService.');
+    }
+
+    return service as MidiClipNodeService;
+  }
+
+  public getNodeService<T extends NodeState>(id: string, initialState: T): NodeService<T> {
+    if (! Boolean(this._nodeServices.get(id))) {
+      this._nodeServices.set(id, new NodeService<T>(initialState));
+    }
+
+    return this._nodeServices.get(id);
   }
 
   public disconnectPin(id: string): Observable<GraphSequencerState> {
     const updatedConnections = this.snapshot.connections
-      .filter(c => c.targetPinId !== id  && c.sourcePinId !== id);
+      .filter(c => c.targetPinId !== id && c.sourcePinId !== id);
     return this.update('connections', updatedConnections);
   }
 
   public loadState(graphState: GraphSequencerState): void {
-    this._midiClipNodeServices.forEach((service) => service.complete());
-    this._midiClipNodeServices.clear();
+    this._nodeServices.forEach((service) => service.complete());
+    this._nodeServices.clear();
     this._state$.next(graphState);
+  }
+
+  public nodeBoundsChanged(nodes: GraphNode[]): void {
+    nodes.forEach(n => {
+      this.setNodeBounds(n.id, n.getBounds()).subscribe();
+    })
+  }
+
+  public selectionChanged(items: SelectableItem[]): void {
+    const selectedNodes = items
+      .filter(i => i instanceof GraphNode)
+      .map(i => (i as GraphNode).id);
+
+    const selectedConnections: Connection[] = items
+      .filter(i => i instanceof Connection) as Connection[];
+
+    const updatedNodes = this.snapshot.nodes
+      .map(n => ({...n, selected: selectedNodes.includes(n.id)}));
+
+    const updatedConnections = this.snapshot.connections
+      .map(c => {
+        const selected = selectedConnections.find(selected =>
+          (selected.first === c.sourcePinId && selected.second === c.targetPinId)
+          || (selected.second === c.sourcePinId && selected.first === c.targetPinId));
+
+        return {...c, selected: Boolean(selected)};
+      });
+
+    updatedNodes.forEach(node => {
+      const nodeService = this._nodeServices.get(node.id);
+      if (nodeService != null) {
+        nodeService.setSelected(node.selected);
+      }
+    });
+
+    this.update('connections', updatedConnections);
+  }
+
+  private setNodeBounds(id: string, bounds: ComponentBounds): Observable<any> {
+    const midiClipService = this._nodeServices.get(id);
+
+    if (midiClipService == null) {
+      throw new Error('Cannot find service for node ' + id);
+    }
+
+    return midiClipService.setBounds(bounds);
   }
 }
 

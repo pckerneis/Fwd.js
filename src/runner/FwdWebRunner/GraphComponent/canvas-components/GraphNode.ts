@@ -87,7 +87,6 @@ export abstract class GraphNode extends Component implements SelectableItem {
     this._mouseDownResult = this.parentGraph.selection.addToSelectionMouseDown(this,
       event.modifiers.shift);
 
-    // event.consumeNativeEvent();
     this._boundsAtMouseDown = this.getBounds();
     this.toFront();
     this.refreshParent();

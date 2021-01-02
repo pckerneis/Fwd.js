@@ -34,7 +34,6 @@ export class Connection implements SelectableItem {
   public draw(g: CanvasRenderingContext2D): void {
     const startPos = this.getFirstPosition();
     const endPos = this.getSecondPosition();
-    console.log({startPos, endPos})
     drawConnection(g, startPos, endPos, this.selected);
   }
 }

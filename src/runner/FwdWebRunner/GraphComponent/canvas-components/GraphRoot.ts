@@ -13,7 +13,12 @@ export class GraphRoot extends Component {
   public readonly selection: SelectedItemSet<SelectableItem> = new SelectedItemSet();
 
   public readonly connectionAdded$: Observable<ConnectionState>;
+  public readonly nodeBoundsChanged$: Observable<GraphNode[]>
+  public readonly selectionChanged$: Observable<SelectableItem[]>;
+
   private readonly _connectionAddedSubject$: Subject<ConnectionState>;
+  private readonly _nodeBoundsChangedSubject$: Subject<GraphNode[]>;
+  private readonly _selectionChangedSubject$: Subject<SelectableItem[]>;
 
   private readonly _viewportArea: ViewportArea;
 
@@ -34,6 +39,14 @@ export class GraphRoot extends Component {
 
     this._connectionAddedSubject$ = new Subject<ConnectionState>();
     this.connectionAdded$ = this._connectionAddedSubject$.asObservable();
+
+    this._nodeBoundsChangedSubject$ = new Subject();
+    this.nodeBoundsChanged$ = this._nodeBoundsChangedSubject$.asObservable();
+
+    this._selectionChangedSubject$ = new Subject<SelectableItem[]>();
+    this.selectionChanged$ = this._selectionChangedSubject$.asObservable();
+
+    this.selection.onchange = (items) => this._selectionChangedSubject$.next(items);
   }
 
   public get temporaryConnection(): TemporaryConnection {
@@ -185,6 +198,11 @@ export class GraphRoot extends Component {
   public resetComponentDrag(): void {
     this.componentDragReady = false;
     this.positionsAtMouseDown.clear();
+
+    if (! this.selection.isEmpty()) {
+      this._nodeBoundsChangedSubject$.next(this.selection.getItems()
+        .filter(item => item instanceof GraphNode) as GraphNode[]);
+    }
   }
 
   public findSelectionBounds(): { top: number, bottom: number, left: number, right: number } {

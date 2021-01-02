@@ -1,7 +1,8 @@
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, pluck, switchMap, take } from 'rxjs/operators';
+import { ComponentBounds } from '../canvas/BaseComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
-import { FlagKind, MidiClipNodeState, MidiFlagState, MidiNoteState } from '../state/project.state';
+import { FlagKind, MidiClipNodeState, MidiFlagState, MidiNoteState, NodeState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
 import { StoreBasedService } from './store-based.service';
 
@@ -35,8 +36,29 @@ function areArraysEqual(first: Array<any>, second: Array<any>): boolean {
   return true;
 }
 
-export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
+export class NodeService<T extends NodeState> extends StoreBasedService<T> {
   public readonly label$: Observable<string>;
+
+  constructor(state: T) {
+    super(state);
+
+    this.label$ = this._state$.pipe(pluck('label'), distinctUntilChanged());
+  }
+
+  public setLabel(newLabel: string): Observable<T> {
+    return this.update('label', newLabel);
+  }
+
+  public setBounds(bounds: ComponentBounds): Observable<T> {
+    return this.update('bounds', bounds);
+  }
+
+  public setSelected(selected: boolean): Observable<T> {
+    return this.update('selected', selected);
+  }
+}
+
+export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
   public readonly duration$: Observable<number>;
   public readonly signature$: Observable<TimeSignature>;
   public readonly flags$: Observable<MidiFlagState[]>;
@@ -48,7 +70,6 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
               public readonly graphSequencerService: GraphSequencerService) {
     super(state);
 
-    this.label$ = this._state$.pipe(pluck('label'), distinctUntilChanged());
     this.duration$ = this._state$.pipe(pluck('duration'), distinctUntilChanged());
     this.signature$ = this._state$.pipe(pluck('timeSignature'), distinctUntilChanged());
     this.flags$ = this._state$.pipe(pluck('flags'), distinctUntilChanged(areArraysEqual));
@@ -71,10 +92,6 @@ export class MidiClipNodeService extends StoreBasedService<MidiClipNodeState> {
     }
 
     return true;
-  }
-
-  public setLabel(newLabel: string): Observable<MidiClipNodeState> {
-    return this.update('label', newLabel);
   }
 
   public setDuration(newDuration: number): Observable<MidiClipNodeState> {
