@@ -110,7 +110,7 @@ export class GraphElement implements EditorElement {
   }
 
   private removeNode(item: GraphNode): void {
-    this._graphRoot.removeNode(item.id);
+    this.graphSequencerService.removeNodeById(item.id).subscribe();
   }
 
   private findNode(id: string): GraphNode {

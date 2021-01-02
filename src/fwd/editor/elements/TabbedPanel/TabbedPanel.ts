@@ -47,7 +47,7 @@ export class TabbedPanel implements EditorElement {
       return;
     }
 
-    const tab = this.findTab(tabId);
+    const tab = this.findTabOrThrow(tabId);
 
     this._viewport.innerHTML = '';
     this._viewport.append(tab.tabOptions.tabContent.htmlElement);
@@ -59,7 +59,7 @@ export class TabbedPanel implements EditorElement {
   }
 
   public renameTab(tabId: any, label: string): void {
-    const tab = this.findTab(tabId);
+    const tab = this.findTabOrThrow(tabId);
     tab.tabOptions.tabName = label;
     tab.button.refresh();
   }
@@ -70,13 +70,21 @@ export class TabbedPanel implements EditorElement {
       this.setCurrentTab(null);
     }
 
-    const tab = this.findTab(tabId);
+    const tab = this.findTabOrThrow(tabId);
     tab.button.htmlElement.remove();
     tab.tabOptions.tabContent.htmlElement.remove();
     this._tabItems.splice(this._tabItems.indexOf(tab), 1);
   }
 
-  public findTab(tabId: string): TabItem {
+  public findTab(tabId: string): TabItem | undefined {
+    return this._tabItems.find((tab) => tabId === tab.tabOptions.id);
+  }
+
+  public hasTab(id: string): boolean {
+    return !! this.findTab(id);
+  }
+
+  private findTabOrThrow(tabId: string): TabItem {
     const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
 
     if (tabs.length === 0) {
@@ -105,22 +113,35 @@ interface TabItem {
 
 export class TabButtonElement implements EditorElement {
   public readonly htmlElement: HTMLElement;
+  private readonly label: HTMLElement;
 
   constructor(public readonly tabbedPanel: TabbedPanel,
               public readonly tabOptions: TabItemOptions,
               public readonly closeable: boolean) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-tabbed-panel-button');
-    this.htmlElement.innerText = tabOptions.tabName;
+
+    this.label = document.createElement('label');
+    this.htmlElement.append(this.label);
 
     this.htmlElement.onclick = (evt) => {
-      this.tabbedPanel.setCurrentTab(tabOptions.id);
+      evt.stopPropagation();
       evt.preventDefault();
-    }
+      this.tabbedPanel.setCurrentTab(tabOptions.id);
+    };
+
+    const closeButton = document.createElement('div');
+    closeButton.innerText = 'x';
+    this.htmlElement.append(closeButton);
+    closeButton.onclick = (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      this.tabbedPanel.removeTab(tabOptions.id);
+    };
   }
 
   public refresh(): void {
-    this.htmlElement.innerText = this.tabOptions.tabName;
+    this.label.innerText = this.tabOptions.tabName;
   }
 }
 
@@ -137,9 +158,9 @@ injectStyle('TabbedPanel', `
 }
 
 .fwd-tabbed-panel-buttons:after {
-    content: " ";
-    flex-grow: 1;
-    border-bottom: 1px solid lightgrey;
+  content: " ";
+  flex-grow: 1;
+  border-bottom: 1px solid lightgrey;
 }
 
 .fwd-tabbed-panel-button {
@@ -149,7 +170,23 @@ injectStyle('TabbedPanel', `
   padding: 2px 5px;
   cursor: pointer;
   user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.fwd-tabbed-panel-button>label {
+  flex-grow: 1;
   font-size: smaller;
+}
+
+.fwd-tabbed-panel-button>div {
+  cursor: pointer;
+  opacity: 0.6;
+  margin-left: 6px;
+}
+
+.fwd-tabbed-panel-button>div:hover {
+  opacity: 1;
 }
 
 .fwd-tabbed-panel-button.current-tab {

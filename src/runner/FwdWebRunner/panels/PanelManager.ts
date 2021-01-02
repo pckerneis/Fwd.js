@@ -29,7 +29,7 @@ export class PanelManager {
   }
 
   public showMidiEditor(node: MidiClipNode): void {
-    if (this.noteSequencerPanels.get(node.id)) {
+    if (this._contextualTabbedPanel.hasTab(node.id)) {
       this._contextualTabbedPanel.setCurrentTab(node.id);
     } else {
       const panel = new MidiClipPanel(node.midiClipNodeService);

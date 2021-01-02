@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { map, pluck } from 'rxjs/operators';
+import { map, pluck, tap } from 'rxjs/operators';
 import { ComponentBounds } from '../canvas/BaseComponent';
 import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
@@ -45,9 +45,15 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   }
 
   public removeNodeById(nodeId: string): Observable<GraphSequencerState> {
-    const updatedNodes = [...this.snapshot.nodes];
-    updatedNodes.splice(updatedNodes.indexOf(updatedNodes.find(n => n.id === nodeId)));
-    return this.update('nodes', updatedNodes);
+    const updatedNodes = this.snapshot.nodes.filter(n => n.id !== nodeId);
+    return this.update('nodes', updatedNodes).pipe(
+      tap(() => {
+        const service = this._nodeServices.get(nodeId);
+        if (service != null) {
+          service.complete();
+          this._nodeServices.set(nodeId, undefined);
+        }
+      }));
   }
 
   public addConnection(connection: ConnectionState): Observable<GraphSequencerState> {
