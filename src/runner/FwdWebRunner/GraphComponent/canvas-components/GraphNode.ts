@@ -37,8 +37,6 @@ export abstract class GraphNode extends Component implements SelectableItem {
     this.selected = state.selected;
     this.width = this.defaultWidth;
     this.height = this.defaultHeight;
-
-    console.log('creating node', state.selected)
   }
 
   public get label(): string {

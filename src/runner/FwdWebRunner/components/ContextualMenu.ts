@@ -82,7 +82,6 @@ export class ContextualMenu {
   }
 
   private optionSelected(option: MenuOption, infos: MenuInfo): void {
-    console.log(option);
     if (typeof option.action === 'function') {
       option.action(infos);
     }

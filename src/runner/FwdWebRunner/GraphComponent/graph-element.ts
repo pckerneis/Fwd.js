@@ -91,7 +91,6 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
-    console.log('add init node');
     // Initialize service
     this.graphSequencerService.getNodeService(state.id, state);
     const n = new InitNode(this._graphRoot, state);
@@ -119,14 +118,6 @@ export class GraphElement implements EditorElement {
 
     if (source != null && target != null) {
       this._graphRoot.addConnection(source, target, connection.selected);
-    }
-  }
-
-  private removeConnection(connection: ConnectionState): void {
-    const {source, target} = this.findPins(connection);
-
-    if (source != null && target != null) {
-      this._graphRoot.removeConnection(source.id, target.id);
     }
   }
 
