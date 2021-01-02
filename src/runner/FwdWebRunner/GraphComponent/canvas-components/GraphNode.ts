@@ -87,7 +87,7 @@ export abstract class GraphNode extends Component implements SelectableItem {
     this._mouseDownResult = this.parentGraph.selection.addToSelectionMouseDown(this,
       event.modifiers.shift);
 
-    event.consumeNativeEvent();
+    // event.consumeNativeEvent();
     this._boundsAtMouseDown = this.getBounds();
     this.toFront();
     this.refreshParent();
@@ -106,9 +106,6 @@ export abstract class GraphNode extends Component implements SelectableItem {
     event.consumeNativeEvent();
     this.parentGraph.moveSelection(event);
     this.refreshParent();
-  }
-
-  public moveSelection(event: ComponentMouseEvent): void {
   }
 
   protected render(g: CanvasRenderingContext2D): void {

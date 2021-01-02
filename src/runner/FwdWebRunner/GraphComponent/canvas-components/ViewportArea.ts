@@ -1,4 +1,4 @@
-import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { drawConnection } from './Connection';
 import { GraphRoot } from './GraphRoot';
 

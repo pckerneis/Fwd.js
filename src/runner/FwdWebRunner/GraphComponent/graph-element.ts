@@ -7,6 +7,7 @@ import { PanelManager } from '../panels/PanelManager';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
+import { Connection } from './canvas-components/Connection';
 import { GraphNode, InitNode } from './canvas-components/GraphNode';
 import { GraphRoot } from './canvas-components/GraphRoot';
 import { MidiClipNode } from './canvas-components/MidiClipNode';
@@ -29,6 +30,8 @@ export class GraphElement implements EditorElement {
     this.htmlElement.append(this._rootHolder.canvas);
     this._rootHolder.attachResizeObserver(this.htmlElement);
     this._rootHolder.attachMouseEventListeners();
+    this._rootHolder.canvas.tabIndex = 0;
+    this._rootHolder.canvas.onkeydown = event => this.handleKeyDown(event);
 
     graphSequencerService.nodes$.subscribe((newNodes: NodeState[]) => {
       this._graphRoot.clearAll();
@@ -92,8 +95,12 @@ export class GraphElement implements EditorElement {
     const {source, target} = this.findPins(connection);
 
     if (source != null && target != null) {
-      this._graphRoot.removeConnection(source, target);
+      this._graphRoot.removeConnection(source.id, target.id);
     }
+  }
+
+  private removeNode(item: GraphNode): void {
+    this._graphRoot.removeNode(item.id);
   }
 
   private findNode(id: string): GraphNode {
@@ -105,6 +112,25 @@ export class GraphElement implements EditorElement {
       source: this.findNode(connection.sourceNode)?.outlets.array.find(p => p.id === connection.sourcePinId),
       target: this.findNode(connection.targetNode)?.inlets.array.find(p => p.id === connection.targetPinId),
     };
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      this.deleteSelection();
+    }
+  }
+
+  private deleteSelection(): void {
+    this._graphRoot.selection.getItems().forEach(item => {
+      if (item instanceof GraphNode) {
+        this.removeNode(item);
+      } else if (item instanceof Connection) {
+        this._graphRoot.removeConnection(item.first, item.second);
+      }
+    });
+
+    this._graphRoot.selection.deselectAll();
+    this._graphRoot.repaint();
   }
 }
 

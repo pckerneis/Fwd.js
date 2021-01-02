@@ -120,7 +120,7 @@ export class GraphRoot extends Component {
     this.repaint();
   }
 
-  public removeConnection(first: Pin, second: Pin): void {
+  public removeConnection(first: string, second: string): void {
     this._connections.remove(this.findConnection(first, second));
     this.repaint();
   }
@@ -254,8 +254,8 @@ export class GraphRoot extends Component {
     return null;
   }
 
-  private findConnection(first: Pin, second: Pin): Connection {
-    return this._connections.array.find(c => c.first === first.id && c.second === second.id);
+  private findConnection(first: string, second: string): Connection {
+    return this._connections.array.find(c => c.first === first && c.second === second);
   }
 
   private connectionAdded(first: Pin, second: Pin, selected: boolean): void {
