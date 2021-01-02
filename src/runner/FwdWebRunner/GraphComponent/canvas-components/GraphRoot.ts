@@ -4,21 +4,10 @@ import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } fr
 import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { ConnectionState } from '../../state/project.state';
+import { Connection, TemporaryConnection } from './Connection';
 import { GraphNode } from './GraphNode';
 import { OutletPin, Pin } from './Pin';
 import { ViewportArea } from './ViewportArea';
-
-interface TemporaryConnection {
-  endPosition: ComponentPosition;
-  readonly sourcePin: Pin;
-}
-
-class Connection implements SelectableItem {
-  constructor(public readonly first: string,
-              public readonly second: string,
-              public readonly selected: boolean) {
-  }
-}
 
 export class GraphRoot extends Component {
   public readonly selection: SelectedItemSet<SelectableItem> = new SelectedItemSet();
@@ -121,7 +110,7 @@ export class GraphRoot extends Component {
 
   public addConnection(first: Pin, second: Pin, selected: boolean): void {
     if (! this.arePinsConnected(first, second)) {
-      this._connections.add(new Connection(first.id, second.id, selected));
+      this._connections.add(new Connection(this, first.id, second.id, selected));
       this.repaint();
     }
   }
@@ -193,7 +182,7 @@ export class GraphRoot extends Component {
     }
   }
 
-  public resetComponentDragger(): void {
+  public resetComponentDrag(): void {
     this.componentDragReady = false;
     this.positionsAtMouseDown.clear();
   }

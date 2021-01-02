@@ -1,9 +1,11 @@
 import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { drawConnection } from './Connection';
 import { GraphRoot } from './GraphRoot';
 
 export class ViewportArea extends Component {
 
   private _backgroundColor: string = 'white';
+  private _mouseDownResult: boolean;
 
   constructor(public readonly graphRoot: GraphRoot) {
     super();
@@ -12,10 +14,23 @@ export class ViewportArea extends Component {
   public mousePressed(event: ComponentMouseEvent): void {
     super.mousePressed(event);
 
-    // TODO detect connections
+    for (const connection of this.graphRoot.connections.array) {
+      if (connection.hitTest(event.position)) {
+        this._mouseDownResult = this.graphRoot.selection
+          .addToSelectionMouseDown(connection, event.modifiers.shift);
+        this.repaint();
+        return;
+      }
+    }
 
     this.graphRoot.selection.deselectAll();
     this.graphRoot.repaint();
+  }
+
+  public mouseReleased(event: ComponentMouseEvent): void {
+    super.mouseReleased(event);
+    this.graphRoot.selection.addToSelectionMouseUp(event.wasDragged,
+      event.modifiers.shift, this._mouseDownResult);
   }
 
   protected render(g: CanvasRenderingContext2D): void {
@@ -30,30 +45,10 @@ export class ViewportArea extends Component {
     }
 
     this.graphRoot.connections.array.forEach(connection => {
-      const firstPin = this.graphRoot.findPin(connection.first);
-      const secondPin = this.graphRoot.findPin(connection.second);
-
-      if (firstPin != null && secondPin != null) {
-        const startPos = firstPin.getBoundsInGraph().center;
-        const endPos = secondPin.getBoundsInGraph().center;
-        drawConnection(g, startPos, endPos, connection.selected);
-      }
+      connection.draw(g);
     });
   }
 
   protected resized(): void {
   }
-}
-
-function drawConnection(g: CanvasRenderingContext2D,
-                        startPos: ComponentPosition,
-                        endPos: ComponentPosition,
-                        selected: boolean): void {
-  g.strokeStyle = selected ? '#00a8ff' : 'black';
-  g.lineWidth = selected ? 2 : 1;
-
-  g.beginPath();
-  g.moveTo(startPos.x, startPos.y);
-  g.lineTo(endPos.x, endPos.y);
-  g.stroke();
 }
