@@ -6,17 +6,26 @@ export interface Command<T = any> {
 export type CommandFactory<T> = (payload: T) => Command<T>;
 
 export interface CommandPerformer<T = any> {
+  canPerform(command: Command<T>): boolean;
+
   perform(command: Command<T>): void;
 
   undo(command: Command<T>): void;
 
-  canPerform(command: Command<T>): boolean;
+  redo(command: Command<T>): void;
+}
+
+export type CommandPerformerFactory<T = any> = () => CommandPerformer<T>;
+
+export type CommandAndPerformer<T = any> = {
+  command: Command<T>;
+  performer: CommandPerformer<T>;
 }
 
 class CommandManager {
-  private _undoStack: Command[] = [];
-  private _redoStack: Command[] = [];
-  private _performers: CommandPerformer[] = [];
+  private _undoStack: CommandAndPerformer[] = [];
+  private _redoStack: CommandAndPerformer[] = [];
+  private _performerFactories: CommandPerformerFactory[] = [];
 
   constructor() {
   }
@@ -32,15 +41,16 @@ class CommandManager {
   public perform(command: Command): boolean {
     this._redoStack = [];
 
-    for (let performer of this._performers) {
+    for (let factory of this._performerFactories) {
+      const performer = factory();
       if (performer.canPerform(command)) {
         performer.perform(command);
-        this._undoStack.push(command);
+        this._undoStack.push({command, performer});
         return true;
       }
     }
 
-    throw new Error('No handler for command ' + command.id);
+    throw new Error('No handler found for command ' + command.id);
   }
 
   public undo(): boolean {
@@ -48,17 +58,8 @@ class CommandManager {
       return;
     }
 
-    const commandToUndo = this._undoStack.pop();
-
-    for (let performer of this._performers) {
-      if (performer.canPerform(commandToUndo)) {
-        performer.undo(commandToUndo);
-        this._redoStack.push(commandToUndo);
-        return true;
-      }
-    }
-
-    throw new Error('No handler for command ' + commandToUndo.id);
+    const {command, performer} = this._undoStack.pop();
+    performer.undo(command);
   }
 
   public redo(): boolean {
@@ -66,22 +67,12 @@ class CommandManager {
       return;
     }
 
-    const commandToRedo = this._redoStack.pop();
-
-    for (let performer of this._performers) {
-      if (performer.canPerform(commandToRedo)) {
-        performer.perform(commandToRedo);
-        this._undoStack.push(commandToRedo);
-        return true;
-      }
-    }
-
-    throw new Error('No handler for command ' + commandToRedo.id);
-
+    const {command, performer} = this._redoStack.pop();
+    performer.redo(command);
   }
 
-  public addPerformer(performer: CommandPerformer): void {
-    this._performers.push(performer);
+  public addPerformerFactory(performerFactory: CommandPerformerFactory): void {
+    this._performerFactories.push(performerFactory);
   }
 
   public clearHistory(): void {

@@ -6,7 +6,7 @@ export abstract class Pin extends Component {
 
   constructor(public readonly parentNode: GraphNode,
               public readonly parentGraph: GraphRoot,
-              public readonly id: string) {
+              public readonly id: number) {
     super();
   }
 

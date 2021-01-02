@@ -20,7 +20,6 @@ import { PanelManager } from './panels/PanelManager';
 import { GraphSequencerService } from './services/graph-sequencer.service';
 import { PlaybackService } from './services/playback.service';
 import { ProjectFileService } from './services/project-file.service';
-import { MidiNoteState } from './state/project.state';
 import { injectStyle } from './StyleInjector';
 
 const DBG = new Logger('FwdWebRunner', parentLogger);
@@ -62,79 +61,31 @@ export default class FwdWebRunner implements FwdRunner {
     // TEST INIT
     registerGraphSequencerCommands(this._graphSequencerService);
 
-    commandManager.perform(createAndAddInitNode({
-      kind: 'Init',
-      id: '1',
-      bounds: {x: 2, y: 2, width: 120, height: 24},
-      label: 'start',
-      outletId: '0',
-      selected: false,
-    }));
+    commandManager.perform(createAndAddInitNode({x: 2, y: 2}));
+    commandManager.perform(createAndAddMidiClipNode({x: 210, y: 4}));
+    commandManager.perform(createAndAddMidiClipNode({x: 210, y: 50}));
 
-    const noteDefault: MidiNoteState = {
-      initialVelocity: 0, initialStart: 0, hidden: false, tempDuration: null, selected: false,
-      time: 0, duration: 0, velocity: 0, pitch: 0,
-    };
-
-    commandManager.perform(createAndAddMidiClipNode({
-      id: '2',
-      kind: 'MidiClip',
-      duration: 4,
-      timeSignature: {upper: 4, lower: 4},
-      notes: [
-        {...noteDefault, time: 0, duration: 1, pitch: 65, velocity: 120},
-        {...noteDefault, time: 1, duration: 1, pitch: 67, velocity: 110},
-        {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
-      ],
-      flags: [
-        {id: '1', kind: 'inlet', time: 0, color: 'grey', name: 'in'},
-        {id: '2', kind: 'outlet', time: 4, color: 'grey', name: 'out'},
-      ],
-      label: 'node1',
-      bounds: {x: 210, y: 4, width: 120, height: 20},
-      selected: false,
-    }));
-
-    commandManager.perform(createAndAddMidiClipNode({
-      id: '3',
-      kind: 'MidiClip',
-      duration: 4,
-      timeSignature: {upper: 4, lower: 4},
-      notes: [
-        {...noteDefault, time: 0, duration: 1, pitch: 65, velocity: 120},
-        {...noteDefault, time: 1, duration: 1, pitch: 67, velocity: 110},
-        {...noteDefault, time: 2, duration: 1, pitch: 69, velocity: 100},
-      ],
-      flags: [
-        {id: '3', kind: 'inlet', time: 0, color: 'grey', name: 'in'},
-        {id: '4', kind: 'outlet', time: 4, color: 'grey', name: 'out'},
-      ],
-      label: 'node2',
-      bounds: {x: 210, y: 50, width: 120, height: 20},
+    commandManager.perform(addConnection({
+      sourceNode: 1,
+      sourcePinId: 0,
+      targetNode: 2,
+      targetPinId: 1,
       selected: false,
     }));
 
     commandManager.perform(addConnection({
-      sourceNode: '1',
-      sourcePinId: '0',
-      targetNode: '2',
-      targetPinId: '1',
+      sourceNode: 2,
+      sourcePinId: 2,
+      targetNode: 3,
+      targetPinId: 3,
       selected: false,
     }));
 
     commandManager.perform(addConnection({
-      sourceNode: '2',
-      sourcePinId: '2',
-      targetNode: '3',
-      targetPinId: '3',
-      selected: false,
-    }));
-
-    commandManager.perform(addConnection({
-      sourceNode: '3',
-      sourcePinId: '4',
-      targetNode: '2',
-      targetPinId: '1',
+      sourceNode: 3,
+      sourcePinId: 4,
+      targetNode: 2,
+      targetPinId: 1,
       selected: true,
     }));
   }

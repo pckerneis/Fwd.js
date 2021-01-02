@@ -25,7 +25,7 @@ export class PlaybackService {
 
   private fireNextNodes(scheduler: FwdScheduler,
                         startNode: NodeState,
-                        startPin: string,
+                        startPin: number,
                         when: number): void {
     const connectedClips = this.connections
       .map((connection) => {
@@ -47,7 +47,7 @@ export class PlaybackService {
     });
   }
 
-  private fireMidiClip(scheduler: FwdScheduler, clip: MidiClipNodeState, inletPin: string): void {
+  private fireMidiClip(scheduler: FwdScheduler, clip: MidiClipNodeState, inletPin: number): void {
     const startTime = clip.flags.find(c => c.id === inletPin)?.time || 0;
     this.playMidiClipSlice(scheduler, clip, startTime);
   }

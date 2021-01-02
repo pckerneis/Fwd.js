@@ -4,16 +4,17 @@ import { ComponentBounds } from '../canvas/BaseComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 import { FlagKind, MidiClipNodeState, MidiFlagState, MidiNoteState, NodeState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
+import { SequenceGenerator } from './sequence-generator';
 import { StoreBasedService } from './store-based.service';
 
 export interface MidiInlet {
-  id: string;
+  id: number;
   time: number;
   name: string;
 }
 
 export interface MidiOutlet {
-  id: string;
+  id: number;
   time: number;
   name: string;
 }
@@ -66,6 +67,8 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
   public readonly inlets$: Observable<MidiInlet[]>;
   public readonly outlets$: Observable<MidiOutlet[]>;
 
+  private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
+
   constructor(state: MidiClipNodeState,
               public readonly graphSequencerService: GraphSequencerService) {
     super(state);
@@ -115,11 +118,12 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
   }
 
   public addFlag(flag: MidiFlagState): Observable<MidiClipNodeState> {
+    flag.id = this._idSequence.next();
     const updateFlags = [...this.snapshot.flags, flag];
     return this.update('flags', updateFlags);
   }
 
-  public removeFlag(id: string): any {
+  public removeFlag(id: number): any {
     const flag = this.snapshot.flags.find(f => f.id === id);
 
     if (flag == null) {
@@ -130,17 +134,17 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
     return this.update('flags', this.snapshot.flags.filter(f => f.id !== id));
   }
 
-  public renameFlag(id: string, value: string): any {
+  public renameFlag(id: number, value: string): any {
     const updatedFlags = this.updateOneFlag(id, 'name', value);
     return this.update('flags', updatedFlags);
   }
 
-  public setFlagTime(id: string, value: number): any {
+  public setFlagTime(id: number, value: number): any {
     const updatedFlags = this.updateOneFlag(id, 'time', value);
     return this.update('flags', updatedFlags);
   }
 
-  public setFlagKind(id: string, kind: string): Observable<MidiClipNodeState> {
+  public setFlagKind(id: number, kind: string): Observable<MidiClipNodeState> {
     if (MidiClipNodeService.checkFlagKind(kind)) {
       const existingFlag = this.snapshot.flags.find(f => f.id === id);
 
@@ -153,7 +157,7 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
     }
   }
 
-  public setFlagJumpDestination(id: string, destination: string): any {
+  public setFlagJumpDestination(id: number, destination: number): any {
     const updatedFlags = this.updateOneFlag(id, 'jumpDestination', destination);
     return this.update('flags', updatedFlags);
   }
@@ -162,7 +166,7 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
     return this.update('notes', notes);
   }
 
-  private updateOneFlag<K extends keyof MidiFlagState>(id: string, key: K, value: MidiFlagState[K]): MidiFlagState[] {
+  private updateOneFlag<K extends keyof MidiFlagState>(id: number, key: K, value: MidiFlagState[K]): MidiFlagState[] {
     return this.snapshot.flags.map(f => (f.id === id ? {...f, [key]: value} : f));
   }
 }

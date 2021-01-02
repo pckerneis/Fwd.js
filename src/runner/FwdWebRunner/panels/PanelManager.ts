@@ -15,7 +15,7 @@ export class PanelManager {
   private _graphEditor: GraphElement;
   private _contextualTabbedPanel: TabbedPanel;
 
-  private readonly noteSequencerPanels: Map<string, MidiClipPanel>;
+  private readonly noteSequencerPanels: Map<number, MidiClipPanel>;
 
   constructor() {
     this.noteSequencerPanels = new Map();

@@ -1,3 +1,4 @@
+import { ComponentPosition } from '../canvas/BaseComponent';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState } from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
@@ -8,33 +9,55 @@ export enum CommandIds {
   addConnection = 'addConnection',
 }
 
-export const createAndAddInitNode: CommandFactory<InitNodeState> = (state: InitNodeState) => {
+export const createAndAddInitNode: CommandFactory<ComponentPosition> = (position) => {
   return {
     id: CommandIds.createAndAddInitNode,
-    payload: state,
+    payload: position,
   };
 };
 
-function createAndAddInitNodePerformer(service: GraphSequencerService): CommandPerformer<InitNodeState> {
+function createAndAddInitNodePerformer(service: GraphSequencerService): CommandPerformer<ComponentPosition> {
+  let addedNodeState: InitNodeState;
   return {
-    canPerform: command => command.id === CommandIds.createAndAddInitNode,
-    perform: command => service.addInitNode(command.payload).subscribe(),
-    undo: command => service.removeNodeById(command.payload.id).subscribe(),
+    canPerform: (command) => command.id === CommandIds.createAndAddInitNode,
+    perform: (command) => {
+      service.createAndAddInitNode(command.payload)
+        .subscribe((state) => addedNodeState = state as InitNodeState)
+    },
+    undo: () => {
+      if (addedNodeState != null) {
+        service.removeNodeById(addedNodeState.id).subscribe();
+      }
+    },
+    redo: () => {
+      service.addNode(addedNodeState).subscribe();
+    },
   };
 }
 
-export const createAndAddMidiClipNode: CommandFactory<MidiClipNodeState> = (state) => {
+export const createAndAddMidiClipNode: CommandFactory<ComponentPosition> = (state) => {
   return {
     id: CommandIds.createAndAddMidiClipNode,
     payload: state,
   };
 };
 
-function createAndAddMidiClipNodePerformer(service: GraphSequencerService): CommandPerformer<MidiClipNodeState> {
+function createAndAddMidiClipNodePerformer(service: GraphSequencerService): CommandPerformer<ComponentPosition> {
+  let addedNodeState: MidiClipNodeState;
   return {
-    canPerform: command => command.id === CommandIds.createAndAddMidiClipNode,
-    perform: command => service.addMidiClipNode(command.payload).subscribe(),
-    undo: command => service.removeNodeById(command.payload.id).subscribe(),
+    canPerform: (command) => command.id === CommandIds.createAndAddMidiClipNode,
+    perform: (command) => {
+      service.createAndAddMidiClipNode(command.payload)
+        .subscribe((state) => addedNodeState = state as MidiClipNodeState)
+    },
+    undo: () => {
+      if (addedNodeState != null) {
+        service.removeNodeById(addedNodeState.id).subscribe();
+      }
+    },
+    redo: () => {
+      service.addNode(addedNodeState).subscribe();
+    },
   };
 }
 
@@ -50,11 +73,12 @@ function addConnectionPerformer(service: GraphSequencerService): CommandPerforme
     canPerform: command => command.id === CommandIds.addConnection,
     perform: command => service.addConnection(command.payload).subscribe(),
     undo: command => service.removeConnection(command.payload).subscribe(),
+    redo: command => service.addConnection(command.payload).subscribe(),
   };
 }
 
 export function registerGraphSequencerCommands(service: GraphSequencerService): void {
-  commandManager.addPerformer(createAndAddInitNodePerformer(service));
-  commandManager.addPerformer(createAndAddMidiClipNodePerformer(service));
-  commandManager.addPerformer(addConnectionPerformer(service));
+  commandManager.addPerformerFactory(() => createAndAddInitNodePerformer(service));
+  commandManager.addPerformerFactory(() => createAndAddMidiClipNodePerformer(service));
+  commandManager.addPerformerFactory(() => addConnectionPerformer(service));
 }

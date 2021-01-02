@@ -3,7 +3,7 @@ import { Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
 export interface BaseNodeState {
-  id: string;
+  id: number;
   bounds: IBounds;
   selected: boolean;
 }
@@ -11,7 +11,7 @@ export interface BaseNodeState {
 export interface InitNodeState extends BaseNodeState {
   kind: 'Init';
   label: string;
-  outletId: string;
+  outletId: number;
 }
 
 export interface MidiNoteState extends Note {
@@ -24,12 +24,12 @@ export interface MidiNoteState extends Note {
 export type FlagKind = 'inlet' | 'outlet' | 'none' | 'jump';
 
 export interface MidiFlagState {
-  id: string;
+  id: number;
   time: number;
   name: string;
   color: string;
   kind: FlagKind;
-  jumpDestination?: string;
+  jumpDestination?: number;
 }
 
 export interface MidiClipNodeState extends BaseNodeState {
@@ -44,10 +44,10 @@ export interface MidiClipNodeState extends BaseNodeState {
 export type NodeState = MidiClipNodeState | InitNodeState;
 
 export interface ConnectionState {
-  sourceNode: string;
-  sourcePinId: string;
-  targetNode: string;
-  targetPinId: string;
+  sourceNode: number;
+  sourcePinId: number;
+  targetNode: number;
+  targetPinId: number;
   selected: boolean;
 }
 

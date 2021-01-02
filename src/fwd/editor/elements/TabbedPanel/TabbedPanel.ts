@@ -42,7 +42,7 @@ export class TabbedPanel implements EditorElement {
     }
   }
 
-  public setCurrentTab(tabId: string | null): void {
+  public setCurrentTab(tabId: number | null): void {
     if (tabId == null) {
       this._viewport.innerHTML = '';
       this._viewport.append(this._elementToShowWhenEmpty);
@@ -66,7 +66,7 @@ export class TabbedPanel implements EditorElement {
     tab.button.refresh();
   }
 
-  public removeTab(tabId: string): void {
+  public removeTab(tabId: number): void {
     if (this.isCurrentTab(tabId)) {
       const currentTabIndex = this._tabItems.indexOf(this._currentTab);
       const nextTab = this._tabItems[currentTabIndex + 1];
@@ -82,11 +82,11 @@ export class TabbedPanel implements EditorElement {
     this._tabItems.splice(this._tabItems.indexOf(tab), 1);
   }
 
-  public findTab(tabId: string): TabItem | undefined {
+  public findTab(tabId: number): TabItem | undefined {
     return this._tabItems.find((tab) => tabId === tab.tabOptions.id);
   }
 
-  public hasTab(id: string): boolean {
+  public hasTab(id: number): boolean {
     return !! this.findTab(id);
   }
   
@@ -97,7 +97,7 @@ export class TabbedPanel implements EditorElement {
     }
   }
 
-  private findTabOrThrow(tabId: string): TabItem {
+  private findTabOrThrow(tabId: number): TabItem {
     const tabs = this._tabItems.filter((tab) => tabId === tab.tabOptions.id);
 
     if (tabs.length === 0) {
@@ -107,13 +107,13 @@ export class TabbedPanel implements EditorElement {
     return tabs[0];
   }
 
-  private isCurrentTab(tabId: string): Boolean {
+  private isCurrentTab(tabId: number): Boolean {
     return this._currentTab.tabOptions.id === tabId;
   }
 }
 
 interface TabItemOptions {
-  readonly id: any;
+  readonly id: number;
   tabName: string;
   tabContent: EditorElement;
   closeable: boolean;

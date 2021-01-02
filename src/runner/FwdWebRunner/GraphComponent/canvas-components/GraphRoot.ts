@@ -29,7 +29,7 @@ export class GraphRoot extends Component {
 
   // TODO: move this in utility class ?
   private componentDragReady: boolean;
-  private positionsAtMouseDown: Map<string, ComponentBounds> = new Map();
+  private positionsAtMouseDown: Map<number, ComponentBounds> = new Map();
 
   constructor() {
     super();
@@ -99,7 +99,7 @@ export class GraphRoot extends Component {
     this.resized();
   }
 
-  public removeNode(id: string): void {
+  public removeNode(id: number): void {
     const node = this._nodes.array.find(n => n.id === id);
 
     if (node != null) {
@@ -133,7 +133,7 @@ export class GraphRoot extends Component {
     this.repaint();
   }
 
-  public removeConnection(first: string, second: string): void {
+  public removeConnection(first: number, second: number): void {
     this._connections.remove(this.findConnection(first, second));
     this.repaint();
   }
@@ -149,7 +149,7 @@ export class GraphRoot extends Component {
     this.repaint();
   }
 
-  public findPin(id: string): Pin {
+  public findPin(id: number): Pin {
     for (let node of this.nodes.array) {
       for (let pin of node.inlets.array) {
         if (pin.id === id) {
@@ -272,7 +272,7 @@ export class GraphRoot extends Component {
     return null;
   }
 
-  private findConnection(first: string, second: string): Connection {
+  private findConnection(first: number, second: number): Connection {
     return this._connections.array.find(c => c.first === first && c.second === second);
   }
 
@@ -283,7 +283,7 @@ export class GraphRoot extends Component {
         sourcePinId: first.id,
         targetNode: second.parentNode.id,
         targetPinId: second.id,
-        selected: selected,
+        selected: false,
       });
     } else {
       this._connectionAddedSubject$.next({
@@ -291,7 +291,7 @@ export class GraphRoot extends Component {
         targetPinId: first.id,
         sourceNode: second.parentNode.id,
         sourcePinId: second.id,
-        selected: selected,
+        selected: false,
       });
     }
   }

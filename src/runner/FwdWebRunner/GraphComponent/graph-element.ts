@@ -2,7 +2,8 @@ import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { ComponentBounds } from '../canvas/BaseComponent';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { commandManager } from '../commands/command-manager';
-import { addConnection } from '../commands/graph-sequencer.commands';
+import { addConnection, createAndAddInitNode, createAndAddMidiClipNode } from '../commands/graph-sequencer.commands';
+import { ContextualMenu } from '../components/ContextualMenu';
 import { PanelManager } from '../panels/PanelManager';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
@@ -18,6 +19,7 @@ export class GraphElement implements EditorElement {
 
   private readonly _rootHolder: RootComponentHolder<GraphRoot>;
   private readonly _graphRoot: GraphRoot;
+  private readonly _contextMenu: ContextualMenu;
 
   constructor(public readonly graphSequencerService: GraphSequencerService,
               public readonly panelManager: PanelManager) {
@@ -32,6 +34,7 @@ export class GraphElement implements EditorElement {
     this._rootHolder.attachMouseEventListeners();
     this._rootHolder.canvas.tabIndex = 0;
     this._rootHolder.canvas.onkeydown = event => this.handleKeyDown(event);
+    this._rootHolder.canvas.oncontextmenu = event => this._contextMenu.show(event);
 
     graphSequencerService.nodes$.subscribe((newNodes: NodeState[]) => {
       this._graphRoot.clearAll();
@@ -64,6 +67,23 @@ export class GraphElement implements EditorElement {
     this._graphRoot.selectionChanged$.subscribe((items) => {
       this.graphSequencerService.selectionChanged(items);
     });
+
+    this._contextMenu = new ContextualMenu([
+      {
+        label: 'Add init node',
+        action: (infos) => commandManager.perform(createAndAddInitNode({
+          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left,
+          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top,
+        })),
+      },
+      {
+        label: 'Add midi clip node',
+        action: (infos) => commandManager.perform(createAndAddMidiClipNode({
+          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left,
+          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top,
+        })),
+      },
+    ]);
   }
 
   public get nodes(): readonly GraphNode[] {
@@ -71,6 +91,7 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
+    console.log('add init node');
     // Initialize service
     this.graphSequencerService.getNodeService(state.id, state);
     const n = new InitNode(this._graphRoot, state);
@@ -113,7 +134,7 @@ export class GraphElement implements EditorElement {
     this.graphSequencerService.removeNodeById(item.id).subscribe();
   }
 
-  private findNode(id: string): GraphNode {
+  private findNode(id: number): GraphNode {
     return this.nodes.find(n => n.id === id);
   }
 

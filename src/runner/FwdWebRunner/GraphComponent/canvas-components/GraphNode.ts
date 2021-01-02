@@ -7,7 +7,7 @@ import { InletPin, OutletPin, Pin } from './Pin';
 
 export abstract class GraphNode extends Component implements SelectableItem {
 
-  public readonly id: string;
+  public readonly id: number;
 
   public selected: boolean;
 
@@ -52,7 +52,7 @@ export abstract class GraphNode extends Component implements SelectableItem {
     }
   }
 
-  public addInlet(id: string): InletPin {
+  public addInlet(id: number): InletPin {
     const pin = new InletPin(this, this.parentGraph, id);
     this.addAndMakeVisible(pin);
     this.inlets.add(pin);
@@ -60,7 +60,7 @@ export abstract class GraphNode extends Component implements SelectableItem {
     return pin;
   }
 
-  public addOutlet(id: string): OutletPin {
+  public addOutlet(id: number): OutletPin {
     const pin = new OutletPin(this, this.parentGraph, id);
     this.addAndMakeVisible(pin);
     this.outlets.add(pin);

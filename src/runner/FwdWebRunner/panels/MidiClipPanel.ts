@@ -8,9 +8,6 @@ import { MidiFlagState, MidiNoteState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { PropertyPanel } from './PropertyPanel';
 
-// TODO this can lead to duplicate ids...
-let latestAdded = 100;
-
 class SettingsPanel implements EditorElement {
   public readonly htmlElement: HTMLElement;
 
@@ -105,7 +102,7 @@ class SettingsPanel implements EditorElement {
     addMarkerButton.textContent = '+ Add marker';
     addMarkerButton.onclick = () => {
       this.service.addFlag({
-        id: (latestAdded++).toString(),
+        id: null,
         kind: 'none',
         name: 'flag',
         time: 0,
@@ -151,24 +148,25 @@ class SettingsPanel implements EditorElement {
 
       const jumpLabel = markerPanel.addLabel('Destination');
       let jumpSelect = markerPanel.addSelect([''], '',
-        (v) => this.service.setFlagJumpDestination(flag.id, v).subscribe());
+        (v) => this.service.setFlagJumpDestination(flag.id, Number(v)).subscribe());
 
       this.service.flags$.subscribe(
         (flags: MidiFlagState[]) => {
-          const newFlatState = flags.find(f => f.id === flag.id);
+          const midiFlagState = flags.find(f => f.id === flag.id);
 
-          if (newFlatState != null) {
-            nameField.value = newFlatState.name;
-            timeField.valueAsNumber = newFlatState.time;
-            titleElem.innerText = newFlatState.name;
+          if (midiFlagState != null) {
+            nameField.value = midiFlagState.name;
+            timeField.valueAsNumber = midiFlagState.time;
+            titleElem.innerText = midiFlagState.name;
 
-            const newJumpSelect = markerPanel.createSelect(flags.map(f => f.id), newFlatState.jumpDestination,
-              (v) => this.service.setFlagJumpDestination(flag.id, v).subscribe());
+            const newJumpSelect = markerPanel.createSelect(flags.map(f => f.id.toString()),
+              midiFlagState.jumpDestination?.toString(),
+              (v) => this.service.setFlagJumpDestination(flag.id, Number(v)).subscribe());
             jumpSelect.replaceWith(newJumpSelect);
             jumpSelect = newJumpSelect;
 
-            jumpLabel.style.display = newFlatState.kind === 'jump' ? 'inline' : 'none';
-            jumpSelect.style.display = newFlatState.kind === 'jump' ? 'inline' : 'none';
+            jumpLabel.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
+            jumpSelect.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
           }
         });
     });
