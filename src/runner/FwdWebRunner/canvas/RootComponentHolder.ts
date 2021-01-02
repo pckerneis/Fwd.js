@@ -68,7 +68,7 @@ export class RootComponentHolder<T extends Component> {
 
     const hit = (event: MouseEvent, action: (hit: Component) => void) => {
       const mousePos = mousePositionRelativeToCanvas(event);
-      const hitComponent = this.rootComponent.findComponentAt(mousePos);
+      const hitComponent = this.rootComponent.findInterceptingComponentAt(mousePos);
 
       if (hitComponent != null) {
         action(hitComponent);

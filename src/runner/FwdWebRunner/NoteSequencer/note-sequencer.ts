@@ -57,6 +57,7 @@ export interface Colors {
   draggableBorderHover: string,
   lassoBackground: string,
   lassoOutline: string,
+  playBar: string;
 }
 
 const defaultColors: Colors = {
@@ -78,6 +79,7 @@ const defaultColors: Colors = {
   draggableBorderHover: '#aea5a5',
   lassoBackground: '#00a8ff20',
   lassoOutline: '#00a8ff80',
+  playBar: '#000000',
 };
 
 export class NoteSequencer {
@@ -216,6 +218,10 @@ export class NoteSequencer {
 
   public setFlags(flags: Flag[]): void {
     this._sequencerRoot.setFlags(flags);
+  }
+
+  public setPlayBarPosition(time: number | null): void {
+    this._sequencerRoot.setPlayBarPosition(time);
   }
 }
 

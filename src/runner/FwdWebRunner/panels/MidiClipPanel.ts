@@ -229,6 +229,8 @@ export class MidiClipPanel implements EditorElement {
     this.clipEditor.noteSequencer.flagDragged$.pipe(
       switchMap((flag) => this.service.setFlagTime(flag.id, flag.time)),
     ).subscribe();
+
+    service.playPosition$.subscribe((time) => this.clipEditor.noteSequencer.setPlayBarPosition(time));
   }
 
   private refreshFlags(flags: MidiFlagState[]): void {

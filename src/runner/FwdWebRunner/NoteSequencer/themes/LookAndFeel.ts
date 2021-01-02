@@ -1,6 +1,6 @@
-import {Note} from '../canvas-components/NoteGridComponent';
-import {getBackgroundAlternateWidth} from '../canvas-components/RenderHelpers';
-import {Colors, MAX_PITCH, PITCH_PATTERN, TimeSignature} from '../note-sequencer';
+import { Note } from '../canvas-components/NoteGridComponent';
+import { getBackgroundAlternateWidth } from '../canvas-components/RenderHelpers';
+import { Colors, MAX_PITCH, PITCH_PATTERN, TimeSignature } from '../note-sequencer';
 
 export interface LookAndFeel {
   name: string;
@@ -34,6 +34,8 @@ export interface LookAndFeel {
   isOnPianoRoll(x: number, y: number, width: number, height: number, semitoneHeight: number): boolean;
 
   drawVelocityRuler(g: CanvasRenderingContext2D, width: number, height: number, colors: Colors): void;
+
+  drawPlayBar(g: CanvasRenderingContext2D, pos: number, height: number, colors: Colors): void;
 }
 
 export class LookAndFeel_Default implements LookAndFeel {
@@ -110,7 +112,7 @@ export class LookAndFeel_Default implements LookAndFeel {
   }
 
   public drawVelocityHandle(g: CanvasRenderingContext2D, x: number, note: Note, width: number, height: number,
-                     vScale: number, hScale: number, handleRadius: number, colors: Colors): void {
+                            vScale: number, hScale: number, handleRadius: number, colors: Colors): void {
     if (note.hidden) {
       return;
     }
@@ -135,7 +137,7 @@ export class LookAndFeel_Default implements LookAndFeel {
   }
 
   public drawOctaveLines(g: CanvasRenderingContext2D, width: number, height: number,
-                          start: number, end: number, semiHeight: number, colors: Colors): void {
+                         start: number, end: number, semiHeight: number, colors: Colors): void {
     g.fillStyle = colors.strokeLight;
 
     for (let i = 0; i < MAX_PITCH; i += 12) {
@@ -147,7 +149,7 @@ export class LookAndFeel_Default implements LookAndFeel {
   }
 
   public drawSemiTonePattern(g: CanvasRenderingContext2D, width: number, height: number,
-                              start: number, end: number, semiHeight: number, colors: Colors): void {
+                             start: number, end: number, semiHeight: number, colors: Colors): void {
 
     const yOffset = (start - Math.floor(start)) * semiHeight;
 
@@ -250,7 +252,7 @@ export class LookAndFeel_Default implements LookAndFeel {
     g.fillStyle = colors.strokeDark;
 
     // Ruler border
-    g.fillRect (width - 1, 0, 1, height);
+    g.fillRect(width - 1, 0, 1, height);
 
     // Top grad
     g.fillRect(width - largeGradW, 0, largeGradW, 1);
@@ -268,8 +270,13 @@ export class LookAndFeel_Default implements LookAndFeel {
     }
 
     g.fillStyle = colors.text;
-    g.fillText("0", width - 20, height - 2);
-    g.fillText("100%", width - 30, 12);
+    g.fillText('0', width - 20, height - 2);
+    g.fillText('100%', width - 30, 12);
+  }
+
+  public drawPlayBar(g: CanvasRenderingContext2D, pos: number, height: number, colors: Colors): void {
+    g.fillStyle = colors.playBar;
+    g.fillRect(pos, 0, 1, height);
   }
 
   protected getOctaveNumber(pitchValue: number): number {
@@ -346,12 +353,12 @@ export class LookAndFeel_Live extends LookAndFeel_Default {
     g.textAlign = 'right';
 
     // Ruler border
-    g.fillRect (width - 1, 0, 1, height);
+    g.fillRect(width - 1, 0, 1, height);
 
     // Top grad
     g.fillRect(width - largeGradW, 0, largeGradW, 1);
     g.fillStyle = colors.text;
-    g.fillText("127", width - labelRightMargin, 12);
+    g.fillText('127', width - labelRightMargin, 12);
 
     g.fillStyle = colors.strokeDark;
 
@@ -362,6 +369,6 @@ export class LookAndFeel_Live extends LookAndFeel_Default {
     g.fillRect(width - largeGradW, height - 1, largeGradW, 1);
 
     g.fillStyle = colors.text;
-    g.fillText("0", width - labelRightMargin, height - 2);
+    g.fillText('0', width - labelRightMargin, height - 2);
   }
 }

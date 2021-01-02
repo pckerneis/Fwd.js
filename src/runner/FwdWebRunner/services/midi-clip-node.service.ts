@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, map, pluck, switchMap, take } from 'rxjs/operators';
 import { ComponentBounds } from '../canvas/BaseComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
@@ -66,8 +66,10 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
   public readonly notes$: Observable<MidiNoteState[]>;
   public readonly inlets$: Observable<MidiInlet[]>;
   public readonly outlets$: Observable<MidiOutlet[]>;
+  public readonly playPosition$: Observable<number>;
 
   private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
+  private readonly _playPositionSubject$: Subject<number>;
 
   constructor(state: MidiClipNodeState,
               public readonly graphSequencerService: GraphSequencerService) {
@@ -85,6 +87,9 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
     this.outlets$ = this.flags$.pipe(map(flags => flags
       .filter(f => f.kind === 'outlet')
       .map(f => ({time: f.time, name: f.name, id: f.id}))));
+
+    this._playPositionSubject$ = new Subject<number>();
+    this.playPosition$ = this._playPositionSubject$.asObservable();
   }
 
   private static checkFlagKind(kind: string): kind is FlagKind {
@@ -164,6 +169,10 @@ export class MidiClipNodeService extends NodeService<MidiClipNodeState> {
 
   public setNotes(notes: MidiNoteState[]): Observable<MidiClipNodeState> {
     return this.update('notes', notes);
+  }
+
+  public setMidiClipPlayPosition(position: number): void {
+    this._playPositionSubject$.next(position);
   }
 
   private updateOneFlag<K extends keyof MidiFlagState>(id: number, key: K, value: MidiFlagState[K]): MidiFlagState[] {

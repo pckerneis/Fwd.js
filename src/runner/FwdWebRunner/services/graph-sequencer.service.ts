@@ -183,6 +183,14 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     this.update('connections', updatedConnections);
   }
 
+  public setMidiClipPlayPosition(clipNode: number, position: number | null): void {
+    const nodeService = this._nodeServices.get(clipNode);
+
+    if(nodeService instanceof MidiClipNodeService) {
+      nodeService.setMidiClipPlayPosition(position);
+    }
+  }
+
   private setNodeBounds(id: number, bounds: ComponentBounds): Observable<any> {
     const midiClipService = this._nodeServices.get(id);
 

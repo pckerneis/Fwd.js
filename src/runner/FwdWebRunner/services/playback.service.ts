@@ -58,7 +58,9 @@ export class PlaybackService {
     // Get fresh reference...
     clip = this.nodes.find(c => c.kind === 'MidiClip' && c.id === clip.id) as MidiClipNodeState;
 
-    const sliceDuration = 0.1;
+    this.graphSequencerService.setMidiClipPlayPosition(clip.id, startTime);
+
+    const sliceDuration = 0.05;
 
     const flagsSlice = clip.flags
       .map(f => ({...f, time: f.time - startTime}))
@@ -97,6 +99,7 @@ export class PlaybackService {
     if (foundJump != null) {
       switch (foundJump.kind) {
         case 'outlet':
+          this.graphSequencerService.setMidiClipPlayPosition(clip.id, null);
           this.fireNextNodes(scheduler, clip, foundJump.id, endOfNoteSlice);
           break;
         case 'jump':

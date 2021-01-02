@@ -47,6 +47,10 @@ export class ComponentBounds implements IBounds {
     }
   }
 
+  public asIBounds(): IBounds {
+    return { x: this.x, y: this.y, height: this.height, width: this.width };
+  }
+
   public clone(): ComponentBounds {
     return new ComponentBounds(this.x, this.y, this.width, this.height);
   }
@@ -94,8 +98,24 @@ export class ComponentBounds implements IBounds {
     return this.translated({ x, y: 0 });
   }
 
+  public withWidth(width: number): ComponentBounds {
+    return ComponentBounds.fromIBounds({ ...this.asIBounds(), width });
+  }
+
+  public withHeight(height: number): ComponentBounds {
+    return ComponentBounds.fromIBounds({ ...this.asIBounds(), height });
+  }
+
   public withY(y: number): ComponentBounds {
     return this.translated({ x: 0, y });
+  }
+
+  public withTrimmedLeft(amount: number): ComponentBounds {
+    return this.withX(amount).withWidth(this.width - amount);
+  }
+
+  public withTrimmedTop(amount: number): ComponentBounds {
+    return this.withY(amount).withHeight(this.height - amount);
   }
 }
 
@@ -154,6 +174,8 @@ export abstract class Component {
   private _hovered: boolean;
   private _mouseCursor: string;
   private _beingDragged: boolean;
+  private _cachedCanvas: HTMLCanvasElement;
+  private _interceptsMouseEvents: boolean = true;
 
   protected constructor(private _bounds: ComponentBounds = new ComponentBounds()) {
   }
@@ -284,15 +306,15 @@ export abstract class Component {
     if (! this._visible)
       return false;
 
-    return isPointInRectangle(mousePosition, this._bounds);
+    return isPointInRectangle(mousePosition, this.getAbsoluteBounds());
   }
 
-  public findComponentAt(position: ComponentPosition): Component {
+  public findInterceptingComponentAt(position: ComponentPosition): Component {
     for (let i = this._children.length; --i >= 0;) {
       const c = this._children[i];
 
-      if (c.hitTest(position)) {
-        return c.findComponentAt(position);
+      if (c._interceptsMouseEvents && c.hitTest(position)) {
+        return c.findInterceptingComponentAt(position);
       }
     }
 
@@ -320,6 +342,10 @@ export abstract class Component {
   }
 
   // Mouse events
+
+  public setInterceptsMouseEvents(shouldIntercept: boolean): void {
+    this._interceptsMouseEvents = shouldIntercept;
+  }
 
   public mouseMoved(event: ComponentMouseEvent): void {
     this._beingDragged = event.isDragging && event.pressedComponent === this;
@@ -377,12 +403,17 @@ export abstract class Component {
    */
   private paint(context: CanvasRenderingContext2D): void {
     if (this._visible
-      && this._needRepaint
       && Math.floor(this._bounds.width) > 0
       && Math.floor(this._bounds.height) > 0) {
-      const g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
-
-      this.render(g.getContext('2d'));
+      let g: HTMLCanvasElement;
+      
+      if (this._needRepaint || this._cachedCanvas == null) {
+        g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
+        this.render(g.getContext('2d'));
+        this._cachedCanvas = g;
+      } else {
+        g = this._cachedCanvas;
+      }
 
       const bounds = this.getAbsoluteBounds();
       context.drawImage(g, Math.floor(bounds.x), Math.floor(bounds.y));

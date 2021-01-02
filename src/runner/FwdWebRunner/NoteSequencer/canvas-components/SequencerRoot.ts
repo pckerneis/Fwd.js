@@ -3,6 +3,7 @@ import { DraggableBorder, DraggableBorderOwner } from '../../canvas/shared/Dragg
 import { NoteSequencer, SequencerDisplayModel } from '../note-sequencer';
 import { Flag, Note, NoteGridComponent } from './NoteGridComponent';
 import { PitchRuler } from './PitchRuler';
+import { PlayBar } from './PlayBar';
 import { TimeRuler } from './TimeRuler';
 import { VelocityRuler } from './VelocityRuler';
 import { VelocityTrack } from './VelocityTrack';
@@ -14,6 +15,7 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
   private readonly _velocityRuler: VelocityRuler;
   private readonly _draggableBorder: DraggableBorder;
   private readonly _velocityTrack: VelocityTrack;
+  private readonly _playBar: PlayBar;
 
   private draggableBorderPosition: number;
 
@@ -38,6 +40,9 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
 
     this._velocityTrack = new VelocityTrack(model, this._grid);
     this.addAndMakeVisible(this._velocityTrack);
+
+    this._playBar = new PlayBar(model, this._grid);
+    this.addAndMakeVisible(this._playBar);
   }
 
   public get notes(): Note[] { return this._grid.notes; };
@@ -69,6 +74,10 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
     this._pitchRuler.setBounds(bounds.removeFromLeft(rulerWidth));
 
     this._grid.setBounds(bounds);
+
+    this._playBar.setBounds(this.getLocalBounds()
+      .withTrimmedLeft(rulerWidth)
+      .withTrimmedTop(rulerHeight));
 
     this.repaint();
   }
@@ -142,5 +151,9 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
 
   public setNotes(notes: Note[]): void {
     this._grid.notes = notes;
+  }
+
+  public setPlayBarPosition(time: number): void {
+   this._playBar.setTime(time);
   }
 }
