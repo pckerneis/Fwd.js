@@ -23,6 +23,7 @@ export enum FlagDirection {
 }
 
 export interface Flag {
+  id: number;
   time: number;
   label: string;
   selected: boolean;
@@ -66,7 +67,7 @@ export class NoteGridComponent extends Component {
   private _maxDragOffset: NotePosition = null;
 
   constructor(private readonly model: SequencerDisplayModel,
-              private readonly noteSequencer: NoteSequencer) {
+              public readonly noteSequencer: NoteSequencer) {
     super();
 
     this._selectedSet = new SelectedItemSet<Note>();
@@ -464,6 +465,16 @@ export class NoteGridComponent extends Component {
     return ratio;
   }
 
+  public snapToGrid(time: number): number {
+    const ratio = this.getTimeIncrement();
+
+    if (ratio > 0) {
+      return ratio * Math.floor(time / ratio);
+    }
+
+    return time * this.getSixteenthWidth();
+  }
+
   //===============================================================================
 
   public moveSelection(event: ComponentMouseEvent): void {
@@ -773,16 +784,6 @@ export class NoteGridComponent extends Component {
     return null;
   }
 
-  private snapToGrid(time: number): number {
-    const ratio = this.getTimeIncrement();
-
-    if (ratio > 0) {
-      return ratio * Math.floor(time / ratio);
-    }
-
-    return time * this.getSixteenthWidth();
-  }
-
   private setMouseCursor(action: DragAction): void {
     switch (action) {
       case 'MOVE_NOTE':
@@ -808,6 +809,6 @@ export class NoteGridComponent extends Component {
   }
 
   private changed(): void {
-    this.noteSequencer.listeners.forEach(listener => listener.notesChanged(this.notes));
+    this.noteSequencer.notesChanged();
   }
 }

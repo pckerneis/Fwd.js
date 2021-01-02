@@ -1,8 +1,9 @@
+import { map, switchMap } from 'rxjs/operators';
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
 import { defaultTheme } from '../../style.constants';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
-import { FlagDirection, Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
+import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { MidiClipNodeService } from '../services/midi-clip-node.service';
 import { MidiFlagState, MidiNoteState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
@@ -220,11 +221,14 @@ export class MidiClipPanel implements EditorElement {
     // Only load notes at startup
     this.refreshNotes(service.snapshot.notes);
 
-    this.clipEditor.noteSequencer.addListener({
-      notesChanged: (notes: Note[]) => {
-        this.service.setNotes(notes.map(n => ({...n}))).subscribe();
-      },
-    })
+    this.clipEditor.noteSequencer.notesChanged$.pipe(
+      map(notes => notes.map(n => ({...n}))),
+      switchMap(notes => this.service.setNotes(notes)),
+    ).subscribe();
+
+    this.clipEditor.noteSequencer.flagDragged$.pipe(
+      switchMap((flag) => this.service.setFlagTime(flag.id, flag.time)),
+    ).subscribe();
   }
 
   private refreshFlags(flags: MidiFlagState[]): void {
@@ -234,6 +238,7 @@ export class MidiClipPanel implements EditorElement {
       color: f.color,
       time: f.time,
       selected: false,
+      id: f.id,
     })));
   }
 

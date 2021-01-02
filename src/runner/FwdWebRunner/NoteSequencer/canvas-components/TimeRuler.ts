@@ -1,18 +1,26 @@
-import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Component, ComponentBounds, ComponentMouseEvent, isPointInRectangle } from '../../canvas/BaseComponent';
 import { Range, SequencerDisplayModel } from '../note-sequencer';
 import { clamp } from '../utils';
-import { FlagDirection, NoteGridComponent } from './NoteGridComponent';
+import { Flag, FlagDirection, NoteGridComponent } from './NoteGridComponent';
 
 export class TimeRuler extends Component {
   private timeAtMouseDown: number;
   private rangeAtMouseDown: Range;
   private zoomAtMouseDown: number;
+  private arrowHeight: number = 12;
+  private arrowWidth: number = 10;
+  private _draggedFlag: Flag;
+  private _draggedFlagTimeAtMouseDown: number;
 
   constructor(private readonly model: SequencerDisplayModel, private readonly grid: NoteGridComponent) {
     super();
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
+    if (this.checkForFlagToDrag(event)) {
+      return;
+    }
+
     this.timeAtMouseDown = this.grid.getTimeAt(event.position.x);
     this.rangeAtMouseDown = {...this.model.visibleTimeRange};
     this.zoomAtMouseDown = (this.model.maxTimeRange.end - this.model.maxTimeRange.start) /
@@ -28,6 +36,11 @@ export class TimeRuler extends Component {
   public mouseDragged(event: ComponentMouseEvent): void {
     event.nativeEvent.stopPropagation();
     event.nativeEvent.preventDefault();
+
+    if (this._draggedFlag != null) {
+      this.dragFlag(event);
+      return;
+    }
 
     const dragSensitivity = -0.0015;
     const minimalRange = 1;
@@ -63,14 +76,28 @@ export class TimeRuler extends Component {
     this.getParentComponent().repaint();
   }
 
+  public mouseReleased(event: ComponentMouseEvent): void {
+    if (this._draggedFlag != null) {
+      this.grid.noteSequencer.flagDragged(this._draggedFlag);
+      this._draggedFlag = null;
+    }
+  }
+
   protected resized(): void {
   }
 
   protected render(g: CanvasRenderingContext2D): void {
     const bounds = this.getLocalBounds();
 
+    // Left border
     g.fillStyle = this.model.colors.background;
     g.fillRect(0, 0, this.width, this.height);
+
+    // Bottom border
+    g.fillStyle = this.model.colors.strokeDark;
+    g.fillRect(0, bounds.height - 1, bounds.width, 1);
+
+    this.renderFlags(g);
 
     const start = this.model.visibleTimeRange.start;
     const end = this.model.visibleTimeRange.end;
@@ -80,7 +107,11 @@ export class TimeRuler extends Component {
       // escape overly intensive calculation or even potential infinite loop
       return;
     }
+    this.renderGraduations(sixteenth, end, start, g, bounds);
+  }
 
+  private renderGraduations(sixteenth: number, end: number, start: number,
+                            g: CanvasRenderingContext2D, bounds: ComponentBounds): void {
     const minLabelSpacing = 50;
     const minGraduationSpacing = 5;
 
@@ -114,16 +145,11 @@ export class TimeRuler extends Component {
         g.rect(x + 1, bounds.height * (1 - gradH), 1, 1);
 
         g.fillStyle = this.model.colors.text;
+        g.textBaseline = 'alphabetic';
         const text = this.grid.getStringForTime(i, true);
         g.fillText(text, x + 4, bounds.height - 5, minLabelSpacing);
       }
     }
-
-    // Bottom border
-    g.fillStyle = this.model.colors.strokeDark;
-    g.fillRect(0, bounds.height - 1, bounds.width, 1);
-
-    this.renderFlags(g);
   }
 
   private renderFlags(g: CanvasRenderingContext2D): void {
@@ -134,12 +160,11 @@ export class TimeRuler extends Component {
 
       g.fillRect(pos, 0, 1, this.height);
 
-      const arrowWidth =  left ? -10 : 10;
-      const arrowHeight = 12;
+      const arrowWidth = left ? -this.arrowWidth : this.arrowWidth;
       g.beginPath();
       g.moveTo(pos, 0);
-      g.lineTo(pos + arrowWidth, arrowHeight / 2);
-      g.lineTo(pos, arrowHeight);
+      g.lineTo(pos + arrowWidth, this.arrowHeight / 2);
+      g.lineTo(pos, this.arrowHeight);
       g.fill();
 
       const textPosition = pos + arrowWidth + (left ? -2 : 2);
@@ -147,5 +172,45 @@ export class TimeRuler extends Component {
       g.textAlign = flag.direction === FlagDirection.left ? 'right' : 'left';
       g.fillText(flag.label, textPosition, 2, 100);
     });
+  }
+
+  private checkForFlagToDrag(event: ComponentMouseEvent): boolean {
+    for (const flag of this.grid.flags) {
+      const pos = this.grid.getPositionForTime(flag.time);
+      const flagPos = pos - (flag.direction === FlagDirection.left ? this.arrowWidth : 0);
+      const arrowBounds = {
+        x: flagPos,
+        y: 0,
+        width: this.arrowWidth,
+        height: this.arrowHeight,
+      };
+
+      const localMousePos = {
+        x: event.position.x - this.getPosition().x,
+        y: event.position.y - this.getPosition().y,
+      };
+
+      if (isPointInRectangle(localMousePos, arrowBounds)) {
+        this._draggedFlag = flag;
+        this._draggedFlagTimeAtMouseDown = flag.time;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private dragFlag(event: ComponentMouseEvent): void {
+    let t = this.grid.getTimeAt(event.position.x);
+
+    if (! event.modifiers.option) {
+      t = this.grid.snapToGrid(t);
+    }
+
+    this._draggedFlag.time = clamp(
+      t,
+      this.model.maxTimeRange.start,
+      this.model.maxTimeRange.end);
+    this.grid.getParentComponent().repaint();
   }
 }

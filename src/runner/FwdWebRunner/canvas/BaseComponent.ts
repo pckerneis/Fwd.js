@@ -284,13 +284,7 @@ export abstract class Component {
     if (! this._visible)
       return false;
 
-    const pos = this.getPosition();
-
-    if (mousePosition.x < pos.x || mousePosition.x > pos.x + this._bounds.width) {
-      return false;
-    }
-
-    return ! (mousePosition.y < pos.y || mousePosition.y > pos.y + this._bounds.height);
+    return isPointInRectangle(mousePosition, this._bounds);
   }
 
   public findComponentAt(position: ComponentPosition): Component {
@@ -428,4 +422,12 @@ export abstract class Component {
       root.paint(root._rootHolder.renderingContext);
     }
   }
+}
+
+export function isPointInRectangle(point: ComponentPosition, rect: IBounds | ComponentBounds): boolean {
+  if (point.x < rect.x || point.x > rect.x + rect.width) {
+    return false;
+  }
+
+  return ! (point.y < rect.y || point.y > rect.y + rect.height);
 }

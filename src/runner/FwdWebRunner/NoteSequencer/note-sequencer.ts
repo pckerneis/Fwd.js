@@ -1,3 +1,4 @@
+import { Observable, Subject } from 'rxjs';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { injectStyle } from '../StyleInjector';
 import { Flag, Note } from './canvas-components/NoteGridComponent';
@@ -81,8 +82,11 @@ const defaultColors: Colors = {
 
 export class NoteSequencer {
   public readonly container: HTMLElement;
-  public readonly listeners: NoteSequencerListener[] = [];
+  public readonly flagDragged$: Observable<Flag>;
+  public readonly notesChanged$: Observable<Note[]>;
 
+  private readonly _flagDraggedSubject: Subject<Flag>;
+  private readonly _notesChangedSubject: Subject<Note[]>;
   private _rootHolder: RootComponentHolder<SequencerRoot>;
   private readonly _model: SequencerDisplayModel;
   private readonly _sequencerRoot: SequencerRoot;
@@ -110,6 +114,12 @@ export class NoteSequencer {
 
     this._rootHolder.attachMouseEventListeners();
     this._rootHolder.attachResizeObserver(this.container);
+
+    this._flagDraggedSubject = new Subject<Flag>();
+    this.flagDragged$ = this._flagDraggedSubject.asObservable();
+
+    this._notesChangedSubject = new Subject<Note[]>();
+    this.notesChanged$ = this._notesChangedSubject.asObservable();
   }
 
   public get notes(): Note[] {
@@ -143,7 +153,6 @@ export class NoteSequencer {
   }
 
   public set signatureUpper(value: number) {
-    console.log(value);
     this._model.signature.upper = value;
     this._sequencerRoot.repaint();
   }
@@ -189,6 +198,14 @@ export class NoteSequencer {
     this.draw();
   }
 
+  public flagDragged(flag: Flag): void {
+    this._flagDraggedSubject.next(flag);
+  }
+
+  public notesChanged(): void {
+    this._notesChangedSubject.next(this.notes);
+  }
+
   public removeMouseEventListeners(): void {
     this._rootHolder.removeMouseEventListeners();
   }
@@ -199,10 +216,6 @@ export class NoteSequencer {
 
   public setFlags(flags: Flag[]): void {
     this._sequencerRoot.setFlags(flags);
-  }
-
-  public addListener(listener: NoteSequencerListener): void {
-    this.listeners.push(listener);
   }
 }
 
