@@ -44,12 +44,6 @@ export class GraphRoot extends Component {
   constructor() {
     super();
 
-    this._viewportArea = new ViewportArea(this);
-    this.addAndMakeVisible(this._viewportArea);
-
-    this._miniMap = new MiniMap(this);
-    this.addAndMakeVisible(this._miniMap);
-
     this._connectionAddedSubject$ = new Subject<ConnectionState>();
     this.connectionAdded$ = this._connectionAddedSubject$.asObservable();
 
@@ -58,6 +52,12 @@ export class GraphRoot extends Component {
 
     this._selectionChangedSubject$ = new Subject<SelectableItem[]>();
     this.selectionChanged$ = this._selectionChangedSubject$.asObservable();
+
+    this._viewportArea = new ViewportArea(this);
+    this.addAndMakeVisible(this._viewportArea);
+
+    this._miniMap = new MiniMap(this);
+    this.addAndMakeVisible(this._miniMap);
 
     this.selection.onchange = (items) => this._selectionChangedSubject$.next(items);
   }

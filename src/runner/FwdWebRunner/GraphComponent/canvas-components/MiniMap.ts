@@ -15,6 +15,8 @@ export class MiniMap extends Component {
 
     this.graphRoot.viewport.viewPositionChanged$
       .subscribe(() => this.updatePreview());
+
+    this.graphRoot.selectionChanged$.subscribe(() => this.updatePreview());
   }
 
   public get previewBounds(): Rectangle {
