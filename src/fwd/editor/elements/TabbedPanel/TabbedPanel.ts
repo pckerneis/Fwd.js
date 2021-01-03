@@ -144,7 +144,7 @@ export class TabButtonElement implements EditorElement {
     };
 
     const closeButton = document.createElement('div');
-    closeButton.innerText = 'x';
+    closeButton.innerText = '✕';
     this.htmlElement.append(closeButton);
     closeButton.onclick = (evt) => {
       evt.preventDefault();
@@ -196,6 +196,7 @@ injectStyle('TabbedPanel', `
   cursor: pointer;
   opacity: 0.6;
   margin-left: 6px;
+  font-size: 11px;
 }
 
 .fwd-tabbed-panel-button>div:hover {

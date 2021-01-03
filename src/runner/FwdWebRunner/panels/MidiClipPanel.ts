@@ -93,12 +93,8 @@ class SettingsPanel implements EditorElement {
     const markersContainer = document.createElement('div');
     this.htmlElement.append(markersContainer);
 
-    let flags = this.service.getMidiClipFlags(this.clipId);
-    let numFlags = flags.length;
+    let numFlags = 0;
 
-    this.refreshMarkers(markersContainer, flags);
-
-    // Refresh all markers if size changed
     this.service.observeMidiClipNode(this.clipId).pipe(
       pluck('flags'),
     ).subscribe(
@@ -111,6 +107,7 @@ class SettingsPanel implements EditorElement {
 
     const addMarkerButton = document.createElement('div');
     addMarkerButton.textContent = '+ Add marker';
+    addMarkerButton.classList.add('fwd-add-marker-button');
     addMarkerButton.onclick = () => {
       this.service.createAndAddMidiClipFlag(this.clipId, {
         kind: 'none',
@@ -137,9 +134,10 @@ class SettingsPanel implements EditorElement {
       titleElem.style.flexGrow = '1';
       titleElem.innerText = flag.name;
       const removeButton = document.createElement('div');
-      removeButton.innerText = 'x';
-      removeButton.style.padding = '0 4px';
-      removeButton.onclick = () => this.service.removeMidiClipFlag(this.clipId, flag.id).subscribe();
+      removeButton.innerText = '✕';
+      removeButton.classList.add('fwd-remove-flag-button');
+      removeButton.onclick = () => this.service.removeMidiClipFlag(this.clipId, flag.id)
+        .subscribe();
 
       titleContainer.append(titleElem, removeButton);
       markerPanel.htmlElement.append(titleContainer);
@@ -204,6 +202,29 @@ injectStyle('MidiClipPanel - SettingsPanel', `
 .fwd-runner-midi-clip-signature {
   display: flex;
 }
+
+.fwd-remove-flag-button {
+  padding: 0 4px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.fwd-remove-flag-button:hover {
+  opacity: 1;
+}
+
+.fwd-add-marker-button {
+  align-self: center;
+  padding: 4px;
+  font-size: smaller;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.fwd-add-marker-button:hover {
+  opacity: 1;
+}
 `);
 
 export class MidiClipPanel implements EditorElement {
@@ -231,9 +252,9 @@ export class MidiClipPanel implements EditorElement {
     service.observeMidiClipNode(this.clipId)
       .pipe(pluck('timeSignature'))
       .subscribe((signature) => {
-      this.clipEditor.noteSequencer.signatureLower = signature.lower;
-      this.clipEditor.noteSequencer.signatureUpper = signature.upper;
-    });
+        this.clipEditor.noteSequencer.signatureLower = signature.lower;
+        this.clipEditor.noteSequencer.signatureUpper = signature.upper;
+      });
 
     service.observeMidiClipNode(this.clipId)
       .pipe(pluck('flags'))

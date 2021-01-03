@@ -144,7 +144,6 @@ export class GraphElement implements EditorElement {
   }
 
   private deleteSelection(): void {
-    console.log('delete selection', this._graphRoot.selection.getItems())
     commandManager.perform(deleteGraphSelection(this._graphRoot.selection.getItems()));
     this._graphRoot.selection.deselectAll();
     this._graphRoot.repaint();
