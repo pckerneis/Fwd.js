@@ -8,7 +8,6 @@ import { GraphElement } from '../GraphComponent/graph-element';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { injectStyle } from '../StyleInjector';
 import { MidiClipPanel } from './MidiClipPanel';
-import { StructurePanel } from './StructurePanel';
 
 const DBG = new Logger('PanelManager', parentLogger);
 
@@ -73,17 +72,17 @@ export class PanelManager {
       DBG.error('Cannot find runner\'s container element.')
     }
 
-    const structurePanel = new StructurePanel();
-
-    parentFlexPanel.addFlexItem(structurePanel, {
-      width: 220,
-      minWidth: 200,
-      maxWidth: 5000,
-    });
-
-    const separator = parentFlexPanel.addSeparator(true);
-    separator.separatorSize = 5;
-    separator.htmlElement.classList.add('fwd-runner-large-separator');
+    // const structurePanel = new StructurePanel();
+    //
+    // parentFlexPanel.addFlexItem(structurePanel, {
+    //   width: 220,
+    //   minWidth: 200,
+    //   maxWidth: 5000,
+    // });
+    //
+    // const separator = parentFlexPanel.addSeparator(true);
+    // separator.separatorSize = 5;
+    // separator.htmlElement.classList.add('fwd-runner-large-separator');
 
     const flexPanel = new FlexPanel();
     flexPanel.htmlElement.style.flexGrow = '1';
