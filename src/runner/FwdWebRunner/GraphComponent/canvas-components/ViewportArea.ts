@@ -1,15 +1,25 @@
+import { Observable, Subject } from 'rxjs';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Rectangle } from '../../canvas/Rectangle';
+import { Point, Points, Rectangle } from '../../canvas/Rectangle';
+import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { drawConnection } from './Connection';
 import { GraphRoot } from './GraphRoot';
 
 export class ViewportArea extends Component {
 
+  public readonly viewPositionChanged$: Observable<void>;
+
   private _backgroundColor: string = 'white';
   private _mouseDownResult: boolean;
+  private _viewOffsetAtMouseDown: Point = Points.origin();
+  private _currentTarget: Point = Points.origin();
+  private _latestOffset: Point = Points.origin();
+  private _viewPositionChanged$: Subject<void> = new Subject<void>();
 
   constructor(public readonly graphRoot: GraphRoot) {
     super();
+
+    this.viewPositionChanged$ = this._viewPositionChanged$.asObservable();
   }
 
   public getViewBounds(): Rectangle {
@@ -18,16 +28,20 @@ export class ViewportArea extends Component {
   }
 
   public centerViewAt(pos: Point): void {
-    this.setViewOffset({
+    this.setTargetOffset({
       x: -pos.x + this.width / 2,
       y: -pos.y + this.height / 2,
     });
+  }
 
-    this.repaint();
+  public setTargetOffset(pos: Point): void {
+    this._currentTarget = pos;
+    this.animateViewScroll();
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
     super.mousePressed(event);
+    this._viewOffsetAtMouseDown = this.graphRoot.viewport.getViewOffset();
 
     for (const connection of this.graphRoot.connections.array) {
       if (connection.hitTest(event.position)) {
@@ -40,6 +54,17 @@ export class ViewportArea extends Component {
 
     this.graphRoot.selection.deselectAll();
     this.graphRoot.repaint();
+  }
+
+  public mouseDragged(event: ComponentMouseEvent): void {
+    super.mouseDragged(event);
+
+    if (this.graphRoot.selection.isEmpty()) {
+      this.graphRoot.viewport.setTargetOffset({
+        x: this._viewOffsetAtMouseDown.x + event.getDragOffset().x,
+        y: this._viewOffsetAtMouseDown.y + event.getDragOffset().y,
+      });
+    }
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
@@ -65,5 +90,28 @@ export class ViewportArea extends Component {
   }
 
   protected resized(): void {
+  }
+
+  private animateViewScroll(): void {
+    const targetPosition = Points.lerp(
+      this._latestOffset,
+      this._currentTarget,
+      0.2);
+
+    this.setViewOffset(targetPosition);
+
+    const reachedTarget = squaredDistance(
+      targetPosition.x, targetPosition.y,
+      this._latestOffset.x, this._latestOffset.y) < 1;
+
+    this._latestOffset = targetPosition;
+
+    if (!reachedTarget) {
+      requestAnimationFrame(() => this.animateViewScroll());
+    }
+    
+    this._viewPositionChanged$.next();
+
+    this.repaint();
   }
 }

@@ -1,7 +1,6 @@
 import { defaultTheme } from '../../../style.constants';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Points, Rectangle } from '../../canvas/Rectangle';
-import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
+import { Points, Rectangle } from '../../canvas/Rectangle';
 import { GraphRoot } from './GraphRoot';
 
 export class MiniMap extends Component {
@@ -11,11 +10,11 @@ export class MiniMap extends Component {
   private _previewRatio: number;
   private _outerBounds: Rectangle;
 
-  private _latestCenterPosition: Point;
-  private _currentTarget: Point;
-
   constructor(public readonly graphRoot: GraphRoot) {
     super();
+
+    this.graphRoot.viewport.viewPositionChanged$
+      .subscribe(() => this.updatePreview());
   }
 
   public get previewBounds(): Rectangle {
@@ -158,38 +157,9 @@ export class MiniMap extends Component {
       y: event.position.y - this.getBounds().topLeft.y,
     };
 
-    if (this._latestCenterPosition == null) {
-      this._latestCenterPosition = {
-        x: this.graphRoot.viewport.width / 2,
-        y: this.graphRoot.viewport.height / 2,
-      };
-    }
-
-    this._currentTarget = {
+    this.graphRoot.viewport.centerViewAt({
       x: (localMousePos.x / this._previewRatio) + (this._outerBounds.x - this._extensionAmount / 2),
       y: (localMousePos.y / this._previewRatio) + (this._outerBounds.y - this._extensionAmount / 2),
-    };
-
-    this.animateView();
-  }
-
-  private animateView(): void {
-    const targetPosition = Points.lerp(
-      this._latestCenterPosition,
-      this._currentTarget,
-      0.2);
-
-    this.graphRoot.viewport.centerViewAt(targetPosition);
-    this.updatePreview();
-
-    const reachedTarget = squaredDistance(
-      targetPosition.x, targetPosition.y,
-      this._latestCenterPosition.x, this._latestCenterPosition.y) < 1;
-
-    this._latestCenterPosition = targetPosition;
-
-    if (!reachedTarget) {
-      requestAnimationFrame(() => this.animateView());
-    }
+    });
   }
 }
