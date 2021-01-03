@@ -1,9 +1,15 @@
 import { IRectangle } from '../canvas/Rectangle';
+import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
-export interface BaseNodeState {
+export interface BaseGraphItemState extends SelectableItem {
   id: number;
+}
+
+export type SelectableGraphItem = SelectableItem & BaseGraphItemState;
+
+export interface BaseNodeState extends BaseGraphItemState {
   bounds: IRectangle;
   selected: boolean;
 }
@@ -43,7 +49,10 @@ export interface MidiClipNodeState extends BaseNodeState {
 
 export type NodeState = MidiClipNodeState | InitNodeState;
 
-export interface ConnectionState {
+export type GraphItemState = NodeState | ConnectionState;
+
+export interface ConnectionState extends BaseGraphItemState {
+  kind: 'Connection'
   sourceNode: number;
   sourcePinId: number;
   targetNode: number;

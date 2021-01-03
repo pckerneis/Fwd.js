@@ -1,12 +1,20 @@
 import { Point } from '../canvas/Rectangle';
+import { UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
-import { ConnectionState, InitNodeState, MidiClipNodeState } from '../state/project.state';
+import {
+  ConnectionState,
+  GraphItemState,
+  InitNodeState,
+  MidiClipNodeState,
+  SelectableGraphItem,
+} from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
 
 export enum CommandIds {
   createAndAddInitNode = 'createAndAddInitNode',
   createAndAddMidiClipNode = 'createAndAddMidiClipNode',
   addConnection = 'addConnection',
+  deleteGraphSelection = 'deleteGraphSelection',
 }
 
 export const createAndAddInitNode: CommandFactory<Point> = (position) => {
@@ -61,19 +69,39 @@ function createAndAddMidiClipNodePerformer(service: GraphSequencerService): Comm
   };
 }
 
-export const addConnection: CommandFactory<ConnectionState> = (state) => {
+export const addConnection: CommandFactory<UnregisteredConnectionState> = (state) => {
   return {
     id: CommandIds.addConnection,
     payload: state,
   };
 };
 
-function addConnectionPerformer(service: GraphSequencerService): CommandPerformer<ConnectionState> {
+function addConnectionPerformer(service: GraphSequencerService): CommandPerformer<UnregisteredConnectionState> {
+  let added: ConnectionState;
   return {
     canPerform: command => command.id === CommandIds.addConnection,
-    perform: command => service.addConnection(command.payload).subscribe(),
-    undo: command => service.removeConnection(command.payload).subscribe(),
-    redo: command => service.addConnection(command.payload).subscribe(),
+    perform: command => service.createAndAddConnection(command.payload)
+      .subscribe((connectionState) => added = connectionState),
+    undo: () => service.removeConnection(added).subscribe(),
+    redo: () => service.addConnection(added).subscribe(),
+  };
+}
+
+export const deleteGraphSelection: CommandFactory<SelectableGraphItem[]> = (state) => {
+  return {
+    id: CommandIds.deleteGraphSelection,
+    payload: state,
+  };
+};
+
+function deleteGraphSelectionPerformer(service: GraphSequencerService): CommandPerformer<SelectableGraphItem[]> {
+  let deleted: GraphItemState[];
+
+  return {
+    canPerform: command => command.id === CommandIds.deleteGraphSelection,
+    perform: command => deleted = service.deleteItems(command.payload),
+    undo: () => service.addItems(deleted),
+    redo: command => deleted = service.deleteItems(command.payload),
   };
 }
 
@@ -81,4 +109,5 @@ export function registerGraphSequencerCommands(service: GraphSequencerService): 
   commandManager.addPerformerFactory(() => createAndAddInitNodePerformer(service));
   commandManager.addPerformerFactory(() => createAndAddMidiClipNodePerformer(service));
   commandManager.addPerformerFactory(() => addConnectionPerformer(service));
+  commandManager.addPerformerFactory(() => deleteGraphSelectionPerformer(service));
 }

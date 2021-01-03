@@ -1,11 +1,23 @@
-import { distinctUntilChanged } from 'rxjs/operators';
+import { map, pluck } from 'rxjs/operators';
 import { ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { Rectangle } from '../../canvas/Rectangle';
 import { PanelManager } from '../../panels/PanelManager';
-import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
-import { MidiClipNodeState, MidiFlagState } from '../../state/project.state';
+import { GraphSequencerService } from '../../services/graph-sequencer.service';
+import { MidiClipNodeState, MidiFlagState, NodeState } from '../../state/project.state';
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
+
+export interface MidiInlet {
+  id: number;
+  time: number;
+  name: string;
+}
+
+export interface MidiOutlet {
+  id: number;
+  time: number;
+  name: string;
+}
 
 export class MidiClipNode extends GraphNode {
   protected readonly defaultHeight: number = 30;
@@ -15,32 +27,37 @@ export class MidiClipNode extends GraphNode {
 
   constructor(parentGraph: GraphRoot,
               state: MidiClipNodeState,
-              public readonly midiClipNodeService: MidiClipNodeService,
+              public readonly graphSequencerService: GraphSequencerService,
               public readonly panelManager: PanelManager) {
     super(parentGraph, state);
   }
 
-  public attachObservers(): void {
-    this.midiClipNodeService.inlets$
-      .pipe(distinctUntilChanged((a, b) => a.length === b.length))
-      .subscribe((inlets) => {
-        this.updateInlets(inlets);
-      });
+  public attachObservers(nodeId: number): void {
+    const nodeObserver = this.graphSequencerService.observeNode(nodeId);
 
-    this.midiClipNodeService.outlets$
-      .pipe(distinctUntilChanged((a, b) => a.length === b.length))
-      .subscribe((inlets) => {
-        this.updateOutlets(inlets);
-      });
-
-    this.midiClipNodeService.flags$
-      .subscribe((flags) => {
-        this.updateFlags(flags);
-      });
-
-    this.midiClipNodeService.label$.subscribe((newLabel) => {
+    nodeObserver.pipe(
+      pluck('label'),
+    ).subscribe((newLabel: string) => {
       this.label = newLabel;
     });
+
+    nodeObserver
+      .pipe(pluck<NodeState, MidiFlagState[]>('flags'))
+      .subscribe((flags: MidiFlagState[]) => this.updateFlags(flags));
+
+    nodeObserver.pipe(
+      pluck<NodeState, MidiFlagState[]>('flags'),
+      map(flags => flags
+        .filter(f => f.kind === 'inlet')
+        .map(f => ({time: f.time, name: f.name, id: f.id}))),
+    ).subscribe((newInlets: MidiInlet[]) => this.updateInlets(newInlets));
+
+    nodeObserver.pipe(
+      pluck<NodeState, MidiFlagState[]>('flags'),
+      map(flags => flags
+        .filter(f => f.kind === 'outlet')
+        .map(f => ({time: f.time, name: f.name, id: f.id}))),
+    ).subscribe((newOutlets: MidiOutlet[]) => this.updateOutlets(newOutlets));
   }
 
   public updateFlags(updatedFlags: MidiFlagState[]): void {

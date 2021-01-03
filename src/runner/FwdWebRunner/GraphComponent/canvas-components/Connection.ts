@@ -10,7 +10,8 @@ export interface TemporaryConnection {
 }
 
 export class Connection implements SelectableItem {
-  constructor(public readonly graphRoot: GraphRoot,
+  constructor(public readonly id: number,
+              public readonly graphRoot: GraphRoot,
               public readonly first: number,
               public readonly second: number,
               public readonly selected: boolean) {

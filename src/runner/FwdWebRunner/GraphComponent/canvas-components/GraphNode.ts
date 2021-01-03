@@ -1,12 +1,11 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Rectangle } from '../../canvas/Rectangle';
-import { SelectableItem } from '../../canvas/shared/SelectedItemSet';
-import { InitNodeState, NodeState } from '../../state/project.state';
+import { IRectangle, Rectangle } from '../../canvas/Rectangle';
+import { InitNodeState, NodeState, SelectableGraphItem } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
-export abstract class GraphNode extends Component implements SelectableItem {
+export abstract class GraphNode extends Component implements SelectableGraphItem {
 
   public readonly id: number;
 
@@ -38,6 +37,10 @@ export abstract class GraphNode extends Component implements SelectableItem {
     this.selected = state.selected;
     this.width = this.defaultWidth;
     this.height = this.defaultHeight;
+  }
+
+  public get bounds(): IRectangle {
+    return this.getBounds().asIBounds();
   }
 
   public get label(): string {

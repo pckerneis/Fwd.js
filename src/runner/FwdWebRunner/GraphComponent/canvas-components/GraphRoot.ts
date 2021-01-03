@@ -4,21 +4,28 @@ import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { Point, Points, Rectangle } from '../../canvas/Rectangle';
 import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
-import { ConnectionState } from '../../state/project.state';
+import { ConnectionState, SelectableGraphItem } from '../../state/project.state';
 import { Connection, TemporaryConnection } from './Connection';
 import { GraphNode } from './GraphNode';
 import { MiniMap } from './MiniMap';
 import { OutletPin, Pin } from './Pin';
 import { ViewportArea } from './ViewportArea';
 
-export class GraphRoot extends Component {
-  public readonly selection: SelectedItemSet<SelectableItem> = new SelectedItemSet();
+export interface UnregisteredConnectionState {
+  targetNode: number;
+  targetPinId: number;
+  sourceNode: number;
+  sourcePinId: number;
+}
 
-  public readonly connectionAdded$: Observable<ConnectionState>;
+export class GraphRoot extends Component {
+  public readonly selection: SelectedItemSet<SelectableGraphItem> = new SelectedItemSet();
+
+  public readonly connectionAdded$: Observable<UnregisteredConnectionState>;
   public readonly nodeBoundsChanged$: Observable<GraphNode[]>
   public readonly selectionChanged$: Observable<SelectableItem[]>;
 
-  private readonly _connectionAddedSubject$: Subject<ConnectionState>;
+  private readonly _connectionAddedSubject$: Subject<UnregisteredConnectionState>;
   private readonly _nodeBoundsChangedSubject$: Subject<GraphNode[]>;
   private readonly _selectionChangedSubject$: Subject<SelectableItem[]>;
 
@@ -105,7 +112,7 @@ export class GraphRoot extends Component {
       const suitablePin = this.findSuitablePinNearby(viewPortPosition, this._temporaryConnection.sourcePin);
 
       if (suitablePin != null) {
-        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin, true);
+        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin);
       }
 
       this._temporaryConnection = null;
@@ -141,20 +148,15 @@ export class GraphRoot extends Component {
     return false;
   }
 
-  public addConnection(first: Pin, second: Pin, selected: boolean): void {
+  public addConnection(id: number, first: Pin, second: Pin, selected: boolean): void {
     if (! this.arePinsConnected(first, second)) {
-      this._connections.add(new Connection(this, first.id, second.id, selected));
+      this._connections.add(new Connection(id, this, first.id, second.id, selected));
       this.repaint();
     }
   }
 
   public setConnections(newConnections: Connection[]): void {
     this._connections.reset(newConnections);
-    this.repaint();
-  }
-
-  public removeConnection(first: number, second: number): void {
-    this._connections.remove(this.findConnection(first, second));
     this.repaint();
   }
 
@@ -300,18 +302,13 @@ export class GraphRoot extends Component {
     return null;
   }
 
-  private findConnection(first: number, second: number): Connection {
-    return this._connections.array.find(c => c.first === first && c.second === second);
-  }
-
-  private connectionAdded(first: Pin, second: Pin, selected: boolean): void {
+  private connectionAdded(first: Pin, second: Pin): void {
     if (first instanceof OutletPin) {
       this._connectionAddedSubject$.next({
         sourceNode: first.parentNode.id,
         sourcePinId: first.id,
         targetNode: second.parentNode.id,
         targetPinId: second.id,
-        selected: false,
       });
     } else {
       this._connectionAddedSubject$.next({
@@ -319,7 +316,6 @@ export class GraphRoot extends Component {
         targetPinId: first.id,
         sourceNode: second.parentNode.id,
         sourcePinId: second.id,
-        selected: false,
       });
     }
   }

@@ -2,13 +2,17 @@ import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { Rectangle } from '../canvas/Rectangle';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { commandManager } from '../commands/command-manager';
-import { addConnection, createAndAddInitNode, createAndAddMidiClipNode } from '../commands/graph-sequencer.commands';
+import {
+  addConnection,
+  createAndAddInitNode,
+  createAndAddMidiClipNode,
+  deleteGraphSelection,
+} from '../commands/graph-sequencer.commands';
 import { ContextualMenu } from '../components/ContextualMenu';
 import { PanelManager } from '../panels/PanelManager';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
-import { Connection } from './canvas-components/Connection';
 import { GraphNode, InitNode } from './canvas-components/GraphNode';
 import { GraphRoot } from './canvas-components/GraphRoot';
 import { MidiClipNode } from './canvas-components/MidiClipNode';
@@ -36,19 +40,19 @@ export class GraphElement implements EditorElement {
     this._rootHolder.canvas.onkeydown = event => this.handleKeyDown(event);
     this._rootHolder.canvas.oncontextmenu = event => this._contextMenu.show(event);
 
-    graphSequencerService.nodes$.subscribe((newNodes: NodeState[]) => {
-      this._graphRoot.clearAll();
+    graphSequencerService.nodeAdded$.subscribe((newNode: NodeState) => {
+      switch (newNode.kind) {
+        case 'MidiClip':
+          this.addMidiClipNode(newNode);
+          break;
+        case 'Init':
+          this.addInitNode(newNode);
+          break;
+      }
+    });
 
-      newNodes.forEach(n => {
-        switch (n.kind) {
-          case 'MidiClip':
-            this.addMidiClipNode(n);
-            break;
-          case 'Init':
-            this.addInitNode(n);
-            break;
-        }
-      });
+    graphSequencerService.nodeRemoved$.subscribe((nodeId) => {
+      this._graphRoot.removeNode(nodeId);
     });
 
     graphSequencerService.connections$.subscribe((newConnections: ConnectionState[]) => {
@@ -72,7 +76,7 @@ export class GraphElement implements EditorElement {
       {
         label: 'Add init node',
         action: (infos) => commandManager.perform(createAndAddInitNode({
-          x: infos.eventThatFiredMenu.clientX  - this.htmlElement.getBoundingClientRect().left
+          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left
             - this._graphRoot.viewport.getViewOffset().x,
           y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top
             - this._graphRoot.viewport.getViewOffset().y,
@@ -95,8 +99,6 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
-    // Initialize service
-    this.graphSequencerService.getNodeService(state.id, state);
     const n = new InitNode(this._graphRoot, state);
     this.addNode(n);
     n.setBounds(Rectangle.fromIBounds(state.bounds));
@@ -104,11 +106,10 @@ export class GraphElement implements EditorElement {
   }
 
   private addMidiClipNode(state: MidiClipNodeState): MidiClipNode {
-    const nodeService = this.graphSequencerService.getMidiNodeService(state.id, state);
-    const n = new MidiClipNode(this._graphRoot, state, nodeService, this.panelManager);
+    const n = new MidiClipNode(this._graphRoot, state, this.graphSequencerService, this.panelManager);
     this.addNode(n);
     n.setBounds(Rectangle.fromIBounds(state.bounds));
-    n.attachObservers();
+    n.attachObservers(state.id);
 
     return n;
   }
@@ -121,12 +122,8 @@ export class GraphElement implements EditorElement {
     const {source, target} = this.findPins(connection);
 
     if (source != null && target != null) {
-      this._graphRoot.addConnection(source, target, connection.selected);
+      this._graphRoot.addConnection(connection.id, source, target, connection.selected);
     }
-  }
-
-  private removeNode(item: GraphNode): void {
-    this.graphSequencerService.removeNodeById(item.id).subscribe();
   }
 
   private findNode(id: number): GraphNode {
@@ -147,14 +144,8 @@ export class GraphElement implements EditorElement {
   }
 
   private deleteSelection(): void {
-    this._graphRoot.selection.getItems().forEach(item => {
-      if (item instanceof GraphNode) {
-        this.removeNode(item);
-      } else if (item instanceof Connection) {
-        this._graphRoot.removeConnection(item.first, item.second);
-      }
-    });
-
+    console.log('delete selection', this._graphRoot.selection.getItems())
+    commandManager.perform(deleteGraphSelection(this._graphRoot.selection.getItems()));
     this._graphRoot.selection.deselectAll();
     this._graphRoot.repaint();
   }

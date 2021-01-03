@@ -1,3 +1,4 @@
+import { pluck } from 'rxjs/operators';
 import { FlexPanel } from '../../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Logger } from '../../../fwd/utils/Logger';
@@ -33,7 +34,7 @@ export class PanelManager {
     if (this._contextualTabbedPanel.hasTab(node.id)) {
       this._contextualTabbedPanel.setCurrentTab(node.id);
     } else {
-      const panel = new MidiClipPanel(node.midiClipNodeService);
+      const panel = new MidiClipPanel(node.graphSequencerService, node.id);
       this._contextualTabbedPanel.addTab({
         id: node.id,
         tabName: node.label,
@@ -44,11 +45,13 @@ export class PanelManager {
       this._contextualTabbedPanel.setCurrentTab(node.id);
       this.noteSequencerPanels.set(node.id, panel);
 
-      node.midiClipNodeService.label$.subscribe((newLabel) => {
+      node.graphSequencerService.observeNode(node.id).pipe(
+        pluck('label'),
+      ).subscribe((newLabel) => {
         this._contextualTabbedPanel.renameTab(node.id, newLabel);
       });
 
-      node.midiClipNodeService.completed$.subscribe(() => {
+      node.graphSequencerService.observeNodeRemoval(node.id).subscribe(() => {
         this._contextualTabbedPanel.removeTab(node.id);
       });
     }

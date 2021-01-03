@@ -1,40 +1,62 @@
-import { Observable } from 'rxjs';
-import { map, pluck, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { distinctUntilChanged, filter, map, pluck, tap } from 'rxjs/operators';
 import { Point, Rectangle } from '../canvas/Rectangle';
 import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
 import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
-import { ConnectionState, GraphSequencerState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
-import { MidiClipNodeService, NodeService } from './midi-clip-node.service';
+import { UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
+import {
+  ConnectionState,
+  FlagKind,
+  GraphItemState,
+  GraphSequencerState,
+  InitNodeState,
+  MidiClipNodeState,
+  MidiFlagState, MidiNoteState,
+  NodeState,
+  SelectableGraphItem,
+} from '../state/project.state';
 import { SequenceGenerator } from './sequence-generator';
 import { StoreBasedService } from './store-based.service';
 
-export class GraphSequencerService extends StoreBasedService<GraphSequencerState> {
+interface PlayBarPosition {
+  clipId: number;
+  time: number;
+}
 
-  public nodes$: Observable<NodeState[]>;
-  public connections$: Observable<ConnectionState[]>;
-  private readonly _nodeServices: Map<number, NodeService<any>> = new Map();
+function isMidiClipNode(node: NodeState): node is MidiClipNodeState {
+  return node.kind === 'MidiClip';
+}
+
+export class GraphSequencerService extends StoreBasedService<GraphSequencerState> {
+  public readonly nodeAdded$: Observable<NodeState>;
+  public readonly connections$: Observable<ConnectionState[]>;
+  public readonly playBarPositions$: Observable<PlayBarPosition[]>;
+  public readonly nodeRemoved$: Observable<number>;
 
   private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
+  private readonly nodes$: Observable<NodeState[]>;
+  private readonly _playBarPositions: BehaviorSubject<PlayBarPosition[]> = new BehaviorSubject<PlayBarPosition[]>([]);
+  private readonly _nodeRemovedSubject: Subject<number> = new Subject<number>();
+  private readonly _nodeAddedSubject: Subject<NodeState> = new Subject<NodeState>();
 
   constructor(state: GraphSequencerState) {
     super(state);
-    this.nodes$ = this.state$.pipe(pluck('nodes'));
-    this.connections$ = this.state$.pipe(pluck('connections'));
+    this.nodes$ = this.state$.pipe(pluck('nodes'), tap(() => console.log('node$')));
+    this.connections$ = this.state$.pipe(pluck('connections'), tap(() => console.log('connections$')));
+    this.playBarPositions$ = this._playBarPositions.asObservable();
+    this.nodeAdded$ = this._nodeAddedSubject.asObservable();
+    this.nodeRemoved$ = this._nodeRemovedSubject.asObservable();
   }
 
-  public get snapshot(): GraphSequencerState {
-    const snapshot = super.snapshot;
-    return {
-      ...snapshot,
-      nodes: this.getNodeStates(),
+  private static checkFlagKind(kind: string): kind is FlagKind {
+    const knownFlags = ['none', 'inlet', 'outlet', 'jump'];
+
+    if (! knownFlags.includes(kind)) {
+      throw new Error('Unknown flag kind ' + kind);
     }
-  }
 
-  public getNodeStates(): NodeState[] {
-    return super.snapshot.nodes.map(n => ({
-      ...this._nodeServices.get(n.id).snapshot,
-    }));
+    return true;
   }
 
   public createAndAddInitNode(position: Point): Observable<NodeState> {
@@ -48,7 +70,9 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     }
 
     const updatedNodes = [...this.snapshot.nodes, initNode];
-    return this.update('nodes', updatedNodes).pipe(map(state => state.nodes[state.nodes.length - 1]));
+    return this.update('nodes', updatedNodes).pipe(
+      map(state => state.nodes[state.nodes.length - 1]),
+      tap((state) => this._nodeAddedSubject.next(state)));
   }
 
   public createAndAddMidiClipNode(position: Point): Observable<NodeState> {
@@ -82,24 +106,21 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     }
 
     const updatedNodes = [...this.snapshot.nodes, midiClipNode];
-    return this.update('nodes', updatedNodes).pipe(map(state => state.nodes[state.nodes.length - 1]));
+    return this.update('nodes', updatedNodes).pipe(
+      map(state => state.nodes[state.nodes.length - 1]),
+      tap((state) => this._nodeAddedSubject.next(state)));
   }
 
   public addNode(newNode: NodeState): Observable<GraphSequencerState> {
     const updatedNodes = [...this.snapshot.nodes, newNode];
-    return this.update('nodes', updatedNodes);
+    return this.update('nodes', updatedNodes)
+      .pipe(tap(() => this._nodeAddedSubject.next(newNode)));
   }
 
   public removeNodeById(nodeId: number): Observable<GraphSequencerState> {
     const updatedNodes = this.snapshot.nodes.filter(n => n.id !== nodeId);
-    return this.update('nodes', updatedNodes).pipe(
-      tap(() => {
-        const service = this._nodeServices.get(nodeId);
-        if (service != null) {
-          service.complete();
-          this._nodeServices.set(nodeId, undefined);
-        }
-      }));
+    this._nodeRemovedSubject.next(nodeId);
+    return this.update('nodes', updatedNodes);
   }
 
   public addConnection(connection: ConnectionState): Observable<GraphSequencerState> {
@@ -113,37 +134,59 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.update('connections', updated);
   }
 
-  public getMidiNodeService<T extends NodeState>(id: number, initialState: MidiClipNodeState): MidiClipNodeService {
-    if (! Boolean(this._nodeServices.get(id))) {
-      this._nodeServices.set(id, new MidiClipNodeService(initialState, this));
-    }
-
-    const service = this._nodeServices.get(id);
-
-    if (! (service instanceof MidiClipNodeService)) {
-      throw new Error('Bad node service type ! Expected MidiClipNodeService.');
-    }
-
-    return service as MidiClipNodeService;
-  }
-
-  public getNodeService<T extends NodeState>(id: number, initialState: T): NodeService<T> {
-    if (! Boolean(this._nodeServices.get(id))) {
-      this._nodeServices.set(id, new NodeService<T>(initialState));
-    }
-
-    return this._nodeServices.get(id);
-  }
-
   public disconnectPin(id: number): Observable<GraphSequencerState> {
     const updatedConnections = this.snapshot.connections
       .filter(c => c.targetPinId !== id && c.sourcePinId !== id);
     return this.update('connections', updatedConnections);
   }
 
+  public addItems(items: GraphItemState[]): void {
+    const nodesToAdd = items
+      .filter((item) => item.kind === 'MidiClip' || item.kind === 'Init') as NodeState[];
+
+    const connectionsToAdd = items
+      .filter((item) => item.kind === 'Connection') as ConnectionState[];
+
+    nodesToAdd.forEach(n => this._nodeAddedSubject.next(n));
+
+    this.update('nodes', [...this.snapshot.nodes, ...nodesToAdd]).subscribe();
+    this.update('connections', [...this.snapshot.connections, ...connectionsToAdd]).subscribe();
+  }
+
+  public deleteItems(items: SelectableGraphItem[]): GraphItemState[] {
+    const idsToRemove = items.map(i => i.id);
+    const updatedConnections = this.snapshot.connections
+      .filter(c => idsToRemove.includes(c.targetNode) || idsToRemove.includes(c.sourceNode));
+    const allRemoved = [...idsToRemove, ...updatedConnections.map(c => c.id)];
+
+    const states = allRemoved.map((id) =>
+      this.snapshot.nodes.find((n) => n.id === id)
+      || this.snapshot.connections.find((c) => c.id === id))
+      .filter(item => !! item);
+
+    this.update('nodes', this.snapshot.nodes.filter((n) => ! allRemoved.includes(n.id))).subscribe();
+    this.update('connections', this.snapshot.connections.filter((c) => ! allRemoved.includes(c.id))).subscribe();
+    states.forEach(state => {
+      if (state.kind === 'MidiClip' || state.kind === 'Init') {
+        this._nodeRemovedSubject.next(state.id);
+      }
+    });
+    return states;
+  }
+
+  public createAndAddConnection(unregisteredConnectionState: UnregisteredConnectionState): Observable<ConnectionState> {
+    const connectionState: ConnectionState = {
+      ...unregisteredConnectionState,
+      id: this._idSequence.next(),
+      kind: 'Connection',
+      selected: false,
+    };
+
+    return this.addConnection(connectionState).pipe(
+      map(() => connectionState));
+  }
+
   public loadState(graphState: GraphSequencerState): void {
-    this._nodeServices.forEach((service) => service.complete());
-    this._nodeServices.clear();
     this._state$.next(graphState);
   }
 
@@ -173,32 +216,132 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
         return {...c, selected: Boolean(selected)};
       });
 
-    updatedNodes.forEach(node => {
-      const nodeService = this._nodeServices.get(node.id);
-      if (nodeService != null) {
-        nodeService.setSelected(node.selected);
-      }
-    });
 
+    this.update('nodes', updatedNodes);
     this.update('connections', updatedConnections);
   }
 
-  public setMidiClipPlayPosition(clipNode: number, position: number | null): void {
-    const nodeService = this._nodeServices.get(clipNode);
-
-    if(nodeService instanceof MidiClipNodeService) {
-      nodeService.setMidiClipPlayPosition(position);
-    }
+  public setNodeBounds(id: number, bounds: Rectangle): Observable<any> {
+    return this.updateOneNode(id, 'bounds', bounds);
   }
 
-  private setNodeBounds(id: number, bounds: Rectangle): Observable<any> {
-    const midiClipService = this._nodeServices.get(id);
+  public setNodeLabel(id: any, newLabel: string): any {
+    return this.updateOneNode(id, 'label', newLabel);
+  }
 
-    if (midiClipService == null) {
-      throw new Error('Cannot find service for node ' + id);
+  public setMidiClipDuration(clipId: number, newDuration: number): Observable<MidiClipNodeState> {
+    return this.updateMidiClipNode(clipId, 'duration', newDuration);
+  }
+
+  public setMidiClipSignatureUpper(clipId: number, upper: number): Observable<MidiClipNodeState> {
+    const n = this.findMidiClipNodeState(clipId);
+    const signature = {...n.timeSignature, upper};
+    return this.updateMidiClipNode(clipId, 'timeSignature', signature);
+  }
+
+  public setMidiClipSignatureLower(clipId: number, lower: number): Observable<MidiClipNodeState> {
+    const n = this.findMidiClipNodeState(clipId);
+    const signature = {...n.timeSignature, lower};
+    return this.updateMidiClipNode(clipId, 'timeSignature', signature);
+  }
+
+  public findMidiClipNodeState(clipId: number): MidiClipNodeState {
+    const n = this.snapshot.nodes.find((n) => n.id === clipId);
+    if (n == null) throw new Error('Cannot find node with id ' + clipId);
+    if (n.kind !== 'MidiClip') throw new Error('Cannot find MidiClipNode with id ' + clipId);
+    return n as MidiClipNodeState;
+  }
+
+  public createAndAddMidiClipFlag(clipId: number, flag: Omit<MidiFlagState, 'id'>): Observable<MidiFlagState> {
+    const newFlag = {
+      ...flag,
+      id: this._idSequence.next(),
     }
+    const flags = this.getMidiClipFlags(clipId);
+    return this.updateMidiClipNode(clipId, 'flags', [...flags, newFlag]).pipe(
+      map((newState) => newState.flags.find(f => f.id === newFlag.id)),
+    );
+  }
 
-    return midiClipService.setBounds(bounds);
+  public removeMidiClipFlag(clipId: number, id: number): any {
+    const flags = this.getMidiClipFlags(clipId);
+    return this.updateMidiClipNode(clipId, 'flags', flags.filter(f => f.id === id));
+  }
+
+  public renameMidiClipFlag(clipId: number, flagId: number, value: string): Observable<MidiFlagState> {
+    return this.updateMidiClipFlag(clipId, flagId, 'name', value);
+  }
+
+  public setMidiClipFlagTime(clipId: number, flagId: number, value: number): Observable<MidiFlagState> {
+    return this.updateMidiClipFlag(clipId, flagId, 'time', value);
+  }
+
+  public setMidiClipFlagKind(clipId: number, flagId: number, value: string): Observable<MidiFlagState> {
+    if (GraphSequencerService.checkFlagKind(value)) {
+      return this.updateMidiClipFlag(clipId, flagId, 'kind', value);
+    } // Will throw otherwise
+  }
+
+  public setMidiClipFlagJumpDestination(clipId: number, flagId: number, value: number): Observable<MidiFlagState> {
+    return this.updateMidiClipFlag(clipId, flagId, 'jumpDestination', value);
+  }
+
+  public updateMidiClipFlag<K extends keyof MidiFlagState>(clipId: number,
+                                                           flagId: number,
+                                                           key: K,
+                                                           value: MidiFlagState[K])
+    : Observable<MidiFlagState> {
+    const updated = this.getMidiClipFlags(clipId)
+      .map(f => f.id === flagId ? ({ ...f, [key]: value }) : f);
+
+    return this.updateMidiClipNode(clipId, 'flags', updated).pipe(
+      map((newState) => newState.flags.find(f => f.id === flagId)));
+  }
+
+  public setMidiClipNotes(clipId: number, notes: MidiNoteState[]): Observable<MidiClipNodeState> {
+    return this.updateMidiClipNode(clipId, 'notes', notes);
+  }
+
+  public updateOneNode<K extends keyof NodeState>(id: number, key: K, value: NodeState[K]): Observable<NodeState> {
+    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({ ...n, [key]: value }) : n);
+    return this.update('nodes', updatedNodes).pipe(
+      map((updatedState) => updatedState.nodes.find(n => n.id === id)));
+  }
+
+  public updateMidiClipNode<K extends keyof MidiClipNodeState>(id: number,
+                                                               key: K,
+                                                               value: MidiClipNodeState[K]): Observable<MidiClipNodeState> {
+    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({ ...n, [key]: value }) : n);
+    return this.update('nodes', updatedNodes).pipe(
+      map((updatedState) => updatedState.nodes.find(n => n.id === id)),
+      filter((newState) => !!newState && isMidiClipNode(newState)),
+      map(n => n as MidiClipNodeState)); // sigh
+  }
+
+  public observeMidiClipNode(nodeId: number): Observable<MidiClipNodeState> {
+    return this.observeNode(nodeId).pipe(
+      filter(n => !! n && isMidiClipNode(n)),
+      map(n => n as MidiClipNodeState));  // sigh... cleanest way I found to avoid type error
+  }
+
+  public observeNode(nodeId: number): Observable<NodeState> {
+    return this.nodes$.pipe(
+      map((nodes) => nodes.find((n) => n.id === nodeId)),
+      filter(n => !! n),
+      distinctUntilChanged());
+  }
+
+  public getMidiClipFlags(clipId: number): MidiFlagState[] | null {
+    const n = this.findMidiClipNodeState(clipId);
+    return n?.flags;
+  }
+
+  public setPlayBarPositions(positions: PlayBarPosition[]): void {
+    this._playBarPositions.next(positions);
+  }
+
+  public observeNodeRemoval(id: number): any {
+    return this.nodeRemoved$.pipe(filter(nodeId => nodeId === id));
   }
 }
 
