@@ -24,11 +24,15 @@ export class Connection implements SelectableItem {
   }
 
   public getFirstPosition(): Point {
-    return this.graphRoot.findPin(this.first)?.getBoundsInGraph().center;
+    return this.graphRoot.findPin(this.first)?.getBoundsInGraph()
+      .translated(this.graphRoot.viewport.getViewOffset())
+      .center;
   }
 
   public getSecondPosition(): Point {
-    return this.graphRoot.findPin(this.second)?.getBoundsInGraph().center;
+    return this.graphRoot.findPin(this.second)?.getBoundsInGraph()
+      .translated(this.graphRoot.viewport.getViewOffset())
+      .center;
   }
 
   public draw(g: CanvasRenderingContext2D): void {

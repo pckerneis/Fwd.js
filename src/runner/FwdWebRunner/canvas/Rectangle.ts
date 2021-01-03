@@ -3,6 +3,33 @@ export interface Point {
   y: number,
 }
 
+export class Points {
+  public static origin(): Point {
+    return {x: 0, y: 0};
+  }
+
+  public static add(...points: readonly Point[]): Point {
+    return points.reduce(
+      (acc, curr) => {
+        acc.x += curr.x;
+        acc.y += curr.y;
+        return acc;
+      },
+      Points.origin());
+  }
+
+  public static lerp(first: Point, second: Point, ratio: number): Point {
+    return {
+      x: lerp(first.x, second.x, ratio),
+      y: lerp(first.y, second.y, ratio),
+    }
+  }
+}
+
+function lerp(a: number, b: number, normal: number): number {
+  return (1 - normal) * a + normal * b;
+}
+
 export interface IRectangle {
   x: number,
   y: number,
@@ -17,10 +44,10 @@ export class Rectangle implements IRectangle {
   public height: number = 0;
 
   constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
-    this.x = Math.ceil(x);
-    this.y = Math.ceil(y);
-    this.width = Math.ceil(width);
-    this.height = Math.ceil(height);
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
   }
 
   public static fromIBounds(bounds: IRectangle): Rectangle {
@@ -34,6 +61,10 @@ export class Rectangle implements IRectangle {
   public static intersect(box1: IRectangle, box2: IRectangle): boolean {
     return ! ((box2.x >= box1.x + box1.width) || (box2.x + box2.width <= box1.x)
       || (box2.y >= box1.y + box1.height) || (box2.y + box2.height <= box1.y));
+  }
+
+  public static findOuterBounds(bounds: IRectangle[]): Rectangle {
+    return Rectangle.fromIBounds(findOuterBounds(bounds));
   }
 
   public get topLeft(): Point {
@@ -143,6 +174,21 @@ export class Rectangle implements IRectangle {
   public withTrimmedBottom(amount: number): Rectangle {
     return this.withHeight(this.height - amount);
   }
+
+  public extended(amount: number): Rectangle {
+    return this.withX(this.x - amount)
+      .withWidth(this.width + 2 * amount)
+      .withY(this.y - amount)
+      .withHeight(this.height + 2 * amount);
+  }
+
+  public scaled(factor: number): Rectangle {
+    return Rectangle.fromIBounds(scaleRectangle(this.asIBounds(), factor));
+  }
+
+  public reduced(amount: number): Rectangle {
+    return this.extended(-amount);
+  }
 }
 
 export function isPointInRectangle(point: Point, rect: IRectangle | Rectangle): boolean {
@@ -151,4 +197,40 @@ export function isPointInRectangle(point: Point, rect: IRectangle | Rectangle): 
   }
 
   return ! (point.y < rect.y || point.y > rect.y + rect.height);
+}
+
+function findOuterBounds(rectangles: IRectangle[]): IRectangle {
+  if (rectangles.length === 0) {
+    return null;
+  } else if (rectangles.length === 1) {
+    return Rectangle.fromIBounds(rectangles[0]);
+  }
+
+  let left: number,
+    top: number,
+    right: number,
+    bottom: number;
+
+  rectangles.forEach(rect => {
+    left = Math.min(rect.x, left ?? rect.x);
+    top = Math.min(rect.y, top ?? rect.y);
+    right = Math.max(rect.x + rect.width, right ?? rect.x + rect.width);
+    bottom = Math.max(rect.y + rect.height, bottom ?? rect.y + rect.height);
+  });
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  }
+}
+
+export function scaleRectangle(rectangle: IRectangle, ratio: number): IRectangle {
+  return {
+    x: rectangle.x * ratio,
+    y: rectangle.y * ratio,
+    width: rectangle.width * ratio,
+    height: rectangle.height * ratio,
+  }
 }

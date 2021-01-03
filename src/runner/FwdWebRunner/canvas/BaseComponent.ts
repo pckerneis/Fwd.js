@@ -1,4 +1,4 @@
-import { Point, Rectangle } from './Rectangle';
+import { Point, Points, Rectangle } from './Rectangle';
 import { RootComponentHolder } from './RootComponentHolder';
 
 export interface IComponentMouseEvent {
@@ -58,6 +58,7 @@ export abstract class Component {
   private _beingDragged: boolean;
   private _cachedCanvas: HTMLCanvasElement;
   private _interceptsMouseEvents: boolean = true;
+  private _viewOffset: Point = Points.origin();
 
   protected constructor(private _bounds: Rectangle = new Rectangle()) {
   }
@@ -163,6 +164,14 @@ export abstract class Component {
   public setBounds(newBounds: Rectangle): void {
     this._bounds = newBounds;
     this.resized();
+  }
+
+  public getViewOffset(): Point {
+    return this._viewOffset;
+  }
+
+  public setViewOffset(offset: Point): void {
+    this._viewOffset = offset;
   }
 
   public toFront(): void {
@@ -309,8 +318,8 @@ export abstract class Component {
     let parent = this.getParentComponent();
 
     while (parent != null) {
-      offset.x += parent.getPosition().x;
-      offset.y += parent.getPosition().y;
+      offset.x += parent.getPosition().x + parent.getViewOffset().x;
+      offset.y += parent.getPosition().y + parent.getViewOffset().y;
       parent = parent.getParentComponent();
     }
 

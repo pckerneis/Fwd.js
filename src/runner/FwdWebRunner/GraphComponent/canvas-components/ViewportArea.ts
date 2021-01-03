@@ -1,4 +1,5 @@
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Point, Rectangle } from '../../canvas/Rectangle';
 import { drawConnection } from './Connection';
 import { GraphRoot } from './GraphRoot';
 
@@ -9,6 +10,20 @@ export class ViewportArea extends Component {
 
   constructor(public readonly graphRoot: GraphRoot) {
     super();
+  }
+
+  public getViewBounds(): Rectangle {
+    const offset = this.getViewOffset();
+    return this.getLocalBounds().translated({x: -offset.x, y: -offset.y});
+  }
+
+  public centerViewAt(pos: Point): void {
+    this.setViewOffset({
+      x: -pos.x + this.width / 2,
+      y: -pos.y + this.height / 2,
+    });
+
+    this.repaint();
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
@@ -39,7 +54,7 @@ export class ViewportArea extends Component {
 
     if (this.graphRoot.hasTemporaryConnection) {
       const sourcePin = this.graphRoot.temporaryConnection.sourcePin;
-      const startPos = sourcePin.getBoundsInGraph().center;
+      const startPos = sourcePin.getBoundsInGraph().translated(this.getViewOffset()).center;
       const endPos = this.graphRoot.temporaryConnection.endPosition;
       drawConnection(g, startPos, endPos, true);
     }

@@ -1,7 +1,7 @@
 import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Rectangle } from '../../canvas/Rectangle';
+import { Point, Points, Rectangle } from '../../canvas/Rectangle';
 import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { ConnectionState } from '../../state/project.state';
@@ -40,7 +40,7 @@ export class GraphRoot extends Component {
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
 
-    this._miniMap = new MiniMap();
+    this._miniMap = new MiniMap(this);
     this.addAndMakeVisible(this._miniMap);
 
     this._connectionAddedSubject$ = new Subject<ConnectionState>();
@@ -53,6 +53,10 @@ export class GraphRoot extends Component {
     this.selectionChanged$ = this._selectionChangedSubject$.asObservable();
 
     this.selection.onchange = (items) => this._selectionChangedSubject$.next(items);
+  }
+
+  public get viewport(): ViewportArea {
+    return this._viewportArea;
   }
 
   public get temporaryConnection(): TemporaryConnection {
@@ -80,15 +84,25 @@ export class GraphRoot extends Component {
 
   public temporaryConnectionDragged(event: ComponentMouseEvent): void {
     if (this._temporaryConnection != null) {
-      const suitablePin = this.findSuitablePinNearby(event.position, this._temporaryConnection.sourcePin);
-      this._temporaryConnection.endPosition = suitablePin?.getBoundsInGraph().center || event.position;
+      const viewPortPosition = Points.add(event.position, {
+        x: -this.viewport.getViewOffset().x,
+        y: -this.viewport.getViewOffset().y,
+      });
+      const suitablePin = this.findSuitablePinNearby(viewPortPosition, this._temporaryConnection.sourcePin);
+      this._temporaryConnection.endPosition = suitablePin?.getBoundsInGraph()
+        .translated(this.viewport.getViewOffset())
+        .center || event.position;
       this.repaint();
     }
   }
 
   public temporaryConnectionReleased(event: ComponentMouseEvent): void {
     if (this._temporaryConnection != null) {
-      const suitablePin = this.findSuitablePinNearby(event.position, this._temporaryConnection.sourcePin);
+      const viewPortPosition = Points.add(event.position, {
+        x: -this.viewport.getViewOffset().x,
+        y: -this.viewport.getViewOffset().y,
+      });
+      const suitablePin = this.findSuitablePinNearby(viewPortPosition, this._temporaryConnection.sourcePin);
 
       if (suitablePin != null) {
         this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin, true);
@@ -208,6 +222,8 @@ export class GraphRoot extends Component {
     if (! this.selection.isEmpty()) {
       this._nodeBoundsChangedSubject$.next(this.selection.getItems()
         .filter(item => item instanceof GraphNode) as GraphNode[]);
+
+      this._miniMap.updatePreview();
     }
   }
 
