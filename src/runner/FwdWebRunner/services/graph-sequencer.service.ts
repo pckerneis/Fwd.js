@@ -42,8 +42,8 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
 
   constructor(state: GraphSequencerState) {
     super(state);
-    this.nodes$ = this.state$.pipe(pluck('nodes'), tap(() => console.log('node$')));
-    this.connections$ = this.state$.pipe(pluck('connections'), tap(() => console.log('connections$')));
+    this.nodes$ = this.state$.pipe(pluck('nodes'));
+    this.connections$ = this.state$.pipe(pluck('connections'));
     this.playBarPositions$ = this._playBarPositions.asObservable();
     this.nodeAdded$ = this._nodeAddedSubject.asObservable();
     this.nodeRemoved$ = this._nodeRemovedSubject.asObservable();
