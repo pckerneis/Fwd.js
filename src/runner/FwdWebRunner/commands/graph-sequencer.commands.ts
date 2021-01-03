@@ -1,4 +1,4 @@
-import { ComponentPosition } from '../canvas/BaseComponent';
+import { Point } from '../canvas/Rectangle';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState } from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
@@ -9,14 +9,14 @@ export enum CommandIds {
   addConnection = 'addConnection',
 }
 
-export const createAndAddInitNode: CommandFactory<ComponentPosition> = (position) => {
+export const createAndAddInitNode: CommandFactory<Point> = (position) => {
   return {
     id: CommandIds.createAndAddInitNode,
     payload: position,
   };
 };
 
-function createAndAddInitNodePerformer(service: GraphSequencerService): CommandPerformer<ComponentPosition> {
+function createAndAddInitNodePerformer(service: GraphSequencerService): CommandPerformer<Point> {
   let addedNodeState: InitNodeState;
   return {
     canPerform: (command) => command.id === CommandIds.createAndAddInitNode,
@@ -35,14 +35,14 @@ function createAndAddInitNodePerformer(service: GraphSequencerService): CommandP
   };
 }
 
-export const createAndAddMidiClipNode: CommandFactory<ComponentPosition> = (state) => {
+export const createAndAddMidiClipNode: CommandFactory<Point> = (state) => {
   return {
     id: CommandIds.createAndAddMidiClipNode,
     payload: state,
   };
 };
 
-function createAndAddMidiClipNodePerformer(service: GraphSequencerService): CommandPerformer<ComponentPosition> {
+function createAndAddMidiClipNodePerformer(service: GraphSequencerService): CommandPerformer<Point> {
   let addedNodeState: MidiClipNodeState;
   return {
     canPerform: (command) => command.id === CommandIds.createAndAddMidiClipNode,

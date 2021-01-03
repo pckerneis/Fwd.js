@@ -1,5 +1,5 @@
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
-import { ComponentBounds } from '../canvas/BaseComponent';
+import { Rectangle } from '../canvas/Rectangle';
 import { RootComponentHolder } from '../canvas/RootComponentHolder';
 import { commandManager } from '../commands/command-manager';
 import { addConnection, createAndAddInitNode, createAndAddMidiClipNode } from '../commands/graph-sequencer.commands';
@@ -95,7 +95,7 @@ export class GraphElement implements EditorElement {
     this.graphSequencerService.getNodeService(state.id, state);
     const n = new InitNode(this._graphRoot, state);
     this.addNode(n);
-    n.setBounds(ComponentBounds.fromIBounds(state.bounds));
+    n.setBounds(Rectangle.fromIBounds(state.bounds));
     return n;
   }
 
@@ -103,7 +103,7 @@ export class GraphElement implements EditorElement {
     const nodeService = this.graphSequencerService.getMidiNodeService(state.id, state);
     const n = new MidiClipNode(this._graphRoot, state, nodeService, this.panelManager);
     this.addNode(n);
-    n.setBounds(ComponentBounds.fromIBounds(state.bounds));
+    n.setBounds(Rectangle.fromIBounds(state.bounds));
     n.attachObservers();
 
     return n;

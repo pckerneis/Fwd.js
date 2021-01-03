@@ -1,5 +1,6 @@
 import { distinctUntilChanged } from 'rxjs/operators';
-import { ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Rectangle } from '../../canvas/Rectangle';
 import { PanelManager } from '../../panels/PanelManager';
 import { MidiClipNodeService, MidiInlet, MidiOutlet } from '../../services/midi-clip-node.service';
 import { MidiClipNodeState, MidiFlagState } from '../../state/project.state';
@@ -101,7 +102,7 @@ export class MidiClipNode extends GraphNode {
       (availableHeight - this.inlets.size() * this.pinHeight) / 2;
 
     this.inlets.array.forEach((pin, index) => {
-      pin.setBounds(new ComponentBounds(0, inletOffsetY + this.pinHeight * index,
+      pin.setBounds(new Rectangle(0, inletOffsetY + this.pinHeight * index,
         this.pinWidth, this.pinHeight));
     });
 
@@ -109,7 +110,7 @@ export class MidiClipNode extends GraphNode {
       (availableHeight - this.outlets.size() * this.pinHeight) / 2;
 
     this.outlets.array.forEach((pin, index) => {
-      pin.setBounds(new ComponentBounds(this.width - this.pinWidth,
+      pin.setBounds(new Rectangle(this.width - this.pinWidth,
         outletOffsetY + this.pinHeight * index,
         this.pinWidth, this.pinHeight));
     });

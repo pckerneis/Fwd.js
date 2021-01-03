@@ -1,4 +1,5 @@
-import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Rectangle } from '../../canvas/Rectangle';
 import { GraphNode } from './GraphNode';
 import { GraphRoot } from './GraphRoot';
 
@@ -24,7 +25,7 @@ export abstract class Pin extends Component {
     this.parentGraph.temporaryConnectionReleased(event);
   }
 
-  public getBoundsInGraph(): ComponentBounds {
+  public getBoundsInGraph(): Rectangle {
     const nodePosition = this.parentNode.getPosition();
     return this.getBounds().translated(nodePosition);
   }

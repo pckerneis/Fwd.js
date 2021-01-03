@@ -1,5 +1,6 @@
 import { Colors } from '../../NoteSequencer/note-sequencer';
-import { Component, ComponentMouseEvent, IBounds } from '../BaseComponent';
+import { Component, ComponentMouseEvent } from '../BaseComponent';
+import { IRectangle } from '../Rectangle';
 import { SelectableItem, SelectedItemSet } from './SelectedItemSet';
 
 interface Lasso<T extends SelectableItem> {
@@ -13,7 +14,7 @@ interface Lasso<T extends SelectableItem> {
 
 export class LassoSelector<T extends SelectableItem> {
 
-  public findAllElementsInLasso: (lassoBounds: IBounds) => T[];
+  public findAllElementsInLasso: (lassoBounds: IRectangle) => T[];
 
   private lasso: Lasso<T>;
 
@@ -52,7 +53,7 @@ export class LassoSelector<T extends SelectableItem> {
     this.lasso.endX = event.position.x - ownerPos.x;
     this.lasso.endY = event.position.y - ownerPos.y;
 
-    const lassoBounds: IBounds = {
+    const lassoBounds: IRectangle = {
       x: Math.min(this.lasso.startX, this.lasso.endX),
       y: Math.min(this.lasso.startY, this.lasso.endY),
       width: Math.abs(this.lasso.startX - this.lasso.endX),

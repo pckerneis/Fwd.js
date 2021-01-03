@@ -1,5 +1,6 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
-import { Component, ComponentBounds, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Rectangle } from '../../canvas/Rectangle';
 import { SelectableItem } from '../../canvas/shared/SelectedItemSet';
 import { InitNodeState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
@@ -27,7 +28,7 @@ export abstract class GraphNode extends Component implements SelectableItem {
   protected readonly defaultHeight: number = 24;
   protected readonly defaultWidth: number = 120;
 
-  private _boundsAtMouseDown: ComponentBounds;
+  private _boundsAtMouseDown: Rectangle;
   private _mouseDownResult: boolean;
 
   protected constructor(public readonly parentGraph: GraphRoot, state: NodeState) {
@@ -141,14 +142,14 @@ export abstract class GraphNode extends Component implements SelectableItem {
     const inletOffsetY = (this.height - this.inlets.size() * this.pinHeight) / 2;
 
     this.inlets.array.forEach((pin, index) => {
-      pin.setBounds(new ComponentBounds(0, inletOffsetY + this.pinHeight * index,
+      pin.setBounds(new Rectangle(0, inletOffsetY + this.pinHeight * index,
         this.pinWidth, this.pinHeight));
     });
 
     const outletOffsetY = (this.height - this.outlets.size() * this.pinHeight) / 2;
 
     this.outlets.array.forEach((pin, index) => {
-      pin.setBounds(new ComponentBounds(this.width - this.pinWidth,
+      pin.setBounds(new Rectangle(this.width - this.pinWidth,
         outletOffsetY + this.pinHeight * index,
         this.pinWidth, this.pinHeight));
     });

@@ -1,5 +1,6 @@
 import { squaredDistance } from '../NoteSequencer/canvas-components/RenderHelpers';
-import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from './BaseComponent';
+import { Component, ComponentMouseEvent } from './BaseComponent';
+import { Point, Rectangle } from './Rectangle';
 
 declare class ResizeObserver {
   constructor(...args: any[]);
@@ -42,20 +43,20 @@ export class RootComponentHolder<T extends Component> {
     this.canvas.width = width;
     this.canvas.height = height;
 
-    this.rootComponent.setBounds(new ComponentBounds(0, 0, width, height));
+    this.rootComponent.setBounds(new Rectangle(0, 0, width, height));
   }
 
   public initMouseEventListeners(): void {
     let pressedComponent: Component = null;
     let componentUnderMouse: Component = null;
-    let mouseDownPos: ComponentPosition;
-    let mouseUpPos: ComponentPosition;
+    let mouseDownPos: Point;
+    let mouseUpPos: Point;
     let mouseDownTime: number;
     let mouseUpTime: number;
     let consecutiveClickCount: number = 0;
     let consecutivePressCount: number = 0;
     let lastClickTime: number;
-    let lastClickPos: ComponentPosition;
+    let lastClickPos: Point;
     let wasDragged: boolean = false;
     let isDragging: boolean = false;
 

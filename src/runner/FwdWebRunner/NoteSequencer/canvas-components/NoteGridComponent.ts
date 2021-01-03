@@ -1,4 +1,5 @@
-import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Point, Rectangle } from '../../canvas/Rectangle';
 import { LassoSelector } from '../../canvas/shared/LassoSelector';
 import { SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, NoteSequencer, SequencerDisplayModel } from '../note-sequencer'
@@ -74,7 +75,7 @@ export class NoteGridComponent extends Component {
 
     this._lasso = new LassoSelector<Note>(this, this._selectedSet, this.model.colors);
 
-    this._lasso.findAllElementsInLasso = (lassoBounds: ComponentBounds) => {
+    this._lasso.findAllElementsInLasso = (lassoBounds: Rectangle) => {
       return this._notes.filter((note) => {
         const noteBounds = {
           x: this.getPositionForTime(note.time),
@@ -83,7 +84,7 @@ export class NoteGridComponent extends Component {
           height: this.getSemitoneHeight(),
         };
 
-        return Component.boundsIntersect(noteBounds, lassoBounds);
+        return Rectangle.intersect(noteBounds, lassoBounds);
       });
     }
   }
@@ -755,7 +756,7 @@ export class NoteGridComponent extends Component {
     this.getParentComponent().repaint();
   }
 
-  private getDragActionForNoteAt(pos: ComponentPosition, n: Note): DragAction {
+  private getDragActionForNoteAt(pos: Point, n: Note): DragAction {
     const margin = 3;
     const noteX = this.getPositionForTime(n.time);
     const noteW = Math.max(2, n.duration * this.getSixteenthWidth());
@@ -768,7 +769,7 @@ export class NoteGridComponent extends Component {
     return 'NONE';
   }
 
-  private findNoteAt(pos: ComponentPosition): Note {
+  private findNoteAt(pos: Point): Note {
     // We need to iterate from end to start to have front most notes first
     for (const note of this.notes) {
       const x = this.getPositionForTime(note.time);

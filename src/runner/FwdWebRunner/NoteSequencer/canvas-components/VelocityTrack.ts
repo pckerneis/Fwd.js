@@ -1,4 +1,5 @@
-import { Component, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Point, Rectangle } from '../../canvas/Rectangle';
 import { LassoSelector } from '../../canvas/shared/LassoSelector';
 import { MAX_PITCH, SequencerDisplayModel } from '../note-sequencer';
 import { Note, NoteGridComponent } from './NoteGridComponent';
@@ -31,7 +32,7 @@ export class VelocityTrack extends Component {
           height: this.handleRadius * 2,
         };
 
-        return Component.boundsIntersect(noteBounds, lassoBounds);
+        return Rectangle.intersect(noteBounds, lassoBounds);
       })
     };
   }
@@ -164,7 +165,7 @@ export class VelocityTrack extends Component {
     }
   }
 
-  private findHandleAt(pos: ComponentPosition): Note {
+  private findHandleAt(pos: Point): Note {
     let vScale = this.height / MAX_PITCH;
     const squaredHitDistance = 64;
 

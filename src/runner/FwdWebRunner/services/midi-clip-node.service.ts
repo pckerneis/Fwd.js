@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, map, pluck, switchMap, take } from 'rxjs/operators';
-import { ComponentBounds } from '../canvas/BaseComponent';
+import { Rectangle } from '../canvas/Rectangle';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 import { FlagKind, MidiClipNodeState, MidiFlagState, MidiNoteState, NodeState } from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
@@ -50,7 +50,7 @@ export class NodeService<T extends NodeState> extends StoreBasedService<T> {
     return this.update('label', newLabel);
   }
 
-  public setBounds(bounds: ComponentBounds): Observable<T> {
+  public setBounds(bounds: Rectangle): Observable<T> {
     return this.update('bounds', bounds);
   }
 

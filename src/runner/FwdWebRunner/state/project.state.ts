@@ -1,10 +1,10 @@
-import { IBounds } from '../canvas/BaseComponent';
+import { IRectangle } from '../canvas/Rectangle';
 import { Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
 export interface BaseNodeState {
   id: number;
-  bounds: IBounds;
+  bounds: IRectangle;
   selected: boolean;
 }
 

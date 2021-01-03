@@ -1,11 +1,13 @@
 import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
-import { Component, ComponentBounds, ComponentMouseEvent, ComponentPosition } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { Point, Rectangle } from '../../canvas/Rectangle';
 import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { ConnectionState } from '../../state/project.state';
 import { Connection, TemporaryConnection } from './Connection';
 import { GraphNode } from './GraphNode';
+import { MiniMap } from './MiniMap';
 import { OutletPin, Pin } from './Pin';
 import { ViewportArea } from './ViewportArea';
 
@@ -29,13 +31,17 @@ export class GraphRoot extends Component {
 
   // TODO: move this in utility class ?
   private componentDragReady: boolean;
-  private positionsAtMouseDown: Map<number, ComponentBounds> = new Map();
+  private boundsAtMouseDown: Map<number, Rectangle> = new Map();
+  private _miniMap: MiniMap;
 
   constructor() {
     super();
 
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
+
+    this._miniMap = new MiniMap();
+    this.addAndMakeVisible(this._miniMap);
 
     this._connectionAddedSubject$ = new Subject<ConnectionState>();
     this.connectionAdded$ = this._connectionAddedSubject$.asObservable();
@@ -180,7 +186,7 @@ export class GraphRoot extends Component {
     if (! this.componentDragReady) {
       this.selection.getItems().forEach(item => {
         if (item instanceof GraphNode) {
-          this.positionsAtMouseDown.set(item.id, item.getBounds());
+          this.boundsAtMouseDown.set(item.id, item.getBounds());
         }
       });
       this.componentDragReady = true;
@@ -190,14 +196,14 @@ export class GraphRoot extends Component {
 
     for (const item of this.selection.getItems()) {
       if (item instanceof GraphNode) {
-        item.setBounds(this.positionsAtMouseDown.get(item.id).translated(dragOffset));
+        item.setBounds(this.boundsAtMouseDown.get(item.id).translated(dragOffset));
       }
     }
   }
 
   public resetComponentDrag(): void {
     this.componentDragReady = false;
-    this.positionsAtMouseDown.clear();
+    this.boundsAtMouseDown.clear();
 
     if (! this.selection.isEmpty()) {
       this._nodeBoundsChangedSubject$.next(this.selection.getItems()
@@ -240,13 +246,19 @@ export class GraphRoot extends Component {
     const bounds = this.getLocalBounds();
     this._viewportArea.setBounds(bounds);
 
+    const miniMapSize = 150;
+
+    this._miniMap.setBounds(this.getLocalBounds()
+      .removeFromBottom(miniMapSize)
+      .removeFromRight(miniMapSize));
+
     this.repaint();
   }
 
   public render(g: CanvasRenderingContext2D): void {
   }
 
-  private findSuitablePinNearby(position: ComponentPosition, sourcePin: Pin): Pin | null {
+  private findSuitablePinNearby(position: Point, sourcePin: Pin): Pin | null {
     const allowedSquaredDistance = 10 ** 2;
 
     const checkPin = (pin: Pin, other: Pin) => {

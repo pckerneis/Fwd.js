@@ -1,4 +1,5 @@
-import { Component, ComponentBounds, ComponentMouseEvent, isPointInRectangle } from '../../canvas/BaseComponent';
+import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
+import { isPointInRectangle, Rectangle } from '../../canvas/Rectangle';
 import { Range, SequencerDisplayModel } from '../note-sequencer';
 import { clamp } from '../utils';
 import { Flag, FlagDirection, NoteGridComponent } from './NoteGridComponent';
@@ -111,7 +112,7 @@ export class TimeRuler extends Component {
   }
 
   private renderGraduations(sixteenth: number, end: number, start: number,
-                            g: CanvasRenderingContext2D, bounds: ComponentBounds): void {
+                            g: CanvasRenderingContext2D, bounds: Rectangle): void {
     const minLabelSpacing = 50;
     const minGraduationSpacing = 5;
 

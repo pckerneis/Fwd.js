@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { map, pluck, tap } from 'rxjs/operators';
-import { ComponentBounds, ComponentPosition } from '../canvas/BaseComponent';
+import { Point, Rectangle } from '../canvas/Rectangle';
 import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
 import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
@@ -37,7 +37,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     }));
   }
 
-  public createAndAddInitNode(position: ComponentPosition): Observable<NodeState> {
+  public createAndAddInitNode(position: Point): Observable<NodeState> {
     const initNode: InitNodeState = {
       kind: 'Init',
       id: this._idSequence.next(),
@@ -51,7 +51,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.update('nodes', updatedNodes).pipe(map(state => state.nodes[state.nodes.length - 1]));
   }
 
-  public createAndAddMidiClipNode(position: ComponentPosition): Observable<NodeState> {
+  public createAndAddMidiClipNode(position: Point): Observable<NodeState> {
     const defaultDuration = 16;
 
     const midiClipNode: MidiClipNodeState = {
@@ -191,7 +191,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     }
   }
 
-  private setNodeBounds(id: number, bounds: ComponentBounds): Observable<any> {
+  private setNodeBounds(id: number, bounds: Rectangle): Observable<any> {
     const midiClipService = this._nodeServices.get(id);
 
     if (midiClipService == null) {

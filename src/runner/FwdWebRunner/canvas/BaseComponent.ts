@@ -1,129 +1,11 @@
+import { Point, Rectangle } from './Rectangle';
 import { RootComponentHolder } from './RootComponentHolder';
-
-export interface ComponentPosition {
-  x: number,
-  y: number,
-}
-
-export interface IBounds {
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-}
-
-export class ComponentBounds implements IBounds {
-  public x: number = 0;
-  public y: number = 0;
-  public width: number = 0;
-  public height: number = 0;
-
-  constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
-    this.x = Math.ceil(x);
-    this.y = Math.ceil(y);
-    this.width = Math.ceil(width);
-    this.height = Math.ceil(height);
-  }
-
-  public static fromIBounds(bounds: IBounds): ComponentBounds {
-    if (! Boolean(bounds)) {
-      return new ComponentBounds();
-    }
-
-    return new ComponentBounds(bounds.x, bounds.y, bounds.width, bounds.height);
-  }
-
-  public get topLeft(): ComponentPosition {
-    return {
-      x: this.x,
-      y: this.y,
-    }
-  }
-
-  public get center(): ComponentPosition {
-    return {
-      x: this.x + this.width / 2,
-      y: this.y + this.height / 2,
-    }
-  }
-
-  public asIBounds(): IBounds {
-    return { x: this.x, y: this.y, height: this.height, width: this.width };
-  }
-
-  public clone(): ComponentBounds {
-    return new ComponentBounds(this.x, this.y, this.width, this.height);
-  }
-
-  public removeFromLeft(amount: number): ComponentBounds {
-    amount = Math.floor(Math.max(0, Math.min(amount, this.width)));
-
-    const removed = new ComponentBounds(this.x, this.y, amount, this.height);
-
-    this.x += amount;
-    this.width -= amount;
-
-    return removed;
-  }
-
-  public removeFromTop(amount: number): ComponentBounds {
-    amount = Math.floor(Math.max(0, Math.min(amount, this.height)));
-
-    const removed = new ComponentBounds(this.x, this.y, this.width, amount);
-
-    this.y += amount;
-    this.height -= amount;
-
-    return removed;
-  }
-
-  public removeFromBottom(amount: number): ComponentBounds {
-    amount = Math.floor(Math.max(0, Math.min(amount, this.height)));
-
-    const removed = new ComponentBounds(this.x, this.height - amount, this.width, amount);
-
-    this.height -= amount;
-
-    return removed;
-  }
-
-  public translated(offset: ComponentPosition): ComponentBounds {
-    return new ComponentBounds(
-      this.x + offset.x,
-      this.y + offset.y,
-      this.width, this.height);
-  }
-
-  public withX(x: number): ComponentBounds {
-    return this.translated({ x, y: 0 });
-  }
-
-  public withWidth(width: number): ComponentBounds {
-    return ComponentBounds.fromIBounds({ ...this.asIBounds(), width });
-  }
-
-  public withHeight(height: number): ComponentBounds {
-    return ComponentBounds.fromIBounds({ ...this.asIBounds(), height });
-  }
-
-  public withY(y: number): ComponentBounds {
-    return this.translated({ x: 0, y });
-  }
-
-  public withTrimmedLeft(amount: number): ComponentBounds {
-    return this.withX(amount).withWidth(this.width - amount);
-  }
-
-  public withTrimmedTop(amount: number): ComponentBounds {
-    return this.withY(amount).withHeight(this.height - amount);
-  }
-}
 
 export interface IComponentMouseEvent {
   nativeEvent: MouseEvent;
   isDragging: boolean;
-  positionAtMouseDown: ComponentPosition,
-  position: ComponentPosition,
+  positionAtMouseDown: Point,
+  position: Point,
   pressedComponent: Component,
   wasDragged: boolean,
   modifiers: { shift: boolean, option: boolean }
@@ -133,8 +15,8 @@ export class ComponentMouseEvent implements IComponentMouseEvent {
   public readonly isDragging: boolean;
   public readonly modifiers: { shift: boolean; option: boolean };
   public readonly nativeEvent: MouseEvent;
-  public readonly position: ComponentPosition;
-  public readonly positionAtMouseDown: ComponentPosition;
+  public readonly position: Point;
+  public readonly positionAtMouseDown: Point;
   public readonly pressedComponent: Component;
   public readonly wasDragged: boolean;
 
@@ -148,7 +30,7 @@ export class ComponentMouseEvent implements IComponentMouseEvent {
     this.wasDragged = infos.wasDragged;
   }
 
-  public getDragOffset(): ComponentPosition {
+  public getDragOffset(): Point {
     return {
       x: this.position.x - this.positionAtMouseDown.x,
       y: this.position.y - this.positionAtMouseDown.y,
@@ -177,15 +59,10 @@ export abstract class Component {
   private _cachedCanvas: HTMLCanvasElement;
   private _interceptsMouseEvents: boolean = true;
 
-  protected constructor(private _bounds: ComponentBounds = new ComponentBounds()) {
+  protected constructor(private _bounds: Rectangle = new Rectangle()) {
   }
 
-  public static boundsIntersect(box1: IBounds, box2: IBounds): boolean {
-    return ! ((box2.x >= box1.x + box1.width) || (box2.x + box2.width <= box1.x)
-      || (box2.y >= box1.y + box1.height) || (box2.y + box2.height <= box1.y));
-  }
-
-  private static createOffscreenCanvas(width: number, height: number): HTMLCanvasElement {
+  protected static createOffscreenCanvas(width: number, height: number): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -261,7 +138,7 @@ export abstract class Component {
     }
   }
 
-  public getPosition(): ComponentPosition {
+  public getPosition(): Point {
     let x = this._bounds.x;
     let y = this._bounds.y;
     let parent = this._parent;
@@ -275,15 +152,15 @@ export abstract class Component {
     return {x, y};
   }
 
-  public getLocalBounds(): ComponentBounds {
-    return new ComponentBounds(0, 0, this.width, this.height);
+  public getLocalBounds(): Rectangle {
+    return new Rectangle(0, 0, this.width, this.height);
   }
 
-  public getBounds(): ComponentBounds {
+  public getBounds(): Rectangle {
     return this._bounds.clone();
   }
 
-  public setBounds(newBounds: ComponentBounds): void {
+  public setBounds(newBounds: Rectangle): void {
     this._bounds = newBounds;
     this.resized();
   }
@@ -302,14 +179,14 @@ export abstract class Component {
     this._parent._children.push(this);
   }
 
-  public hitTest(mousePosition: ComponentPosition): boolean {
+  public hitTest(mousePosition: Point): boolean {
     if (! this._visible)
       return false;
 
-    return isPointInRectangle(mousePosition, this.getAbsoluteBounds());
+    return this.getAbsoluteBounds().contains(mousePosition);
   }
 
-  public findInterceptingComponentAt(position: ComponentPosition): Component {
+  public findInterceptingComponentAt(position: Point): Component {
     for (let i = this._children.length; --i >= 0;) {
       const c = this._children[i];
 
@@ -406,7 +283,7 @@ export abstract class Component {
       && Math.floor(this._bounds.width) > 0
       && Math.floor(this._bounds.height) > 0) {
       let g: HTMLCanvasElement;
-      
+
       if (this._needRepaint || this._cachedCanvas == null) {
         g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
         this.render(g.getContext('2d'));
@@ -424,8 +301,8 @@ export abstract class Component {
     this._needRepaint = false;
   }
 
-  private getAbsoluteBounds(): ComponentBounds {
-    let offset: ComponentPosition = {
+  private getAbsoluteBounds(): Rectangle {
+    let offset: Point = {
       x: 0, y: 0,
     };
 
@@ -453,12 +330,4 @@ export abstract class Component {
       root.paint(root._rootHolder.renderingContext);
     }
   }
-}
-
-export function isPointInRectangle(point: ComponentPosition, rect: IBounds | ComponentBounds): boolean {
-  if (point.x < rect.x || point.x > rect.x + rect.width) {
-    return false;
-  }
-
-  return ! (point.y < rect.y || point.y > rect.y + rect.height);
 }

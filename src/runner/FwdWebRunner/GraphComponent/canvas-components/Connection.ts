@@ -1,11 +1,11 @@
 import { clamp } from '../../../../fwd/utils/numbers';
-import { ComponentPosition } from '../../canvas/BaseComponent';
+import { Point } from '../../canvas/Rectangle';
 import { SelectableItem } from '../../canvas/shared/SelectedItemSet';
 import { GraphRoot } from './GraphRoot';
 import { Pin } from './Pin';
 
 export interface TemporaryConnection {
-  endPosition: ComponentPosition;
+  endPosition: Point;
   readonly sourcePin: Pin;
 }
 
@@ -16,18 +16,18 @@ export class Connection implements SelectableItem {
               public readonly selected: boolean) {
   }
 
-  public hitTest(position: ComponentPosition): boolean {
+  public hitTest(position: Point): boolean {
     const maxDistanceSquared = 16;
     const start = this.getFirstPosition();
     const end = this.getSecondPosition();
     return distanceToSegmentSquared(position, start, end) < maxDistanceSquared;
   }
 
-  public getFirstPosition(): ComponentPosition {
+  public getFirstPosition(): Point {
     return this.graphRoot.findPin(this.first)?.getBoundsInGraph().center;
   }
 
-  public getSecondPosition(): ComponentPosition {
+  public getSecondPosition(): Point {
     return this.graphRoot.findPin(this.second)?.getBoundsInGraph().center;
   }
 
@@ -39,8 +39,8 @@ export class Connection implements SelectableItem {
 }
 
 export function drawConnection(g: CanvasRenderingContext2D,
-                               startPos: ComponentPosition,
-                               endPos: ComponentPosition,
+                               startPos: Point,
+                               endPos: Point,
                                selected: boolean): void {
   g.strokeStyle = selected ? '#00a8ff' : 'black';
   g.lineWidth = selected ? 2 : 1;
@@ -55,13 +55,13 @@ function squared(x: number): number {
   return x * x;
 }
 
-function squaredDistance(v: ComponentPosition, w: ComponentPosition): number {
+function squaredDistance(v: Point, w: Point): number {
   return squared(v.x - w.x) + squared(v.y - w.y);
 }
 
-function distanceToSegmentSquared(p: ComponentPosition,
-                                  v: ComponentPosition,
-                                  w: ComponentPosition): number {
+function distanceToSegmentSquared(p: Point,
+                                  v: Point,
+                                  w: Point): number {
   const l2 = squaredDistance(v, w);
 
   if (l2 == 0) return squaredDistance(p, v);
