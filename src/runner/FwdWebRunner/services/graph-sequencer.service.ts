@@ -263,9 +263,9 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     );
   }
 
-  public removeMidiClipFlag(clipId: number, id: number): any {
+  public removeMidiClipFlag(clipId: number, id: number): Observable<any> {
     const flags = this.getMidiClipFlags(clipId);
-    return this.updateMidiClipNode(clipId, 'flags', flags.filter(f => f.id === id));
+    return this.updateMidiClipNode(clipId, 'flags', flags.filter(f => f.id !== id));
   }
 
   public renameMidiClipFlag(clipId: number, flagId: number, value: string): Observable<MidiFlagState> {
