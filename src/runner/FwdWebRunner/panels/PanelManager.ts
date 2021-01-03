@@ -1,4 +1,4 @@
-import { pluck } from 'rxjs/operators';
+import { pluck, takeUntil } from 'rxjs/operators';
 import { FlexPanel } from '../../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Logger } from '../../../fwd/utils/Logger';
@@ -46,13 +46,18 @@ export class PanelManager {
       this.noteSequencerPanels.set(node.id, panel);
 
       node.graphSequencerService.observeNode(node.id).pipe(
+        takeUntil(node.graphSequencerService.observeNodeRemoval(node.id)),
         pluck('label'),
       ).subscribe((newLabel) => {
-        this._contextualTabbedPanel.renameTab(node.id, newLabel);
+        if (this._contextualTabbedPanel.hasTab(node.id)) {
+          this._contextualTabbedPanel.renameTab(node.id, newLabel);
+        }
       });
 
       node.graphSequencerService.observeNodeRemoval(node.id).subscribe(() => {
-        this._contextualTabbedPanel.removeTab(node.id);
+        if (this._contextualTabbedPanel.hasTab(node.id)) {
+          this._contextualTabbedPanel.removeTab(node.id);
+        }
       });
     }
   }
