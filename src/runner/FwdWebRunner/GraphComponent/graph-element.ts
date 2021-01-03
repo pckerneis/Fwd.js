@@ -72,15 +72,19 @@ export class GraphElement implements EditorElement {
       {
         label: 'Add init node',
         action: (infos) => commandManager.perform(createAndAddInitNode({
-          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left,
-          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top,
+          x: infos.eventThatFiredMenu.clientX  - this.htmlElement.getBoundingClientRect().left
+            - this._graphRoot.viewport.getViewOffset().x,
+          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top
+            - this._graphRoot.viewport.getViewOffset().y,
         })),
       },
       {
         label: 'Add midi clip node',
         action: (infos) => commandManager.perform(createAndAddMidiClipNode({
-          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left,
-          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top,
+          x: infos.eventThatFiredMenu.clientX - this.htmlElement.getBoundingClientRect().left
+            - this._graphRoot.viewport.getViewOffset().x,
+          y: infos.eventThatFiredMenu.clientY - this.htmlElement.getBoundingClientRect().top
+            - this._graphRoot.viewport.getViewOffset().y,
         })),
       },
     ]);
