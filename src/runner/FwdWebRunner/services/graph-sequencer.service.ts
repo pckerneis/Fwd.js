@@ -1,10 +1,10 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, map, pluck, tap } from 'rxjs/operators';
-import { Point, Rectangle } from '../canvas/Rectangle';
+import { IRectangle, Point, Rectangle } from '../canvas/Rectangle';
 import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
 import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
-import { UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
+import { GraphObjectBounds, UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
 import {
   ConnectionState,
   FlagKind,
@@ -33,12 +33,14 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   public readonly connections$: Observable<ConnectionState[]>;
   public readonly playBarPositions$: Observable<PlayBarPosition[]>;
   public readonly nodeRemoved$: Observable<number>;
+  public readonly nodesMoved$: Observable<GraphObjectBounds[]>;
 
   private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
   private readonly nodes$: Observable<NodeState[]>;
   private readonly _playBarPositions: BehaviorSubject<PlayBarPosition[]> = new BehaviorSubject<PlayBarPosition[]>([]);
   private readonly _nodeRemovedSubject: Subject<number> = new Subject<number>();
   private readonly _nodeAddedSubject: Subject<NodeState> = new Subject<NodeState>();
+  private readonly _nodesMovedSubject: Subject<GraphObjectBounds[]> = new Subject<GraphObjectBounds[]>();
 
   constructor(state: GraphSequencerState) {
     super(state);
@@ -47,6 +49,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     this.playBarPositions$ = this._playBarPositions.asObservable();
     this.nodeAdded$ = this._nodeAddedSubject.asObservable();
     this.nodeRemoved$ = this._nodeRemovedSubject.asObservable();
+    this.nodesMoved$ = this._nodesMovedSubject.asObservable();
   }
 
   private static checkFlagKind(kind: string): kind is FlagKind {
@@ -190,10 +193,12 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     this._state$.next(graphState);
   }
 
-  public nodeBoundsChanged(nodes: GraphNode[]): void {
+  public setNodesBounds(nodes: { id: number, bounds: IRectangle }[]): void {
     nodes.forEach(n => {
-      this.setNodeBounds(n.id, n.getBounds()).subscribe();
-    })
+      this.setNodeBounds(n.id, Rectangle.fromIBounds(n.bounds)).subscribe();
+    });
+
+    this._nodesMovedSubject.next(nodes);
   }
 
   public selectionChanged(items: SelectableItem[]): void {

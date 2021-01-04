@@ -6,7 +6,7 @@ import {
   addConnection,
   createAndAddInitNode,
   createAndAddMidiClipNode,
-  deleteGraphSelection,
+  deleteGraphSelection, moveNodes,
 } from '../commands/graph-sequencer.commands';
 import { ContextualMenu } from '../components/ContextualMenu';
 import { PanelManager } from '../panels/PanelManager';
@@ -14,7 +14,7 @@ import { GraphSequencerService } from '../services/graph-sequencer.service';
 import { ConnectionState, InitNodeState, MidiClipNodeState, NodeState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
 import { GraphNode, InitNode } from './canvas-components/GraphNode';
-import { GraphRoot } from './canvas-components/GraphRoot';
+import { GraphObjectBounds, GraphRoot } from './canvas-components/GraphRoot';
 import { MidiClipNode } from './canvas-components/MidiClipNode';
 import { InletPin, OutletPin } from './canvas-components/Pin';
 
@@ -55,6 +55,11 @@ export class GraphElement implements EditorElement {
       this._graphRoot.removeNode(nodeId);
     });
 
+    graphSequencerService.nodesMoved$.subscribe((nodes: GraphObjectBounds[]) => {
+      this._graphRoot.setNodesBounds(nodes);
+      console.log('service => comp', nodes);
+    });
+
     graphSequencerService.connections$.subscribe((newConnections: ConnectionState[]) => {
       this._graphRoot.setConnections([]);
       newConnections.forEach(c => this.addConnection(c));
@@ -65,7 +70,7 @@ export class GraphElement implements EditorElement {
     });
 
     this._graphRoot.nodeBoundsChanged$.subscribe((nodes) => {
-      this.graphSequencerService.nodeBoundsChanged(nodes);
+      commandManager.perform(moveNodes(nodes));
     });
 
     this._graphRoot.selectionChanged$.subscribe((items) => {

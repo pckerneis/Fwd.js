@@ -1,7 +1,7 @@
 import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Points, Rectangle } from '../../canvas/Rectangle';
+import { IRectangle, Point, Points, Rectangle } from '../../canvas/Rectangle';
 import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
 import { ConnectionState, SelectableGraphItem } from '../../state/project.state';
@@ -18,15 +18,20 @@ export interface UnregisteredConnectionState {
   sourcePinId: number;
 }
 
+export interface GraphObjectBounds {
+  id: number,
+  bounds: IRectangle
+}
+
 export class GraphRoot extends Component {
   public readonly selection: SelectedItemSet<SelectableGraphItem> = new SelectedItemSet();
 
   public readonly connectionAdded$: Observable<UnregisteredConnectionState>;
-  public readonly nodeBoundsChanged$: Observable<GraphNode[]>
+  public readonly nodeBoundsChanged$: Observable<GraphObjectBounds[]>
   public readonly selectionChanged$: Observable<SelectableItem[]>;
 
   private readonly _connectionAddedSubject$: Subject<UnregisteredConnectionState>;
-  private readonly _nodeBoundsChangedSubject$: Subject<GraphNode[]>;
+  private readonly _nodeBoundsChangedSubject$: Subject<GraphObjectBounds[]>;
   private readonly _selectionChangedSubject$: Subject<SelectableItem[]>;
 
   private readonly _viewportArea: ViewportArea;
@@ -258,6 +263,16 @@ export class GraphRoot extends Component {
     });
 
     return {left, right, top, bottom};
+  }
+
+  public setNodesBounds(movedNodes: { id: number, bounds: IRectangle }[]): void {
+    this.nodes.array.forEach((ownedNode) => {
+      const newBounds = movedNodes.find(n => n.id === ownedNode.id)?.bounds;
+
+      if (newBounds != null) {
+        ownedNode.setBounds(Rectangle.fromIBounds(newBounds));
+      }
+    });
   }
 
   public resized(): void {

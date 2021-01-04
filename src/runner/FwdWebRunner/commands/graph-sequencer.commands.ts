@@ -1,5 +1,5 @@
 import { Point } from '../canvas/Rectangle';
-import { UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
+import { GraphObjectBounds, UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
 import {
   ConnectionState,
@@ -15,6 +15,7 @@ export enum CommandIds {
   createAndAddMidiClipNode = 'createAndAddMidiClipNode',
   addConnection = 'addConnection',
   deleteGraphSelection = 'deleteGraphSelection',
+  moveNodes = 'moveNodes',
 }
 
 export const createAndAddInitNode: CommandFactory<Point> = (position) => {
@@ -105,9 +106,37 @@ function deleteGraphSelectionPerformer(service: GraphSequencerService): CommandP
   };
 }
 
+export const moveNodes: CommandFactory<GraphObjectBounds[]> = (state) => {
+  return {
+    id: CommandIds.moveNodes,
+    payload: state,
+  };
+};
+
+function moveNodesPerformer(service: GraphSequencerService): CommandPerformer<GraphObjectBounds[]> {
+  let previousPositions: GraphObjectBounds[];
+  let newPositions: GraphObjectBounds[];
+
+  return {
+    canPerform: command => command.id === CommandIds.moveNodes,
+    perform: command => {
+      const ids = command.payload.map(node => node.id);
+      previousPositions = service.snapshot.nodes
+        .filter((n) => ids.includes(n.id))
+        .map(n => ({id: n.id, bounds: n.bounds}));
+      newPositions = command.payload.map(n => ({id: n.id, bounds: n.bounds}));
+
+      service.setNodesBounds(newPositions);
+    },
+    undo: () => service.setNodesBounds(previousPositions),
+    redo: () => service.setNodesBounds(newPositions),
+  };
+}
+
 export function registerGraphSequencerCommands(service: GraphSequencerService): void {
   commandManager.addPerformerFactory(() => createAndAddInitNodePerformer(service));
   commandManager.addPerformerFactory(() => createAndAddMidiClipNodePerformer(service));
   commandManager.addPerformerFactory(() => addConnectionPerformer(service));
   commandManager.addPerformerFactory(() => deleteGraphSelectionPerformer(service));
+  commandManager.addPerformerFactory(() => moveNodesPerformer(service));
 }
