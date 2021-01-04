@@ -5,6 +5,7 @@ import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
 import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
 import { GraphObjectBounds, UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
+import { TimeSignature } from '../NoteSequencer/note-sequencer';
 import {
   ConnectionState,
   FlagKind,
@@ -238,16 +239,8 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.updateMidiClipNode(clipId, 'duration', newDuration);
   }
 
-  public setMidiClipSignatureUpper(clipId: number, upper: number): Observable<MidiClipNodeState> {
-    const n = this.findMidiClipNodeState(clipId);
-    const signature = {...n.timeSignature, upper};
-    return this.updateMidiClipNode(clipId, 'timeSignature', signature);
-  }
-
-  public setMidiClipSignatureLower(clipId: number, lower: number): Observable<MidiClipNodeState> {
-    const n = this.findMidiClipNodeState(clipId);
-    const signature = {...n.timeSignature, lower};
-    return this.updateMidiClipNode(clipId, 'timeSignature', signature);
+  public setMidiClipSignature(clipId: number, timeSignature: TimeSignature): Observable<MidiClipNodeState> {
+    return this.updateMidiClipNode(clipId, 'timeSignature', timeSignature);
   }
 
   public findMidiClipNodeState(clipId: number): MidiClipNodeState {

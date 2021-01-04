@@ -3,7 +3,12 @@ import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
 import { defaultTheme } from '../../style.constants';
 import { commandManager } from '../commands/command-manager';
-import { setNodeLabel } from '../commands/graph-sequencer.commands';
+import {
+  setMidiClipDuration,
+  setMidiClipNotes,
+  setMidiClipSignature,
+  setNodeLabel,
+} from '../commands/graph-sequencer.commands';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
 import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
@@ -52,8 +57,13 @@ class SettingsPanel implements EditorElement {
   private buildDurationField(): void {
     this.clipPropertyPanel.addLabel('Duration');
     const durationField = this.clipPropertyPanel.addNumberInput(0, 0);
-    durationField.onchange = () => this.service.setMidiClipDuration(this.clipId, durationField.valueAsNumber)
-      .subscribe();
+    this.service.observeMidiClipNode(this.clipId).pipe(
+      pluck('duration'))
+      .subscribe((newDuration: number) => durationField.value = newDuration.toString(10));
+
+    durationField.onchange = () => commandManager.perform(setMidiClipDuration({
+      id: this.clipId, value: durationField.valueAsNumber,
+    }));
   }
 
   private buildOutputField(): void {
@@ -73,16 +83,33 @@ class SettingsPanel implements EditorElement {
     const span = document.createElement('span');
     span.textContent = '/';
 
+    let selectedUpper = 4,
+      selectedLower = 4;
+
+    const signatureChanged = () => {
+      commandManager.perform(setMidiClipSignature({
+        id: this.clipId,
+        value: {
+          upper: selectedUpper,
+          lower: selectedLower,
+        },
+      }));
+    };
+
     const upperOptions = new Array(99).fill(0).map((_, i) => i + 1).map(n => n.toString());
     const upperField = this.clipPropertyPanel.createSelect(upperOptions, '4',
-      (value) => this.service.setMidiClipSignatureUpper(this.clipId, Number(value))
-        .subscribe());
+      (value) => {
+        selectedUpper = parseInt(value);
+        signatureChanged();
+      });
     upperField.style.width = '40px';
 
     const lowerOptions = [1, 2, 4, 8, 16, 32].map(n => n.toString());
     const lowerField = this.clipPropertyPanel.createSelect(lowerOptions, '4',
-      (value) => this.service.setMidiClipSignatureUpper(this.clipId, Number(value))
-        .subscribe());
+      (value) => {
+        selectedLower = parseInt(value);
+        signatureChanged();
+      });
     lowerField.style.width = '40px';
 
     signature.append(upperField);
@@ -90,6 +117,13 @@ class SettingsPanel implements EditorElement {
     signature.append(lowerField);
 
     this.clipPropertyPanel.htmlElement.append(signature);
+
+    this.service.observeMidiClipNode(this.clipId).pipe(
+      pluck('timeSignature'),
+    ).subscribe((timeSignature) => {
+      upperField.value = timeSignature.upper.toString();
+      lowerField.value = timeSignature.lower.toString();
+    });
   }
 
   private buildMarkersSection(): void {
@@ -265,13 +299,13 @@ export class MidiClipPanel implements EditorElement {
       .pipe(pluck('flags'))
       .subscribe((flags) => this.refreshFlags(flags));
 
-    // Only load notes at startup
-    this.refreshNotes(service.findMidiClipNodeState(this.clipId).notes);
+    service.observeMidiClipNode(this.clipId)
+      .pipe(pluck('notes'))
+      .subscribe((notes) => this.refreshNotes(notes));
 
     this.clipEditor.noteSequencer.notesChanged$.pipe(
       map(notes => notes.map(n => ({...n}))),
-      switchMap(notes => this.service.setMidiClipNotes(this.clipId, notes)),
-    ).subscribe();
+    ).subscribe(notes => commandManager.perform(setMidiClipNotes({id: this.clipId, value: notes})));
 
     this.clipEditor.noteSequencer.flagDragged$.pipe(
       switchMap((flag) => this.service.setMidiClipFlagTime(this.clipId, flag.id, flag.time)),
