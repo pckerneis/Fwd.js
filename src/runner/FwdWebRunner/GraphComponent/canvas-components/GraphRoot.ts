@@ -201,13 +201,6 @@ export class GraphRoot extends Component {
     return null;
   }
 
-  public clearAll(): void {
-    this._connections.clear();
-    this._nodes.array.forEach(n => this._viewportArea.removeChild(n));
-    this._nodes.clear();
-    this.repaint();
-  }
-
   public moveSelection(event: ComponentMouseEvent): void {
     if (this.selection.isEmpty())
       return;
@@ -222,11 +215,11 @@ export class GraphRoot extends Component {
     this.selectedNodes.forEach(node => node.setBounds(this.boundsAtMouseDown.get(node.id).translated(dragOffset)));
   }
 
-  public resetComponentDrag(): void {
+  public resetComponentDragAndNotifyIfDragged(event: ComponentMouseEvent): void {
     this.componentDragReady = false;
     this.boundsAtMouseDown.clear();
 
-    if (! this.selection.isEmpty()) {
+    if (! this.selection.isEmpty() && ! Points.isOrigin(event.getDragOffset())) {
       this._changeNodeBoundsSubject.next(this.selectedNodes);
       this._miniMap.updatePreview();
     }
@@ -269,6 +262,9 @@ export class GraphRoot extends Component {
         ownedNode.setBounds(Rectangle.fromIBounds(newBounds));
       }
     });
+
+    this.repaint();
+    this._miniMap.updatePreview();
   }
 
   public removeConnection(id: number): void {

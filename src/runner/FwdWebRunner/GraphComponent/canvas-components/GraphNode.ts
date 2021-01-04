@@ -98,7 +98,7 @@ export abstract class GraphNode extends Component {
 
   public mouseReleased(event: ComponentMouseEvent): void {
     super.mouseReleased(event);
-    this.parentGraph.resetComponentDrag();
+    this.parentGraph.resetComponentDragAndNotifyIfDragged(event);
     this.parentGraph.selection.addToSelectionMouseUp(event.wasDragged,
       event.modifiers.shift, this._mouseDownResult);
 

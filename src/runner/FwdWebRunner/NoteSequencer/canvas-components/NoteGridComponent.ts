@@ -356,6 +356,8 @@ export class NoteGridComponent extends Component {
   public mouseReleased(event: ComponentMouseEvent): void {
     event.consumeNativeEvent();
 
+    const shouldNotifyChanges = this._dragAction != 'NONE';
+
     this._dragAction = 'NONE';
     this.setMouseCursor(this._dragAction);
 
@@ -381,7 +383,10 @@ export class NoteGridComponent extends Component {
     });
 
     this._draggedItem = null;
-    this.changed();
+
+    if (shouldNotifyChanges) {
+      this.changed();
+    }
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {

@@ -24,6 +24,14 @@ export class Points {
       y: lerp(first.y, second.y, ratio),
     }
   }
+
+  public static equal(first: Point, second: Point): boolean {
+    return first.x === second.x && first.y === second.y;
+  }
+
+  public static isOrigin(point: Point): Boolean {
+    return this.equal(point, this.origin());
+  }
 }
 
 function lerp(a: number, b: number, normal: number): number {
@@ -206,10 +214,10 @@ function findOuterBounds(rectangles: IRectangle[]): IRectangle {
     return Rectangle.fromIBounds(rectangles[0]);
   }
 
-  let left: number,
-    top: number,
-    right: number,
-    bottom: number;
+  let left: number = Infinity,
+    top: number = Infinity,
+    right: number = -Infinity,
+    bottom: number = -Infinity;
 
   rectangles.forEach(rect => {
     left = Math.min(rect.x, left ?? rect.x);
