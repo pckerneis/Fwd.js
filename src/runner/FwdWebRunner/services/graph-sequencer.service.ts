@@ -1,9 +1,7 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, map, pluck, tap } from 'rxjs/operators';
 import { IRectangle, Point, Rectangle } from '../canvas/Rectangle';
-import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Connection } from '../GraphComponent/canvas-components/Connection';
-import { GraphNode } from '../GraphComponent/canvas-components/GraphNode';
 import { GraphObjectBounds, UnregisteredConnectionState } from '../GraphComponent/canvas-components/GraphRoot';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 import {
@@ -13,9 +11,9 @@ import {
   GraphSequencerState,
   InitNodeState,
   MidiClipNodeState,
-  MidiFlagState, MidiNoteState,
+  MidiFlagState,
+  MidiNoteState,
   NodeState,
-  SelectableGraphItem,
 } from '../state/project.state';
 import { SequenceGenerator } from './sequence-generator';
 import { StoreBasedService } from './store-based.service';
@@ -31,7 +29,8 @@ function isMidiClipNode(node: NodeState): node is MidiClipNodeState {
 
 export class GraphSequencerService extends StoreBasedService<GraphSequencerState> {
   public readonly nodeAdded$: Observable<NodeState>;
-  public readonly connections$: Observable<ConnectionState[]>;
+  public readonly connectionAdded$: Observable<ConnectionState>;
+  public readonly connectionRemoved$: Observable<ConnectionState>;
   public readonly playBarPositions$: Observable<PlayBarPosition[]>;
   public readonly nodeRemoved$: Observable<number>;
   public readonly nodesMoved$: Observable<GraphObjectBounds[]>;
@@ -39,6 +38,8 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
   private readonly nodes$: Observable<NodeState[]>;
   private readonly _playBarPositions: BehaviorSubject<PlayBarPosition[]> = new BehaviorSubject<PlayBarPosition[]>([]);
+  private readonly _connectionAddedSubject: Subject<ConnectionState> = new Subject<ConnectionState>();
+  private readonly _connectionRemovedSubject: Subject<ConnectionState> = new Subject<ConnectionState>();
   private readonly _nodeRemovedSubject: Subject<number> = new Subject<number>();
   private readonly _nodeAddedSubject: Subject<NodeState> = new Subject<NodeState>();
   private readonly _nodesMovedSubject: Subject<GraphObjectBounds[]> = new Subject<GraphObjectBounds[]>();
@@ -46,7 +47,8 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   constructor(state: GraphSequencerState) {
     super(state);
     this.nodes$ = this.state$.pipe(pluck('nodes'));
-    this.connections$ = this.state$.pipe(pluck('connections'));
+    this.connectionAdded$ = this._connectionAddedSubject.asObservable();
+    this.connectionRemoved$ = this._connectionRemovedSubject.asObservable();
     this.playBarPositions$ = this._playBarPositions.asObservable();
     this.nodeAdded$ = this._nodeAddedSubject.asObservable();
     this.nodeRemoved$ = this._nodeRemovedSubject.asObservable();
@@ -129,13 +131,15 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
 
   public addConnection(connection: ConnectionState): Observable<GraphSequencerState> {
     const updated = [...this.snapshot.connections, connection];
-    return this.update('connections', updated);
+    return this.update('connections', updated)
+      .pipe(tap(() => this._connectionAddedSubject.next(connection)));
   }
 
   public removeConnection(connectionToRemove: ConnectionState): Observable<GraphSequencerState> {
     const updated = [...this.snapshot.connections];
     updated.splice(updated.indexOf(updated.find(c => areConnectionsEqual(c, connectionToRemove))));
-    return this.update('connections', updated);
+    return this.update('connections', updated)
+      .pipe(tap(() => this._connectionRemovedSubject.next(connectionToRemove)));
   }
 
   public disconnectPin(id: number): Observable<GraphSequencerState> {
@@ -152,13 +156,13 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
       .filter((item) => item.kind === 'Connection') as ConnectionState[];
 
     nodesToAdd.forEach(n => this._nodeAddedSubject.next(n));
+    connectionsToAdd.forEach(c => this._connectionAddedSubject.next(c));
 
     this.update('nodes', [...this.snapshot.nodes, ...nodesToAdd]).subscribe();
     this.update('connections', [...this.snapshot.connections, ...connectionsToAdd]).subscribe();
   }
 
-  public deleteItems(items: SelectableGraphItem[]): GraphItemState[] {
-    const idsToRemove = items.map(i => i.id);
+  public deleteItems(idsToRemove: number[]): GraphItemState[] {
     const updatedConnections = this.snapshot.connections
       .filter(c => idsToRemove.includes(c.targetNode) || idsToRemove.includes(c.sourceNode));
     const allRemoved = [...idsToRemove, ...updatedConnections.map(c => c.id)];
@@ -170,9 +174,12 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
 
     this.update('nodes', this.snapshot.nodes.filter((n) => ! allRemoved.includes(n.id))).subscribe();
     this.update('connections', this.snapshot.connections.filter((c) => ! allRemoved.includes(c.id))).subscribe();
+
     states.forEach(state => {
       if (state.kind === 'MidiClip' || state.kind === 'Init') {
         this._nodeRemovedSubject.next(state.id);
+      } else {
+        this._connectionRemovedSubject.next(state);
       }
     });
     return states;
@@ -202,28 +209,10 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     this._nodesMovedSubject.next(nodes);
   }
 
-  public selectionChanged(items: SelectableItem[]): void {
-    const selectedNodes = items
-      .filter(i => i instanceof GraphNode)
-      .map(i => (i as GraphNode).id);
-
-    const selectedConnections: Connection[] = items
-      .filter(i => i instanceof Connection) as Connection[];
-
-    const updatedNodes = this.snapshot.nodes
-      .map(n => ({...n, selected: selectedNodes.includes(n.id)}));
-
-    const updatedConnections = this.snapshot.connections
-      .map(c => {
-        const selected = selectedConnections.find(selected =>
-          (selected.first === c.sourcePinId && selected.second === c.targetPinId)
-          || (selected.second === c.sourcePinId && selected.first === c.targetPinId));
-
-        return {...c, selected: Boolean(selected)};
-      });
-
-
+  public selectionChanged(items: number[]): void {
+    const updatedNodes = this.snapshot.nodes.map(n => ({...n, selected: items.includes(n.id)}));
     this.update('nodes', updatedNodes);
+    const updatedConnections = this.snapshot.connections.map(c => ({...c, selected: items.includes(c.id)}));
     this.update('connections', updatedConnections);
   }
 
@@ -290,7 +279,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
                                                            value: MidiFlagState[K])
     : Observable<MidiFlagState> {
     const updated = this.getMidiClipFlags(clipId)
-      .map(f => f.id === flagId ? ({ ...f, [key]: value }) : f);
+      .map(f => f.id === flagId ? ({...f, [key]: value}) : f);
 
     return this.updateMidiClipNode(clipId, 'flags', updated).pipe(
       map((newState) => newState.flags.find(f => f.id === flagId)));
@@ -301,7 +290,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   }
 
   public updateOneNode<K extends keyof NodeState>(id: number, key: K, value: NodeState[K]): Observable<NodeState> {
-    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({ ...n, [key]: value }) : n);
+    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({...n, [key]: value}) : n);
     return this.update('nodes', updatedNodes).pipe(
       map((updatedState) => updatedState.nodes.find(n => n.id === id)));
   }
@@ -309,10 +298,10 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
   public updateMidiClipNode<K extends keyof MidiClipNodeState>(id: number,
                                                                key: K,
                                                                value: MidiClipNodeState[K]): Observable<MidiClipNodeState> {
-    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({ ...n, [key]: value }) : n);
+    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({...n, [key]: value}) : n);
     return this.update('nodes', updatedNodes).pipe(
       map((updatedState) => updatedState.nodes.find(n => n.id === id)),
-      filter((newState) => !!newState && isMidiClipNode(newState)),
+      filter((newState) => !! newState && isMidiClipNode(newState)),
       map(n => n as MidiClipNodeState)); // sigh
   }
 

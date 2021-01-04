@@ -1,6 +1,5 @@
 import { clamp } from '../../../../fwd/utils/numbers';
 import { Point } from '../../canvas/Rectangle';
-import { SelectableItem } from '../../canvas/shared/SelectedItemSet';
 import { GraphRoot } from './GraphRoot';
 import { Pin } from './Pin';
 
@@ -9,12 +8,12 @@ export interface TemporaryConnection {
   readonly sourcePin: Pin;
 }
 
-export class Connection implements SelectableItem {
+export class Connection {
   constructor(public readonly id: number,
               public readonly graphRoot: GraphRoot,
               public readonly first: number,
               public readonly second: number,
-              public readonly selected: boolean) {
+              public selected: boolean) {
   }
 
   public hitTest(position: Point): boolean {

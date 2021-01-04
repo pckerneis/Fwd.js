@@ -1,10 +1,12 @@
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Rectangle } from '../../canvas/Rectangle';
+import { IRectangle, Point, Rectangle } from '../../canvas/Rectangle';
 import { LassoSelector } from '../../canvas/shared/LassoSelector';
 import { SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
+import { SequenceGenerator } from '../../services/sequence-generator';
 import { MAX_PITCH, MAX_VELOCITY, MIN_SEMI_H, NoteSequencer, SequencerDisplayModel } from '../note-sequencer'
 
 export interface Note {
+  id: number;
   time: number,
   pitch: number,
   duration: number,
@@ -50,8 +52,8 @@ export class NoteGridComponent extends Component {
 
   private _notes: Note[] = [];
   private _flags: Flag[] = [];
-  private readonly _selectedSet: SelectedItemSet<Note>;
-  private readonly _lasso: LassoSelector<Note>;
+  private readonly _selectedSet: SelectedItemSet;
+  private readonly _lasso: LassoSelector;
 
   // Mouse interaction state
   private _dragAction: DragAction;
@@ -66,32 +68,35 @@ export class NoteGridComponent extends Component {
   private _maxDurationOffset: number = null;
   private _minDragOffset: NotePosition = null;
   private _maxDragOffset: NotePosition = null;
+  private readonly _idSequence: SequenceGenerator = new SequenceGenerator();
 
   constructor(private readonly model: SequencerDisplayModel,
               public readonly noteSequencer: NoteSequencer) {
     super();
 
-    this._selectedSet = new SelectedItemSet<Note>();
+    this._selectedSet = new SelectedItemSet();
 
-    this._lasso = new LassoSelector<Note>(this, this._selectedSet, this.model.colors);
+    this._lasso = new LassoSelector(this, this._selectedSet, this.model.colors);
 
-    this._lasso.findAllElementsInLasso = (lassoBounds: Rectangle) => {
-      return this._notes.filter((note) => {
-        const noteBounds = {
-          x: this.getPositionForTime(note.time),
-          y: this.getPositionForPitch(note.pitch),
-          width: Math.max(2, note.duration * this.getSixteenthWidth()),
-          height: this.getSemitoneHeight(),
-        };
+    this._lasso.findAllElementsInLasso = (lassoBounds: Rectangle) => this._notes
+      .filter((note) => Rectangle.intersect(this.getNoteBounds(note), lassoBounds))
+      .map(n => n.id);
 
-        return Rectangle.intersect(noteBounds, lassoBounds);
-      });
-    }
+    this.selectedSet.selection$.subscribe((selection) => {
+      this._notes.forEach(n => n.selected = selection.includes(n.id));
+      this.repaint();
+    });
   }
 
   public get notes(): Note[] {
     return this._notes;
   }
+
+  public get selectedNotes(): Note[] {
+    return this._selectedSet.items
+      .map(id => this.notes.find(n => n.id === id))
+      .filter(note => !! note);
+  };
 
   public set notes(newNotes: Note[]) {
     this._notes = newNotes;
@@ -107,7 +112,7 @@ export class NoteGridComponent extends Component {
     this.getParentComponent().repaint();
   }
 
-  public get selectedSet(): SelectedItemSet<Note> {
+  public get selectedSet(): SelectedItemSet {
     return this._selectedSet;
   }
 
@@ -146,9 +151,9 @@ export class NoteGridComponent extends Component {
 
   //===============================================================================
   // Note management
-  public removeNote(note: Note, repaint: boolean = true): void {
-    this._selectedSet.removeFromSelection(note);
-    this._notes = this._notes.filter(n => n !== note);
+  public removeNote(id: number, repaint: boolean = true): void {
+    this._selectedSet.removeFromSelection(id);
+    this._notes = this._notes.filter(n => n.id !== id);
     this.changed();
 
     if (repaint) {
@@ -167,7 +172,7 @@ export class NoteGridComponent extends Component {
   }
 
   public deleteSelection(): void {
-    const selected = this._selectedSet.getItems();
+    const selected = this._selectedSet.items;
 
     for (let i = selected.length; --i >= 0;)
       this.removeNote(selected[i], false);
@@ -246,7 +251,7 @@ export class NoteGridComponent extends Component {
     const existingNote = this.findNoteAt(local);
 
     if (existingNote != null) {
-      this.removeNote(existingNote);
+      this.removeNote(existingNote.id);
       return;
     }
 
@@ -255,6 +260,7 @@ export class NoteGridComponent extends Component {
     const d = this.getTimeIncrement();
 
     const newNote: Note = {
+      id: this._idSequence.next(),
       time: t,
       pitch: p,
       duration: d,
@@ -267,7 +273,7 @@ export class NoteGridComponent extends Component {
     };
 
     this._notes.push(newNote);
-    this._selectedSet.setUniqueSelection(newNote);
+    this._selectedSet.setUniqueSelection(newNote.id);
 
     this.removeOverlaps(true);
 
@@ -339,7 +345,7 @@ export class NoteGridComponent extends Component {
       return;
     }
 
-    this._mouseDownResult = this._selectedSet.addToSelectionMouseDown(existingNote, event.modifiers.shift);
+    this._mouseDownResult = this._selectedSet.addToSelectionMouseDown(existingNote.id, event.modifiers.shift);
     this._dragAction = this.getDragActionForNoteAt(local, existingNote);
     this.setMouseCursor(this._dragAction);
 
@@ -361,8 +367,9 @@ export class NoteGridComponent extends Component {
     this._lasso.endLasso();
 
     // in case a drag would have caused negative durations
-    for (const selected of this._selectedSet.getItems()) {
-      selected.duration = Math.max(0, selected.duration);
+    for (const selected of this._selectedSet.items) {
+      const note = this.notes.find(n => n.id === selected);
+      note.duration = Math.max(0, note.duration);
     }
 
     this._selectedSet.addToSelectionMouseUp(event.wasDragged, event.modifiers.shift, this._mouseDownResult);
@@ -495,7 +502,7 @@ export class NoteGridComponent extends Component {
       const {left, right, top, bottom} = this.findSelectionBounds();
 
       // Deduce constraints for this box
-      this._minDragOffset = { time: -left, pitch: -top };
+      this._minDragOffset = {time: -left, pitch: -top};
       this._maxDragOffset = {
         time: this.model.maxTimeRange.end - right,
         pitch: MAX_PITCH - bottom,
@@ -528,13 +535,17 @@ export class NoteGridComponent extends Component {
     const gridOffsetX = this._draggedItem.time - currentPosition.time;
     const gridOffsetY = this._draggedItem.pitch - currentPosition.pitch;
 
-    for (const s of this._selectedSet.getItems()) {
+    for (const s of this._selectedSet.items) {
       // Ignore itemDragged which has already been moved
-      if (s === this._draggedItem)
+      if (s === this._draggedItem.id)
         continue;
 
-      s.pitch += gridOffsetY;
-      s.time += gridOffsetX;
+      const note = this.notes.find(n => n.id === s);
+
+      if (note != null) {
+        note.pitch += gridOffsetY;
+        note.time += gridOffsetX;
+      }
     }
   }
 
@@ -544,7 +555,7 @@ export class NoteGridComponent extends Component {
     let top: number = Infinity;
     let bottom: number = -Infinity;
 
-    this._selectedSet.getItems().forEach((note) => {
+    this.selectedNotes.forEach((note) => {
       if (left == null || note.time < left) {
         left = note.time;
       }
@@ -575,7 +586,7 @@ export class NoteGridComponent extends Component {
       this._initialDuration = currentDuration;
 
       let selectionRight: number = null;
-      this._selectedSet.getItems().forEach((note) => {
+      this.selectedNotes.forEach((note) => {
         if (selectionRight == null || note.time + note.duration > selectionRight) {
           selectionRight = note.time + note.duration;
         }
@@ -600,7 +611,8 @@ export class NoteGridComponent extends Component {
     // Now we determine the actual offset
     const gridOffsetX = this._draggedItem.duration - currentDuration;
 
-    for (const s of this._selectedSet.getItems()) {
+
+    for (const s of this.selectedNotes) {
       // Ignore itemDragged which has already been moved
       if (s === this._draggedItem)
         continue;
@@ -622,13 +634,13 @@ export class NoteGridComponent extends Component {
       this._initialStart = currentStart;
       this._initialDuration = currentDuration;
 
-      for (const s of this._selectedSet.getItems()) {
+      for (const s of this.selectedNotes) {
         s.initialStart = s.time;
       }
 
       let selectionLeft: number = null;
 
-      this._selectedSet.getItems().forEach((note) => {
+      this.selectedNotes.forEach((note) => {
         if (selectionLeft == null || note.time < selectionLeft) {
           selectionLeft = note.time;
         }
@@ -654,7 +666,7 @@ export class NoteGridComponent extends Component {
     // Now we determine the actual offset since beginning of drag
     const startOffset = this._draggedItem.time - this._initialStart;
 
-    for (const s of this._selectedSet.getItems()) {
+    for (const s of this.selectedNotes) {
       // Ignore itemDragged which has already been moved
       if (s === this._draggedItem)
         continue;
@@ -719,7 +731,7 @@ export class NoteGridComponent extends Component {
       note.hidden = null;
     }
 
-    for (const selected of this._selectedSet.getItems()) {
+    for (const selected of this.selectedNotes) {
       for (const note of this._notes) {
         if (selected == note)
           continue;
@@ -734,7 +746,7 @@ export class NoteGridComponent extends Component {
             // If note is also selected, we won't remove it
             if (! note.selected) {
               if (apply)
-                this.removeNote(note);
+                this.removeNote(note.id);
               else
                 note.hidden = true;
             }
@@ -811,5 +823,14 @@ export class NoteGridComponent extends Component {
 
   private changed(): void {
     this.noteSequencer.notesChanged();
+  }
+
+  private getNoteBounds(note: Note): IRectangle {
+    return {
+      x: this.getPositionForTime(note.time),
+      y: this.getPositionForPitch(note.pitch),
+      width: Math.max(2, note.duration * this.getSixteenthWidth()),
+      height: this.getSemitoneHeight(),
+    };
   }
 }

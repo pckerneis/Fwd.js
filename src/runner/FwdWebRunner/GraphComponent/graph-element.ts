@@ -60,12 +60,10 @@ export class GraphElement implements EditorElement {
       console.log('service => comp', nodes);
     });
 
-    graphSequencerService.connections$.subscribe((newConnections: ConnectionState[]) => {
-      this._graphRoot.setConnections([]);
-      newConnections.forEach(c => this.addConnection(c));
-    });
+    graphSequencerService.connectionAdded$.subscribe((c) => this.addConnection(c));
+    graphSequencerService.connectionRemoved$.subscribe((c) => this.removeConnection(c.id));
 
-    this._graphRoot.connectionAdded$.subscribe((connection) => {
+    this._graphRoot.addConnection$.subscribe((connection) => {
       commandManager.perform(addConnection(connection));
     });
 
@@ -149,9 +147,11 @@ export class GraphElement implements EditorElement {
   }
 
   private deleteSelection(): void {
-    commandManager.perform(deleteGraphSelection(this._graphRoot.selection.getItems()));
-    this._graphRoot.selection.deselectAll();
-    this._graphRoot.repaint();
+    commandManager.perform(deleteGraphSelection(this._graphRoot.selection.items));
+  }
+
+  private removeConnection(id: number): void {
+    this._graphRoot.removeConnection(id);
   }
 }
 

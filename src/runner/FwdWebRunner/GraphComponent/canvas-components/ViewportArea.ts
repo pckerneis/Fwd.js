@@ -45,8 +45,7 @@ export class ViewportArea extends Component {
 
     for (const connection of this.graphRoot.connections.array) {
       if (connection.hitTest(event.position)) {
-        this._mouseDownResult = this.graphRoot.selection
-          .addToSelectionMouseDown(connection, event.modifiers.shift);
+        this._mouseDownResult = this.graphRoot.selection.addToSelectionMouseDown(connection.id, event.modifiers.shift);
         this.repaint();
         return;
       }

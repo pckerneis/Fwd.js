@@ -151,6 +151,7 @@ export class SequencerRoot extends Component implements DraggableBorderOwner {
 
   public setNotes(notes: Note[]): void {
     this._grid.notes = notes;
+    this.repaint();
   }
 
   public setPlayBarPosition(time: number): void {

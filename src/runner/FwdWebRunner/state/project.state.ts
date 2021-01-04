@@ -1,13 +1,10 @@
 import { IRectangle } from '../canvas/Rectangle';
-import { SelectableItem } from '../canvas/shared/SelectedItemSet';
 import { Note } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { TimeSignature } from '../NoteSequencer/note-sequencer';
 
-export interface BaseGraphItemState extends SelectableItem {
+export interface BaseGraphItemState {
   id: number;
 }
-
-export type SelectableGraphItem = SelectableItem & BaseGraphItemState;
 
 export interface BaseNodeState extends BaseGraphItemState {
   bounds: IRectangle;

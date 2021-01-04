@@ -1,5 +1,5 @@
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
-import { Point, Rectangle } from '../../canvas/Rectangle';
+import { IRectangle, Point, Rectangle } from '../../canvas/Rectangle';
 import { LassoSelector } from '../../canvas/shared/LassoSelector';
 import { MAX_PITCH, SequencerDisplayModel } from '../note-sequencer';
 import { Note, NoteGridComponent } from './NoteGridComponent';
@@ -13,28 +13,16 @@ export class VelocityTrack extends Component {
   private _mouseDownResult: boolean;
   private _initialVelocity: number;
 
-  private readonly lasso: LassoSelector<Note>;
+  private readonly lasso: LassoSelector;
 
   constructor(private readonly model: SequencerDisplayModel, private readonly grid: NoteGridComponent) {
     super();
 
-    this.lasso = new LassoSelector<Note>(this, this.grid.selectedSet, this.model.colors);
+    this.lasso = new LassoSelector(this, this.grid.selectedSet, this.model.colors);
 
-    this.lasso.findAllElementsInLasso = (lassoBounds) => {
-      const vScale = this.height / MAX_PITCH;
-
-      return this.grid.notes.filter((note) => {
-
-        const noteBounds = {
-          x: this.grid.getPositionForTime(note.time) - this.handleRadius,
-          y: this.height - (note.velocity * vScale) - this.handleRadius,
-          width: this.handleRadius * 2,
-          height: this.handleRadius * 2,
-        };
-
-        return Rectangle.intersect(noteBounds, lassoBounds);
-      })
-    };
+    this.lasso.findAllElementsInLasso = (lassoBounds) => this.grid.notes
+      .filter((note) => Rectangle.intersect(this.getNoteBounds(note), lassoBounds))
+      .map(n => n.id);
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
@@ -62,7 +50,8 @@ export class VelocityTrack extends Component {
 
     this._initialVelocity = handle.velocity;
 
-    this.grid.selectedSet.getItems().forEach((note) => {
+    this.grid.selectedSet.items.forEach((id) => {
+      const note = this.grid.notes.find(n => n.id === id);
       note.initialVelocity = note.velocity;
     });
 
@@ -70,7 +59,7 @@ export class VelocityTrack extends Component {
     this.grid.moveNoteToFront(handle);
     this._draggingHandle = true;
 
-    this._mouseDownResult = this.grid.selectedSet.addToSelectionMouseDown(handle, event.modifiers.shift);
+    this._mouseDownResult = this.grid.selectedSet.addToSelectionMouseDown(handle.id, event.modifiers.shift);
 
     this.getParentComponent().repaint();
   }
@@ -159,7 +148,7 @@ export class VelocityTrack extends Component {
 
     const scaled = dragOffset / vScale;
 
-    for (const selected of this.grid.selectedSet.getItems()) {
+    for (const selected of this.grid.selectedNotes) {
       selected.velocity = selected.initialVelocity - scaled;
       selected.velocity = Math.min(MAX_PITCH, Math.max(1, selected.velocity));
     }
@@ -187,5 +176,15 @@ export class VelocityTrack extends Component {
       g.fillStyle = flag.color;
       g.fillRect(pos, 0, 1, this.height);
     });
+  }
+
+  private getNoteBounds(note: Note): IRectangle {
+    const vScale = this.height / MAX_PITCH;
+    return {
+      x: this.grid.getPositionForTime(note.time) - this.handleRadius,
+      y: this.height - (note.velocity * vScale) - this.handleRadius,
+      width: this.handleRadius * 2,
+      height: this.handleRadius * 2,
+    };
   }
 }

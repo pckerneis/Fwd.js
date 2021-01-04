@@ -2,9 +2,9 @@ import { Observable, Subject } from 'rxjs';
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { IRectangle, Point, Points, Rectangle } from '../../canvas/Rectangle';
-import { SelectableItem, SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
+import { SelectedItemSet } from '../../canvas/shared/SelectedItemSet';
 import { squaredDistance } from '../../NoteSequencer/canvas-components/RenderHelpers';
-import { ConnectionState, SelectableGraphItem } from '../../state/project.state';
+import { ConnectionState } from '../../state/project.state';
 import { Connection, TemporaryConnection } from './Connection';
 import { GraphNode } from './GraphNode';
 import { MiniMap } from './MiniMap';
@@ -24,48 +24,55 @@ export interface GraphObjectBounds {
 }
 
 export class GraphRoot extends Component {
-  public readonly selection: SelectedItemSet<SelectableGraphItem> = new SelectedItemSet();
+  public readonly selection: SelectedItemSet = new SelectedItemSet();
 
-  public readonly connectionAdded$: Observable<UnregisteredConnectionState>;
+  public readonly addConnection$: Observable<UnregisteredConnectionState>;
   public readonly nodeBoundsChanged$: Observable<GraphObjectBounds[]>
-  public readonly selectionChanged$: Observable<SelectableItem[]>;
+  public readonly selectionChanged$: Observable<number[]>;
 
-  private readonly _connectionAddedSubject$: Subject<UnregisteredConnectionState>;
-  private readonly _nodeBoundsChangedSubject$: Subject<GraphObjectBounds[]>;
-  private readonly _selectionChangedSubject$: Subject<SelectableItem[]>;
+  private readonly _addConnectionSubject: Subject<UnregisteredConnectionState>;
+  private readonly _changeNodeBoundsSubject: Subject<GraphObjectBounds[]>;
 
   private readonly _viewportArea: ViewportArea;
-
-  private _temporaryConnection: TemporaryConnection = null;
+  private readonly _miniMap: MiniMap;
 
   private readonly _nodes: ArrayList<GraphNode> = new ArrayList<GraphNode>();
   private readonly _connections: ArrayList<Connection> = new ArrayList<Connection>();
 
+  private _temporaryConnection: TemporaryConnection = null;
+
   // TODO: move this in utility class ?
   private componentDragReady: boolean;
   private boundsAtMouseDown: Map<number, Rectangle> = new Map();
-  private _miniMap: MiniMap;
 
   constructor() {
     super();
 
-    this._connectionAddedSubject$ = new Subject<ConnectionState>();
-    this.connectionAdded$ = this._connectionAddedSubject$.asObservable();
+    this._addConnectionSubject = new Subject<ConnectionState>();
+    this.addConnection$ = this._addConnectionSubject.asObservable();
 
-    this._nodeBoundsChangedSubject$ = new Subject();
-    this.nodeBoundsChanged$ = this._nodeBoundsChangedSubject$.asObservable();
+    this._changeNodeBoundsSubject = new Subject();
+    this.nodeBoundsChanged$ = this._changeNodeBoundsSubject.asObservable();
 
-    this._selectionChangedSubject$ = new Subject<SelectableItem[]>();
-    this.selectionChanged$ = this._selectionChangedSubject$.asObservable();
+    this.selectionChanged$ = this.selection.selection$;
+    this.selection.selection$.subscribe(selection => {
+      this.nodes.array.forEach(n => n.selected = selection.includes(n.id));
+      this.connections.array.forEach(c => c.selected = selection.includes(c.id));
+      this.repaint();
+    });
 
     this._viewportArea = new ViewportArea(this);
     this.addAndMakeVisible(this._viewportArea);
 
     this._miniMap = new MiniMap(this);
     this.addAndMakeVisible(this._miniMap);
-
-    this.selection.onchange = (items) => this._selectionChangedSubject$.next(items);
   }
+
+  public get selectedNodes(): GraphNode[] {
+    return this.selection.items
+      .map(id => this.findNode(id))
+      .filter(node => !! node);
+  };
 
   public get viewport(): ViewportArea {
     return this._viewportArea;
@@ -117,7 +124,7 @@ export class GraphRoot extends Component {
       const suitablePin = this.findSuitablePinNearby(viewPortPosition, this._temporaryConnection.sourcePin);
 
       if (suitablePin != null) {
-        this.connectionAdded(this._temporaryConnection.sourcePin, suitablePin);
+        this.createConnection(this._temporaryConnection.sourcePin, suitablePin);
       }
 
       this._temporaryConnection = null;
@@ -161,6 +168,7 @@ export class GraphRoot extends Component {
   }
 
   public setConnections(newConnections: Connection[]): void {
+    console.log('set connections')
     this._connections.reset(newConnections);
     this.repaint();
   }
@@ -205,21 +213,13 @@ export class GraphRoot extends Component {
       return;
 
     if (! this.componentDragReady) {
-      this.selection.getItems().forEach(item => {
-        if (item instanceof GraphNode) {
-          this.boundsAtMouseDown.set(item.id, item.getBounds());
-        }
-      });
+      this.selectedNodes.forEach(node => this.boundsAtMouseDown.set(node.id, node.getBounds()));
       this.componentDragReady = true;
     }
 
     const dragOffset = event.getDragOffset();
 
-    for (const item of this.selection.getItems()) {
-      if (item instanceof GraphNode) {
-        item.setBounds(this.boundsAtMouseDown.get(item.id).translated(dragOffset));
-      }
-    }
+    this.selectedNodes.forEach(node => node.setBounds(this.boundsAtMouseDown.get(node.id).translated(dragOffset)));
   }
 
   public resetComponentDrag(): void {
@@ -227,9 +227,7 @@ export class GraphRoot extends Component {
     this.boundsAtMouseDown.clear();
 
     if (! this.selection.isEmpty()) {
-      this._nodeBoundsChangedSubject$.next(this.selection.getItems()
-        .filter(item => item instanceof GraphNode) as GraphNode[]);
-
+      this._changeNodeBoundsSubject.next(this.selectedNodes);
       this._miniMap.updatePreview();
     }
   }
@@ -240,25 +238,23 @@ export class GraphRoot extends Component {
     let top: number = Infinity;
     let bottom: number = -Infinity;
 
-    this.selection.getItems().forEach((item) => {
-      if (item instanceof Component) {
-        const bounds = item.getBounds();
+    this.selectedNodes.forEach((item) => {
+      const bounds = item.getBounds();
 
-        if (left == null || bounds.x < left) {
-          left = bounds.x;
-        }
+      if (left == null || bounds.x < left) {
+        left = bounds.x;
+      }
 
-        if (right == null || bounds.x + bounds.width > right) {
-          right = bounds.x + bounds.width;
-        }
+      if (right == null || bounds.x + bounds.width > right) {
+        right = bounds.x + bounds.width;
+      }
 
-        if (top == null || bounds.y < top) {
-          top = bounds.y;
-        }
+      if (top == null || bounds.y < top) {
+        top = bounds.y;
+      }
 
-        if (bottom == null || bounds.y + bounds.height > bottom) {
-          bottom = bounds.y + bounds.height;
-        }
+      if (bottom == null || bounds.y + bounds.height > bottom) {
+        bottom = bounds.y + bounds.height;
       }
     });
 
@@ -273,6 +269,11 @@ export class GraphRoot extends Component {
         ownedNode.setBounds(Rectangle.fromIBounds(newBounds));
       }
     });
+  }
+
+  public removeConnection(id: number): void {
+    this.connections.removeIfMatch(c => c.id === id);
+    this.repaint();
   }
 
   public resized(): void {
@@ -317,21 +318,25 @@ export class GraphRoot extends Component {
     return null;
   }
 
-  private connectionAdded(first: Pin, second: Pin): void {
+  private createConnection(first: Pin, second: Pin): void {
     if (first instanceof OutletPin) {
-      this._connectionAddedSubject$.next({
+      this._addConnectionSubject.next({
         sourceNode: first.parentNode.id,
         sourcePinId: first.id,
         targetNode: second.parentNode.id,
         targetPinId: second.id,
       });
     } else {
-      this._connectionAddedSubject$.next({
+      this._addConnectionSubject.next({
         targetNode: first.parentNode.id,
         targetPinId: first.id,
         sourceNode: second.parentNode.id,
         sourcePinId: second.id,
       });
     }
+  }
+
+  private findNode(id: number): GraphNode | null {
+    return this._nodes.array.find(n => n.id === id);
   }
 }

@@ -335,7 +335,7 @@ export class MidiClipPanel implements EditorElement {
   }
 
   private refreshNotes(notes: MidiNoteState[]): void {
-    this.clipEditor.noteSequencer.notes = notes.map(n => ({...n}));
+    this.clipEditor.noteSequencer.updateNotes(notes);
   }
 }
 

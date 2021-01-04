@@ -1,11 +1,11 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { IRectangle, Rectangle } from '../../canvas/Rectangle';
-import { InitNodeState, NodeState, SelectableGraphItem } from '../../state/project.state';
+import { InitNodeState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
 
-export abstract class GraphNode extends Component implements SelectableGraphItem {
+export abstract class GraphNode extends Component {
 
   public readonly id: number;
 
@@ -88,7 +88,7 @@ export abstract class GraphNode extends Component implements SelectableGraphItem
   }
 
   public mousePressed(event: ComponentMouseEvent): void {
-    this._mouseDownResult = this.parentGraph.selection.addToSelectionMouseDown(this,
+    this._mouseDownResult = this.parentGraph.selection.addToSelectionMouseDown(this.id,
       event.modifiers.shift);
 
     this._boundsAtMouseDown = this.getBounds();

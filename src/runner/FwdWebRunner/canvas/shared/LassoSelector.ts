@@ -1,24 +1,24 @@
 import { Colors } from '../../NoteSequencer/note-sequencer';
 import { Component, ComponentMouseEvent } from '../BaseComponent';
 import { IRectangle } from '../Rectangle';
-import { SelectableItem, SelectedItemSet } from './SelectedItemSet';
+import { SelectedItemSet } from './SelectedItemSet';
 
-interface Lasso<T extends SelectableItem> {
+interface Lasso {
   startX: number,
   startY: number,
   endX: number,
   endY: number,
   commuteMode: boolean,
-  commutableSelection: T[],
+  commutableSelection: number[],
 }
 
-export class LassoSelector<T extends SelectableItem> {
+export class LassoSelector {
 
-  public findAllElementsInLasso: (lassoBounds: IRectangle) => T[];
+  public findAllElementsInLasso: (lassoBounds: IRectangle) => number[];
 
-  private lasso: Lasso<T>;
+  private lasso: Lasso;
 
-  constructor(public readonly ownerComp: Component, public readonly selectedItemSet: SelectedItemSet<T>,
+  constructor(public readonly ownerComp: Component, public readonly selectedItemSet: SelectedItemSet,
               public readonly colors: Colors) {
   }
 
@@ -35,7 +35,7 @@ export class LassoSelector<T extends SelectableItem> {
     };
 
     if (event.modifiers.shift) {
-      this.lasso.commutableSelection = this.selectedItemSet.getItems();
+      this.lasso.commutableSelection = this.selectedItemSet.items;
     }
   }
 
@@ -79,7 +79,7 @@ export class LassoSelector<T extends SelectableItem> {
 
       // Browse current lasso selection
       for (let s of lassoSelection) {
-        if (this.selectedItemSet.getItems().indexOf(s) >= 0) {
+        if (this.selectedItemSet.items.includes(s)) {
           // If the item is already selected, deselect it
           this.selectedItemSet.removeFromSelection(s);
         } else {

@@ -1,34 +1,45 @@
-export interface SelectableItem {
-  selected: boolean;
+import { BehaviorSubject, Observable } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
+
+type Identifier = number;
+
+function areArraysEqual(a: Identifier[], b: Identifier[]): boolean {
+  return a.length === b.length
+    && a.map((a, i) => b[i] === a)
+      .reduce((acc, curr) => acc && curr, true);
 }
 
-export class SelectedItemSet<T extends SelectableItem> {
+export class SelectedItemSet {
 
-  private _selection: T[] = [];
-  private _itemAboutToBeSelected: T = null;
+  public readonly selection$: Observable<Identifier[]>;
 
-  public onchange: (items: T[]) => void = () => {};
+  private readonly _selection: BehaviorSubject<Identifier[]>;
+  private _itemAboutToBeSelected: Identifier = null;
 
-  public getItems(): T[] { return this._selection; }
+  constructor() {
+    this._selection = new BehaviorSubject<number[]>([]);
+    this.selection$ = this._selection
+      .pipe(distinctUntilChanged((a, b) => areArraysEqual(a, b)));
+  }
+
+  public get items(): Identifier[] {
+    return [...this._selection.getValue()];
+  }
 
   public isEmpty(): boolean {
-    return this._selection.length === 0;
+    return this.items.length === 0;
   }
 
-  public addToSelection(item: T, deselectAll: boolean = false): void {
-    if (deselectAll) {
-      this.deselectAll();
-    }
-
-    this._selection.push (item);
-    item.selected = true;
+  public addToSelection(itemId: Identifier): void {
+    this._selection.next([...this.items, itemId]);
   }
 
-  public addToSelectionMouseDown(item: T, isShiftKeyDown: boolean): boolean {
-    if (this._selection.includes(item)) {
+  // TODO: replace boolean by event
+  public addToSelectionMouseDown(itemId: Identifier, isShiftKeyDown: boolean): boolean {
+    if (this.items.includes(itemId)) {
       // The item is already selected
       if (isShiftKeyDown) {
-        this.removeFromSelection (item);
+        this.removeFromSelection(itemId);
         return true;
       }
 
@@ -39,7 +50,7 @@ export class SelectedItemSet<T extends SelectableItem> {
         this.deselectAll();
       }
 
-      this.doAddToSelection(item, true);
+      this.addToSelection(itemId);
       return true;
     }
   }
@@ -48,41 +59,26 @@ export class SelectedItemSet<T extends SelectableItem> {
     if (this._itemAboutToBeSelected == null
       || wasMouseDragged
       || actionConsumedOnMouseDown
-      || this._selection.includes(this._itemAboutToBeSelected))
+      || this.items.includes(this._itemAboutToBeSelected))
       return;
 
     if (! isShiftKeyDown) {
       this.deselectAll();
     }
 
-    this.doAddToSelection(this._itemAboutToBeSelected, true);
-
+    this.addToSelection(this._itemAboutToBeSelected);
     this._itemAboutToBeSelected = null;
   }
 
-  public setUniqueSelection(item: T): void {
-    this.deselectAll();
-    this.doAddToSelection(item, true);
+  public setUniqueSelection(itemId: Identifier): void {
+    this._selection.next([itemId]);
   }
 
-  public removeFromSelection(item: T): void {
-    this._selection = this._selection.filter((selected) => selected !== item);
-    item.selected = false;
-    this.onchange(this._selection);
+  public removeFromSelection(itemId: Identifier): void {
+    this._selection.next(this.items.filter(i => i !== itemId));
   }
 
   public deselectAll(): void {
-    this._selection.forEach(item => item.selected = false);
-    this._selection = [];
-    this.onchange(this._selection);
-  }
-
-  private doAddToSelection(item: T, notify: boolean): void {
-    this._selection.push (item);
-    item.selected = true;
-
-    if (notify) {
-      this.onchange(this._selection);
-    }
+    this._selection.next([]);
   }
 }

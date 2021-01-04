@@ -9,7 +9,6 @@ import {
   InitNodeState,
   MidiClipNodeState,
   MidiNoteState,
-  SelectableGraphItem,
 } from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
 
@@ -95,14 +94,14 @@ function addConnectionPerformer(service: GraphSequencerService): CommandPerforme
   };
 }
 
-export const deleteGraphSelection: CommandFactory<SelectableGraphItem[]> = (state) => {
+export const deleteGraphSelection: CommandFactory<number[]> = (state) => {
   return {
     id: CommandIds.deleteGraphSelection,
     payload: state,
   };
 };
 
-function deleteGraphSelectionPerformer(service: GraphSequencerService): CommandPerformer<SelectableGraphItem[]> {
+function deleteGraphSelectionPerformer(service: GraphSequencerService): CommandPerformer<number[]> {
   let deleted: GraphItemState[];
 
   return {

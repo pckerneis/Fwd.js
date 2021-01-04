@@ -223,6 +223,10 @@ export class NoteSequencer {
   public setPlayBarPosition(time: number | null): void {
     this._sequencerRoot.setPlayBarPosition(time);
   }
+
+  public updateNotes(notes: Note[]): void {
+    this._sequencerRoot.setNotes(notes.map(n => ({...n})));
+  }
 }
 
 const CONTAINER_CLASS = 'fwd-runner-note-sequencer';
