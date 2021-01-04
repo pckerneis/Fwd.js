@@ -230,7 +230,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.updateOneNode(id, 'bounds', bounds);
   }
 
-  public setNodeLabel(id: any, newLabel: string): any {
+  public setNodeLabel(id: any, newLabel: string): Observable<any> {
     return this.updateOneNode(id, 'label', newLabel);
   }
 

@@ -2,6 +2,8 @@ import { map, pluck, switchMap } from 'rxjs/operators';
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
 import { defaultTheme } from '../../style.constants';
+import { commandManager } from '../commands/command-manager';
+import { setNodeLabel } from '../commands/graph-sequencer.commands';
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
 import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
@@ -39,9 +41,12 @@ class SettingsPanel implements EditorElement {
     this.clipPropertyPanel.addLabel('Name');
     const nameField = this.clipPropertyPanel.addTextInput('');
     this.service.observeNode(this.clipId).pipe(
-      pluck('label')).subscribe((newLabel: string) => nameField.value = newLabel);
-    nameField.onchange = () => this.service.setNodeLabel(this.clipId, nameField.value)
-      .subscribe();
+      pluck('label'))
+      .subscribe((newLabel: string) => nameField.value = newLabel);
+
+    nameField.onchange = () => commandManager.perform(setNodeLabel({
+      id: this.clipId, name: nameField.value,
+    }));
   }
 
   private buildDurationField(): void {

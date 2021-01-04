@@ -16,6 +16,7 @@ export enum CommandIds {
   addConnection = 'addConnection',
   deleteGraphSelection = 'deleteGraphSelection',
   moveNodes = 'moveNodes',
+  setNodeLabel = 'setNodeLabel',
 }
 
 export const createAndAddInitNode: CommandFactory<Point> = (position) => {
@@ -133,10 +134,34 @@ function moveNodesPerformer(service: GraphSequencerService): CommandPerformer<Gr
   };
 }
 
+export const setNodeLabel: CommandFactory<{ id: number, name: string }> = (state) => {
+  return {
+    id: CommandIds.setNodeLabel,
+    payload: state,
+  };
+};
+
+function setNodeLabelPerformer(service: GraphSequencerService): CommandPerformer<{ id: number, name: string }> {
+  let previousName: string;
+  return {
+    canPerform: command => command.id === CommandIds.setNodeLabel,
+    perform: (command) => {
+      previousName = service.snapshot.nodes.find(n => n.id === command.payload.id)?.label;
+      service.setNodeLabel(command.payload.id, command.payload.name)
+        .subscribe();
+    },
+    undo: (command) => service.setNodeLabel(command.payload.id, previousName)
+      .subscribe(),
+    redo: (command) => service.setNodeLabel(command.payload.id, command.payload.name)
+      .subscribe(),
+  };
+}
+
 export function registerGraphSequencerCommands(service: GraphSequencerService): void {
   commandManager.addPerformerFactory(() => createAndAddInitNodePerformer(service));
   commandManager.addPerformerFactory(() => createAndAddMidiClipNodePerformer(service));
   commandManager.addPerformerFactory(() => addConnectionPerformer(service));
   commandManager.addPerformerFactory(() => deleteGraphSelectionPerformer(service));
   commandManager.addPerformerFactory(() => moveNodesPerformer(service));
+  commandManager.addPerformerFactory(() => setNodeLabelPerformer(service));
 }
