@@ -68,7 +68,7 @@ export class FlexPanel implements EditorElement {
 
   public addFlexItem(element: EditorElement, flexItemOptions: FlexItemOptions): EditorElement {
     const container = document.createElement('div');
-    container.append(element.htmlElement);
+    container.append(element.htmlElement!);
     container.classList.add(WRAPPER_CLASS);
     this.htmlElement.append(container);
 
@@ -126,7 +126,7 @@ export class FlexPanel implements EditorElement {
     return this.htmlElement.classList.contains('start') ? 'start' : 'end';
   }
 
-  public addSeparator(draggable?: boolean): SeparatorElement {
+  public addSeparator(draggable: boolean = false): SeparatorElement {
     const draggedElementIndex = this.getAlignment() === 'start' ?
       this._elementStack.length - 1 : this._elementStack.length;
     const separator = this.createSeparatorElement(draggedElementIndex, draggable);
@@ -146,7 +146,7 @@ export class FlexPanel implements EditorElement {
 
   private startDrag(event: MouseEvent, separator: SeparatorElement): void {
     // Dragging while having something selected in the dom leads to weird behaviours
-    getSelection().removeAllRanges();
+    getSelection()!.removeAllRanges();
 
     const vertical = this.isVertical();
     const mouseDownPos = vertical ? event.clientY : event.clientX;
@@ -168,7 +168,7 @@ export class FlexPanel implements EditorElement {
         return;
       }
 
-      getSelection().removeAllRanges();
+      getSelection()!.removeAllRanges();
 
       const containerPos = vertical ?
         this.htmlElement.getBoundingClientRect().top
@@ -199,9 +199,10 @@ export class FlexPanel implements EditorElement {
     const vertical = this.isVertical();
 
     // Determine max size based on space left available by other elements
+    const thisItemMinSize = item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'] || 0;
     const otherMinSize = this._elementStack
-      .map((item) => item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'])
-      .reduce((prev, curr) => prev + curr, 0) - item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'];
+      .map((item) => item.flexItemOptions[vertical ? 'minHeight' : 'minWidth'] || 0)
+      .reduce((prev, curr) => prev + curr, 0) - thisItemMinSize;
 
     const separatorsSize = this._separators
       .map(sep => sep.htmlElement.getBoundingClientRect()[vertical ? 'height' : 'width'])
@@ -211,16 +212,14 @@ export class FlexPanel implements EditorElement {
       - otherMinSize
       - separatorsSize;
 
-    let newSize = clamp(desiredSize,
-      vertical ? item.flexItemOptions.minHeight : item.flexItemOptions.minWidth,
-      vertical ? item.flexItemOptions.maxHeight : item.flexItemOptions.maxWidth);
+    const minSize = (vertical ? item.flexItemOptions.minHeight : item.flexItemOptions.minWidth) || 0;
+    const maxSize = (vertical ? item.flexItemOptions.maxHeight : item.flexItemOptions.maxWidth) || 0;
+    let newSize = clamp(desiredSize, minSize, maxSize);
 
     if (vertical) {
-      newSize = clamp(newSize, item.flexItemOptions.minHeight, item.flexItemOptions.maxHeight);
       newSize = Math.min(newSize, computedMaxSize);
       item.container.style.height = newSize + 'px';
     } else {
-      newSize = clamp(newSize, item.flexItemOptions.minWidth, item.flexItemOptions.maxWidth);
       newSize = Math.min(newSize, computedMaxSize);
       item.container.style.width = newSize + 'px';
     }

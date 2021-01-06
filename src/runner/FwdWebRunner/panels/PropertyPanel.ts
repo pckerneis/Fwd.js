@@ -13,19 +13,19 @@ export interface Choice<T> {
 export class ChoiceElement<T> implements EditorElement {
   public readonly htmlElement: HTMLSelectElement;
 
-  public readonly valueChanged$: Observable<T>;
+  public readonly valueChanged$: Observable<T | null>;
 
   private _choices: Choice<T>[];
-  private readonly _valueChangedSubject: BehaviorSubject<T>;
+  private readonly _valueChangedSubject: BehaviorSubject<T | null>;
 
   constructor() {
-    this.htmlElement = document.createElement('select');
-    this._valueChangedSubject = new BehaviorSubject<T>(null);
+    this.htmlElement = document.createElement('select')!;
+    this._valueChangedSubject = new BehaviorSubject<T | null>(null);
     this.valueChanged$ = this._valueChangedSubject.pipe(distinctUntilChanged(), filter(v => !!v));
 
     this.htmlElement.onchange = () => {
-      const newValue = this._choices.find(c => c.element.value === this.htmlElement.value)?.value;
-      this._valueChangedSubject.next(newValue);
+      const newValue = this._choices.find(c => c.element?.value === this.htmlElement.value)?.value;
+      this._valueChangedSubject.next(newValue ?? null);
     };
   }
 
@@ -34,10 +34,10 @@ export class ChoiceElement<T> implements EditorElement {
     if (c == null) {
       throw new Error('Cannot find choice with value ' + value);
     }
-    this.htmlElement.value = c.element.value;
+    this.htmlElement.value = c.element!.value;
   }
 
-  public getValue(): T {
+  public getValue(): T | null {
     return this._valueChangedSubject.getValue();
   }
 
@@ -142,8 +142,8 @@ export class PropertyPanel implements EditorElement {
     const e = document.createElement('input');
     e.type = 'number';
     e.value = defaultValue.toString();
-    if (! isNaN(min)) e.min = min.toString();
-    if (! isNaN(max)) e.max = max.toString();
+    if (typeof min === 'number') e.min = min.toString();
+    if (typeof max === 'number') e.max = max.toString();
     return e;
   }
 }

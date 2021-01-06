@@ -42,12 +42,12 @@ export class AudioMixerElement implements EditorElement {
     return Array.from(this._trackElements.values()).map(value => value.mixerTrack);
   }
 
-  public getTrack(trackName: string): AudioTrackElement {
+  public getTrack(trackName: string): AudioTrackElement | null {
     const elements = this._trackElements.get(trackName);
     return elements == null ? null : elements.mixerTrack;
   }
 
-  public addTrack(trackName: string): AudioTrackElement {
+  public addTrack(trackName: string): AudioTrackElement | null {
     const existingTrack = this.getTrack(trackName);
 
     if (existingTrack != null) {
@@ -77,7 +77,7 @@ export class AudioMixerElement implements EditorElement {
     return mixerTrack;
   }
 
-  public getOrAddTrack(trackName: string): AudioTrackElement {
+  public getOrAddTrack(trackName: string): AudioTrackElement | null {
     return this.getTrack(trackName) || this.addTrack(trackName);
   }
 

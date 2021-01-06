@@ -10,7 +10,7 @@ export class AudioMeterElement implements EditorElement {
 
   private _releaseClipDebounced: any;
 
-  private _analyser: AnalyserNode;
+  private _analyser?: AnalyserNode;
 
   private _isMute: boolean = false;
 
@@ -42,7 +42,7 @@ export class AudioMeterElement implements EditorElement {
   public set audioSource(source: AudioNode) {
     if (this._analyser != null) {
       this._analyser.disconnect();
-      this._analyser = null;
+      this._analyser = undefined;
     }
 
     this._source = source;

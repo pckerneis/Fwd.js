@@ -19,7 +19,7 @@ export class RootComponentHolder<T extends Component> {
   private canvasMouseDownListener: (event: MouseEvent) => void;
   private documentMouseUpListener: (event: MouseEvent) => void;
   private documentMouseMoveListener: (event: MouseEvent) => void;
-  private _resizeObserver: ResizeObserver;
+  private _resizeObserver?: ResizeObserver;
 
   constructor(public readonly width: number, public readonly height: number, public readonly rootComponent: T) {
     rootComponent.rootHolder = this;
@@ -32,7 +32,7 @@ export class RootComponentHolder<T extends Component> {
   }
 
   public get renderingContext(): CanvasRenderingContext2D {
-    return this.canvas.getContext('2d');
+    return this.canvas.getContext('2d')!;
   }
 
   public repaint(): void {
@@ -47,8 +47,8 @@ export class RootComponentHolder<T extends Component> {
   }
 
   public initMouseEventListeners(): void {
-    let pressedComponent: Component = null;
-    let componentUnderMouse: Component = null;
+    let pressedComponent: Component | null = null;
+    let componentUnderMouse: Component | null = null;
     let mouseDownPos: Point;
     let mouseUpPos: Point;
     let mouseDownTime: number;
@@ -257,7 +257,7 @@ export class RootComponentHolder<T extends Component> {
   public removeResizeObserver(): void {
     if (this._resizeObserver != null) {
       this._resizeObserver.disconnect();
-      this._resizeObserver = null;
+      this._resizeObserver = undefined;
     }
   }
 

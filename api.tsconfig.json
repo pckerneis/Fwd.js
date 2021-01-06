@@ -9,7 +9,7 @@
       "experimentalDecorators": true,
       "removeComments": false,
       "noImplicitAny": true,
-      "strictNullChecks": false,
+      "strictNullChecks": true,
       "suppressImplicitAnyIndexErrors": true,
       "esModuleInterop": true,
       "declaration": true,

@@ -39,7 +39,7 @@ export class GraphRoot extends Component {
   private readonly _nodes: ArrayList<GraphNode> = new ArrayList<GraphNode>();
   private readonly _connections: ArrayList<Connection> = new ArrayList<Connection>();
 
-  private _temporaryConnection: TemporaryConnection = null;
+  private _temporaryConnection?: TemporaryConnection;
 
   // TODO: move this in utility class ?
   private componentDragReady: boolean;
@@ -71,14 +71,14 @@ export class GraphRoot extends Component {
   public get selectedNodes(): GraphNode[] {
     return this.selection.items
       .map(id => this.findNode(id))
-      .filter(node => !! node);
+      .filter(node => !! node) as GraphNode[];
   };
 
   public get viewport(): ViewportArea {
     return this._viewportArea;
   }
 
-  public get temporaryConnection(): TemporaryConnection {
+  public get temporaryConnection(): TemporaryConnection | undefined {
     return this._temporaryConnection;
   }
 
@@ -127,7 +127,7 @@ export class GraphRoot extends Component {
         this.createConnection(this._temporaryConnection.sourcePin, suitablePin);
       }
 
-      this._temporaryConnection = null;
+      this._temporaryConnection = undefined;
       this.repaint();
     }
   }
@@ -184,7 +184,7 @@ export class GraphRoot extends Component {
     this.repaint();
   }
 
-  public findPin(id: number): Pin {
+  public findPin(id: number): Pin | null {
     for (let node of this.nodes.array) {
       for (let pin of node.inlets.array) {
         if (pin.id === id) {
@@ -212,7 +212,12 @@ export class GraphRoot extends Component {
 
     const dragOffset = event.getDragOffset();
 
-    this.selectedNodes.forEach(node => node.setBounds(this.boundsAtMouseDown.get(node.id).translated(dragOffset)));
+    this.selectedNodes.forEach(node => {
+      const previousBounds = this.boundsAtMouseDown.get(node.id);
+      if (previousBounds) {
+        node.setBounds(previousBounds.translated(dragOffset))
+      }
+    });
   }
 
   public resetComponentDragAndNotifyIfDragged(event: ComponentMouseEvent): void {
@@ -333,6 +338,6 @@ export class GraphRoot extends Component {
   }
 
   private findNode(id: number): GraphNode | null {
-    return this._nodes.array.find(n => n.id === id);
+    return this._nodes.array.find(n => n.id === id) || null;
   }
 }

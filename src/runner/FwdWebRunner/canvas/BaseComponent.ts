@@ -6,7 +6,7 @@ export interface IComponentMouseEvent {
   isDragging: boolean;
   positionAtMouseDown: Point,
   position: Point,
-  pressedComponent: Component,
+  pressedComponent: Component | null,
   wasDragged: boolean,
   modifiers: { shift: boolean, option: boolean }
 }
@@ -17,7 +17,7 @@ export class ComponentMouseEvent implements IComponentMouseEvent {
   public readonly nativeEvent: MouseEvent;
   public readonly position: Point;
   public readonly positionAtMouseDown: Point;
-  public readonly pressedComponent: Component;
+  public readonly pressedComponent: Component | null;
   public readonly wasDragged: boolean;
 
   constructor(infos: IComponentMouseEvent) {
@@ -49,7 +49,7 @@ export class ComponentMouseEvent implements IComponentMouseEvent {
 export abstract class Component {
 
   private _children: Component[] = [];
-  private _parent: Component = null;
+  private _parent: Component | null = null;
   private _visible: boolean = true;
   private _needRepaint: boolean = true;
   private _rootHolder: RootComponentHolder<this>;
@@ -110,7 +110,7 @@ export abstract class Component {
     this._rootHolder = holder;
   }
 
-  public getParentComponent(): Component {
+  public getParentComponent(): Component | null {
     return this._parent;
   }
 
@@ -277,6 +277,10 @@ export abstract class Component {
 
   // Resizing and rendering
 
+  public repaintParent(): void {
+    this.getParentComponent()?.repaint();
+  }
+
   protected abstract resized(): void;
 
   protected abstract render(g: CanvasRenderingContext2D): void;
@@ -295,7 +299,7 @@ export abstract class Component {
 
       if (this._needRepaint || this._cachedCanvas == null) {
         g = Component.createOffscreenCanvas(Math.ceil(this._bounds.width), Math.ceil(this._bounds.height));
-        this.render(g.getContext('2d'));
+        this.render(g.getContext('2d')!);
         this._cachedCanvas = g;
       } else {
         g = this._cachedCanvas;

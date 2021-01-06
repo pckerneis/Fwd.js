@@ -1,3 +1,3 @@
 import { Logger, LoggerLevel } from "./utils/Logger";
 
-export default new Logger('fwd', null, LoggerLevel.error);
+export default new Logger('fwd', undefined, LoggerLevel.error);

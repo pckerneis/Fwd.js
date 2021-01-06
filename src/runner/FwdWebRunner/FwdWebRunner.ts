@@ -7,7 +7,7 @@ import FwdRunner from '../FwdRunner';
 import parentLogger from '../logger.runner';
 import { RunnerConfig } from '../RunnerConfig';
 import { darkTheme, defaultTheme } from '../style.constants';
-import { registerGraphSequencerCommands, } from './commands/graph-sequencer.commands';
+import { registerGraphSequencerCommands } from './commands/graph-sequencer.commands';
 import { RunnerFooter } from './components/RunnerFooter';
 import { RunnerHeader } from './components/RunnerHeader';
 import { PanelManager } from './panels/PanelManager';
@@ -61,8 +61,11 @@ export default class FwdWebRunner implements FwdRunner {
     FwdRuntime.startContext(this.fwd);
 
     this._header.onRunnerStart();
-    this._footer.masterSlider.meter.audioSource = this.fwd.audio.master;
-    this._footer.applyMasterValue();
+
+    if (this.fwd.audio.master) {
+      this._footer.masterSlider.meter.audioSource = this.fwd.audio.master;
+      this._footer.applyMasterValue();
+    }
 
     DBG.debug('Starting playback');
     this._playbackService.startPlayback(this.fwd.scheduler);

@@ -51,6 +51,10 @@ export class TabbedPanel implements EditorElement {
 
     const tab = this.findTabOrThrow(tabId);
 
+    if (tab.tabOptions.tabContent.htmlElement == null) {
+      throw new Error('No element set for tab ' + tabId);
+    }
+
     this._viewport.innerHTML = '';
     this._viewport.append(tab.tabOptions.tabContent.htmlElement);
 
@@ -78,7 +82,7 @@ export class TabbedPanel implements EditorElement {
 
     const tab = this.findTabOrThrow(tabId);
     tab.button.htmlElement.remove();
-    tab.tabOptions.tabContent.htmlElement.remove();
+    tab.tabOptions.tabContent.htmlElement?.remove();
     this._tabItems.splice(this._tabItems.indexOf(tab), 1);
   }
 

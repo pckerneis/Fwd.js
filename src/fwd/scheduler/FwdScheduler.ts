@@ -1,6 +1,6 @@
 import { Logger } from '../utils/Logger';
 import { EventRef, Time } from './EventQueue/EventQueue';
-import { Callable, FwdChain, FwdChainEvent, FwdFire, FwdWait } from './FwdChain';
+import { Callable, FwdChain, FwdFire, FwdWait } from './FwdChain';
 import parentLogger from './logger.core';
 import { Action, Scheduler } from './Scheduler/Scheduler';
 import { SchedulerImpl } from './Scheduler/SchedulerImpl';
@@ -14,7 +14,8 @@ class FwdEvent implements Action {
     public readonly time: Time,
     public readonly action: Function,
     public readonly cancelable: boolean,
-  ) {}
+  ) {
+  }
 
   public trigger(): void {
     const previous = NOW;
@@ -59,7 +60,9 @@ export class FwdScheduler {
   /**
    * The current state for the scheduler, either `running`, `stopping`, `stopped` or `ready`.
    */
-  public get state(): State { return this._state; }
+  public get state(): State {
+    return this._state;
+  }
 
   /**
    * Returns the current time position for the scheduler. It's only useful when called inside the `FwdScheduler`'s
@@ -198,19 +201,19 @@ export class FwdScheduler {
   }
 
   public wait(time: Time | (() => Time)): FwdChain {
-    const chain = new FwdChain(this, null);
+    const chain = new FwdChain(this, undefined);
     chain.wait(time);
     return chain;
   }
 
   public fire(action: Callable | string, ...args: any[]): FwdChain {
-    const chain = new FwdChain(this, null);
+    const chain = new FwdChain(this, undefined);
     chain.fire(action, ...args);
     return chain;
   }
 
   public chain(...events: (Callable | string | number | any[])[]): FwdChain {
-    const chain = new FwdChain(this, null);
+    const chain = new FwdChain(this, undefined);
 
     events.map((event) => {
       if (typeof event === 'function') {
@@ -224,7 +227,7 @@ export class FwdScheduler {
       }
       return null;
     }).filter((event) => Boolean(event))
-      .forEach(event => chain.append(event));
+      .forEach(event => chain.append(event!));
 
     return chain;
   }

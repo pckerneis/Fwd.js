@@ -29,7 +29,7 @@ export interface LookAndFeel {
                   hoveredPitch: number, colors: Colors): void;
 
   drawPitchRuler(g: CanvasRenderingContext2D, width: number, height: number, start: number, end: number, semiHeight: number,
-                 hoveredPitch: number, colors: Colors): void;
+                 hoveredPitch: number | null, colors: Colors): void;
 
   isOnPianoRoll(x: number, y: number, width: number, height: number, semitoneHeight: number): boolean;
 
@@ -173,7 +173,7 @@ export class LookAndFeel_Default implements LookAndFeel {
   }
 
   public drawPitchRuler(g: CanvasRenderingContext2D, width: number, height: number, start: number, end: number,
-                        semiHeight: number, hoveredPitch: number, colors: Colors): void {
+                        semiHeight: number, hoveredPitch: number | null, colors: Colors): void {
     // piano roll
     if (this.isPianoRollVisible(semiHeight)) {
       this.drawPianoRoll(g, width, height, start, end, semiHeight, colors);
@@ -188,7 +188,7 @@ export class LookAndFeel_Default implements LookAndFeel {
   }
 
   public drawPitchLabels(g: CanvasRenderingContext2D, width: number, height: number, start: number, end: number,
-                         semiHeight: number, hoveredPitch: number, colors: Colors): void {
+                         semiHeight: number, hoveredPitch: number | null, colors: Colors): void {
 
 
     const isPianoRollVisible = this.isPianoRollVisible(semiHeight);
@@ -328,7 +328,7 @@ export class LookAndFeel_Live extends LookAndFeel_Default {
   }
 
   public drawPitchLabels(g: CanvasRenderingContext2D, width: number, height: number, start: number, end: number,
-                         semiHeight: number, hoveredPitch: number, colors: Colors): void {
+                         semiHeight: number, hoveredPitch: number | null, colors: Colors): void {
 
     for (let i = 0; i < 128; i += 12) {
       if (i >= start && i <= end) {

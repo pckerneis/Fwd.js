@@ -35,7 +35,7 @@ export class FwdWebConsole {
     this._code.innerHTML = '';
   }
 
-  public print(time: number, ...messages: any[]): void {
+  public print(time: number | null, ...messages: any[]): void {
     if (time != null) {
       messages = [formatTime(time), ...messages];
     }

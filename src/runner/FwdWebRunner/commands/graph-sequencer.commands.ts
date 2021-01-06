@@ -153,7 +153,7 @@ function setNodeLabelPerformer(service: GraphSequencerService): CommandPerformer
   return {
     canPerform: command => command.id === CommandIds.setNodeLabel,
     perform: (command) => {
-      previousName = service.snapshot.nodes.find(n => n.id === command.payload.id)?.label;
+      previousName = service.snapshot.nodes.find(n => n.id === command.payload.id)?.label || '';
       service.setNodeLabel(command.payload.id, command.payload.name)
         .subscribe();
     },

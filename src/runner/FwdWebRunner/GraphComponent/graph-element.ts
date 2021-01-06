@@ -128,14 +128,14 @@ export class GraphElement implements EditorElement {
     }
   }
 
-  private findNode(id: number): GraphNode {
+  private findNode(id: number): GraphNode | undefined {
     return this.nodes.find(n => n.id === id);
   }
 
-  private findPins(connection: ConnectionState): { source: OutletPin, target: InletPin } {
+  private findPins(connection: ConnectionState): { source: OutletPin | null, target: InletPin | null } {
     return {
-      source: this.findNode(connection.sourceNode)?.outlets.array.find(p => p.id === connection.sourcePinId),
-      target: this.findNode(connection.targetNode)?.inlets.array.find(p => p.id === connection.targetPinId),
+      source: this.findNode(connection.sourceNode)?.outlets.array.find(p => p.id === connection.sourcePinId) || null,
+      target: this.findNode(connection.targetNode)?.inlets.array.find(p => p.id === connection.targetPinId) || null,
     };
   }
 

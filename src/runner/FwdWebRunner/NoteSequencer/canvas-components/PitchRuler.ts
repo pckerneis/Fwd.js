@@ -13,8 +13,8 @@ export class PitchRuler extends Component {
   private consecutiveVerticalDrag: number = 0;
 
   private isPreviewingNote: boolean = false;
-  private lastPreviewedPitch: number = null;
-  private hoveredPitch: number = null;
+  private lastPreviewedPitch: number | null = null;
+  private hoveredPitch: number | null = null;
 
   constructor(private readonly model: SequencerDisplayModel, private grid: NoteGridComponent) {
     super();
@@ -85,7 +85,7 @@ export class PitchRuler extends Component {
         this.grid.getSemitoneHeight())) {
       this.model.verticalRange.start = MIN_PITCH;
       this.model.verticalRange.end = MAX_PITCH;
-      this.getParentComponent().repaint();
+      this.repaintParent();
     }
   }
 
@@ -130,7 +130,7 @@ export class PitchRuler extends Component {
       this.model.verticalRange.start += zoomAmount;
       this.model.verticalRange.end -= zoomAmount;
 
-      this.getParentComponent().repaint();
+      this.repaintParent();
     }
   }
 
@@ -146,7 +146,7 @@ export class PitchRuler extends Component {
     this.model.verticalRange.end = Math.min(this.model.verticalRange.end, MAX_PITCH);
     this.model.verticalRange.start = Math.max(this.model.verticalRange.start, MIN_PITCH);
 
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   private translate(amount: number): void {
@@ -162,7 +162,7 @@ export class PitchRuler extends Component {
       this.model.verticalRange.start = clipped;
       this.model.verticalRange.end += correctAmount;
 
-      this.getParentComponent().repaint();
+      this.repaintParent();
     } else if (amount > 0) {
       const desiredMax = end + amount / semiHeight;
       const clipped = Math.min(desiredMax, MAX_PITCH);
@@ -171,7 +171,7 @@ export class PitchRuler extends Component {
       this.model.verticalRange.end = clipped;
       this.model.verticalRange.start += correctAmount;
 
-      this.getParentComponent().repaint();
+      this.repaintParent();
     }
   }
 

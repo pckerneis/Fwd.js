@@ -3,14 +3,14 @@ import { SequencerDisplayModel } from '../note-sequencer';
 import { NoteGridComponent } from './NoteGridComponent';
 
 export class PlayBar extends Component {
-  private time: number;
+  private time: number | null = null;
 
   constructor(private readonly model: SequencerDisplayModel, private readonly grid: NoteGridComponent) {
     super();
     this.setInterceptsMouseEvents(false);
   }
 
-  public setTime(time: number): void {
+  public setTime(time: number | null): void {
     this.time = time;
     this.repaint();
   }

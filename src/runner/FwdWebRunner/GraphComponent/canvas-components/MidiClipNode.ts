@@ -139,7 +139,7 @@ export class MidiClipNode extends GraphNode {
       this.outlets.size() * this.pinHeight + this.labelHeight);
 
     this.resized();
-    this.refreshParent();
+    this.repaintParent();
   }
 
   private updateInlets(inlets: MidiInlet[]): void {

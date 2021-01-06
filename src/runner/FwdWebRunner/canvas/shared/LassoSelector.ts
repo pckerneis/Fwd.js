@@ -16,7 +16,7 @@ export class LassoSelector {
 
   public findAllElementsInLasso: (lassoBounds: IRectangle) => number[];
 
-  private lasso: Lasso;
+  private lasso?: Lasso;
 
   constructor(public readonly ownerComp: Component, public readonly selectedItemSet: SelectedItemSet,
               public readonly colors: Colors) {
@@ -40,7 +40,7 @@ export class LassoSelector {
   }
 
   public endLasso(): void {
-    this.lasso = null;
+    this.lasso = undefined;
   }
 
   public dragLasso(event: ComponentMouseEvent): void {

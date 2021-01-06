@@ -51,9 +51,9 @@ export class RunnerHeader {
     this._saveButton.htmlElement.onclick = () => this.runner.save();
 
     this._undoButton = new IconButton('undo');
-    this._undoButton.onclick = () => commandManager.undo();
+    this._undoButton.onclick = () => { commandManager.undo(); return true; }
     this._redoButton = new IconButton('undo');
-    this._redoButton.onclick = () => commandManager.redo();
+    this._redoButton.onclick = () => { commandManager.redo(); return true; }
     this._redoButton.htmlElement.style.transform = 'scale(-1, 1)';
 
     commandManager.historyChanged$.subscribe(() => {

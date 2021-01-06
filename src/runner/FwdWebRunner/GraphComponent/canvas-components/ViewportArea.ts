@@ -77,9 +77,9 @@ export class ViewportArea extends Component {
     g.fillRect(0, 0, this.width, this.height);
 
     if (this.graphRoot.hasTemporaryConnection) {
-      const sourcePin = this.graphRoot.temporaryConnection.sourcePin;
+      const sourcePin = this.graphRoot.temporaryConnection!.sourcePin;
       const startPos = sourcePin.getBoundsInGraph().translated(this.getViewOffset()).center;
-      const endPos = this.graphRoot.temporaryConnection.endPosition;
+      const endPos = this.graphRoot.temporaryConnection!.endPosition;
       drawConnection(g, startPos, endPos, true);
     }
 
@@ -105,10 +105,10 @@ export class ViewportArea extends Component {
 
     this._latestOffset = targetPosition;
 
-    if (!reachedTarget) {
+    if (! reachedTarget) {
       requestAnimationFrame(() => this.animateViewScroll());
     }
-    
+
     this._viewPositionChanged$.next();
 
     this.repaint();

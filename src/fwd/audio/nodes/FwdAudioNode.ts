@@ -1,36 +1,39 @@
 import { FwdAudio } from "../FwdAudio";
 
 export abstract class FwdAudioNode {
-  public abstract inputNode: AudioNode | AudioParam;
-  public abstract outputNode: AudioNode;
+  public abstract inputNode?: AudioNode | AudioParam;
+  public abstract outputNode?: AudioNode;
   public abstract readonly fwdAudio: FwdAudio;
 
   protected tearedDownCalled: boolean = false;
 
   public get wasTornDown(): boolean { return this.tearedDownCalled; }
 
-  public connect(destination: FwdAudioNode | AudioNode | AudioParam, output?: number, input?: number): FwdAudioNode {
+  public connect(destination: FwdAudioNode | AudioNode | AudioParam,
+                 output?: number, input?: number): FwdAudioNode | undefined {
+
+    if (this.outputNode == null || (destination instanceof FwdAudioNode && destination.inputNode == null)) {
+      throw new Error('Error while trying to connect the audio node');
+    }
+
     if (destination instanceof AudioNode) {
       this.outputNode.connect(destination, output, input);
       return;
     }
 
-    if (destination instanceof AudioParam) {
+    if (this.outputNode && destination instanceof AudioParam) {
       this.outputNode.connect(destination, output);
       return;
     }
 
-    if (this.outputNode == null || destination.inputNode == null) {
-      throw new Error('Error while trying to connect the audio node');
+    if (destination instanceof FwdAudioNode) {
+      if (destination.inputNode instanceof AudioNode) {
+        this.outputNode.connect(destination.inputNode, output, input);
+      } else if (destination.inputNode instanceof AudioParam) {
+        this.outputNode.connect(destination.inputNode, output);
+      }
+      return destination;
     }
-
-    if (destination.inputNode instanceof AudioNode) {
-      this.outputNode.connect(destination.inputNode, output, input);
-    } else {
-      this.outputNode.connect(destination.inputNode, output);
-    }
-
-    return destination;
   }
 
   public connectToMaster(): this {
@@ -38,7 +41,10 @@ export abstract class FwdAudioNode {
       throw new Error('Error while trying to connect the audio node');
     }
 
-    this.connect(this.fwdAudio.master);
+    if (this.fwdAudio.master) {
+      this.connect(this.fwdAudio.master);
+    }
+
     return this;
   }
 

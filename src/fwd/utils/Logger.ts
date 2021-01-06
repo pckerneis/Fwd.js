@@ -11,7 +11,7 @@ type LogMethod = 'warn' | 'log' | 'error';
 
 export class Logger {
 
-  public static runtimeLevel: LoggerLevel = null;
+  public static runtimeLevel: LoggerLevel | null = null;
 
   public readonly pathLength: number = 32;
 

@@ -14,7 +14,7 @@ export class SelectedItemSet {
   public readonly selection$: Observable<Identifier[]>;
 
   private readonly _selection: BehaviorSubject<Identifier[]>;
-  private _itemAboutToBeSelected: Identifier = null;
+  private _itemAboutToBeSelected: Identifier | null = null;
 
   constructor() {
     this._selection = new BehaviorSubject<number[]>([]);

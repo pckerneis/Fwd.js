@@ -28,13 +28,13 @@ export class MiniMap extends Component {
 
   public updatePreview(): void {
     if (this._previewCanvas != null) {
-      const g = this._previewCanvas.getContext('2d');
+      const g = this._previewCanvas.getContext('2d')!;
       g.fillStyle = defaultTheme.bgSecondary;
       g.fillRect(0, 0, this._previewCanvas.width, this._previewCanvas.height);
 
       const previewBounds = this.previewBounds;
       const nodesBounds = this.graphRoot.nodes.array.map((n) => n.getBounds());
-      const outerBounds = Rectangle.findOuterBounds(nodesBounds);
+      const outerBounds = Rectangle.findOuterBounds(nodesBounds) || new Rectangle();
       const extended = outerBounds.extended(this._extensionAmount);
 
       // We cache these results for faster mouse interaction
@@ -130,26 +130,29 @@ export class MiniMap extends Component {
       const viewOffset = this.graphRoot.viewport.getViewOffset();
       const firstPos = connection.getFirstPosition();
       const secondPos = connection.getSecondPosition();
-      const previewOffset = Points.add(this._outerBounds, {
-        x: -this._extensionAmount / 2,
-        y: -this._extensionAmount / 2,
-      });
 
-      const start = {
-        x: (firstPos.x - viewOffset.x - previewOffset.x) * this._previewRatio,
-        y: (firstPos.y - viewOffset.y - previewOffset.y) * this._previewRatio,
-      };
-      const end = {
-        x: (secondPos.x - viewOffset.x - previewOffset.x) * this._previewRatio,
-        y: (secondPos.y - viewOffset.y - previewOffset.y) * this._previewRatio,
-      };
+      if (firstPos && secondPos) {
+        const previewOffset = Points.add(this._outerBounds, {
+          x: -this._extensionAmount / 2,
+          y: -this._extensionAmount / 2,
+        });
 
-      g.strokeStyle = connection.selected ? defaultTheme.selectedBorder : defaultTheme.border;
+        const start = {
+          x: (firstPos.x - viewOffset.x - previewOffset.x) * this._previewRatio,
+          y: (firstPos.y - viewOffset.y - previewOffset.y) * this._previewRatio,
+        };
+        const end = {
+          x: (secondPos.x - viewOffset.x - previewOffset.x) * this._previewRatio,
+          y: (secondPos.y - viewOffset.y - previewOffset.y) * this._previewRatio,
+        };
 
-      g.beginPath();
-      g.moveTo(start.x, start.y);
-      g.lineTo(end.x, end.y);
-      g.stroke();
+        g.strokeStyle = connection.selected ? defaultTheme.selectedBorder : defaultTheme.border;
+
+        g.beginPath();
+        g.moveTo(start.x, start.y);
+        g.lineTo(end.x, end.y);
+        g.stroke();
+      }
     });
   }
 

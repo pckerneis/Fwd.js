@@ -10,7 +10,7 @@ export class TimeRuler extends Component {
   private zoomAtMouseDown: number;
   private arrowHeight: number = 12;
   private arrowWidth: number = 10;
-  private _draggedFlag: Flag;
+  private _draggedFlag?: Flag;
   private _draggedFlagTimeAtMouseDown: number;
 
   constructor(private readonly model: SequencerDisplayModel, private readonly grid: NoteGridComponent) {
@@ -31,7 +31,7 @@ export class TimeRuler extends Component {
   public doubleClicked(event: ComponentMouseEvent): void {
     this.model.visibleTimeRange.start = 0;
     this.model.visibleTimeRange.end = this.model.maxTimeRange.end;
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {
@@ -74,13 +74,13 @@ export class TimeRuler extends Component {
     this.model.visibleTimeRange.start = Math.max(this.model.maxTimeRange.start, newStart + offset);
     this.model.visibleTimeRange.end = Math.min(this.model.maxTimeRange.end, newEnd + offset);
 
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
     if (this._draggedFlag != null) {
       this.grid.noteSequencer.flagDragged(this._draggedFlag);
-      this._draggedFlag = null;
+      this._draggedFlag = undefined;
     }
   }
 
@@ -202,16 +202,19 @@ export class TimeRuler extends Component {
   }
 
   private dragFlag(event: ComponentMouseEvent): void {
+    if (this._draggedFlag == null)
+      return;
+
     let t = this.grid.getTimeAt(event.position.x);
 
     if (! event.modifiers.option) {
       t = this.grid.snapToGrid(t);
     }
 
-    this._draggedFlag.time = clamp(
-      t,
+    this._draggedFlag.time = clamp(t,
       this.model.maxTimeRange.start,
       this.model.maxTimeRange.end);
-    this.grid.getParentComponent().repaint();
+
+    this.grid.repaintParent();
   }
 }

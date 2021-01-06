@@ -83,7 +83,7 @@ class SettingsPanel implements EditorElement {
       .subscribe((newValue) => {
         commandManager.perform(setMidiClipDestination({
           id: this.clipId,
-          value: destinations.find(d => d.deviceId === newValue),
+          value: destinations.find(d => d.deviceId === newValue)!,
         }));
       });
 
@@ -226,20 +226,22 @@ class SettingsPanel implements EditorElement {
         pluck('flags'),
         map(flags => flags.find(f => f.id === flag.id)),
       ).subscribe((midiFlagState) => {
-        nameField.value = midiFlagState.name;
-        timeField.valueAsNumber = midiFlagState.time;
-        titleElem.innerText = midiFlagState.name;
+        if (midiFlagState) {
+          nameField.value = midiFlagState.name;
+          timeField.valueAsNumber = midiFlagState.time;
+          titleElem.innerText = midiFlagState.name;
 
-        // TODO: re-add options instead of recreating element
-        const newJumpSelect = markerPanel.createSelect(flags.map(f => f.id.toString()),
-          midiFlagState.jumpDestination?.toString(),
-          (v) => this.service.setMidiClipFlagJumpDestination(this.clipId, flag.id, Number(v))
-            .subscribe());
-        jumpSelect.replaceWith(newJumpSelect);
-        jumpSelect = newJumpSelect;
+          // TODO: re-add options instead of recreating element
+          const newJumpSelect = markerPanel.createSelect(flags.map(f => f.id.toString()),
+            midiFlagState.jumpDestination?.toString() ?? '',
+            (v) => this.service.setMidiClipFlagJumpDestination(this.clipId, flag.id, Number(v))
+              .subscribe());
+          jumpSelect.replaceWith(newJumpSelect);
+          jumpSelect = newJumpSelect;
 
-        jumpLabel.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
-        jumpSelect.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
+          jumpLabel.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
+          jumpSelect.style.display = midiFlagState.kind === 'jump' ? 'inline' : 'none';
+        }
       });
     });
   }
@@ -296,7 +298,7 @@ export class MidiClipPanel implements EditorElement {
 
   constructor(public readonly service: GraphSequencerService,
               public readonly clipId: number) {
-    this.htmlElement = document.createElement('div');
+    this.htmlElement = document.createElement('div')!;
     this.htmlElement.classList.add(CONTAINER_CLASS);
 
     this.clipSettings = new SettingsPanel(this);

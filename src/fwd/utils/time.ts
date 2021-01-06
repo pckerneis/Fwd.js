@@ -4,9 +4,9 @@ type Time = number;
  * Format a time value in seconds as `hh:mm:ss:mls`
  * @param timeSeconds the seconds value to format
  */
-export function formatTime(timeSeconds: Time): string {
+export function formatTime(timeSeconds: Time | null): string {
   if (timeSeconds === null) {
-    return null;
+    return '';
   }
 
   const minutes = Math.floor(timeSeconds / 60);

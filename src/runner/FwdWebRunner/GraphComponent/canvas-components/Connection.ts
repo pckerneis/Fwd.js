@@ -20,16 +20,16 @@ export class Connection {
     const maxDistanceSquared = 16;
     const start = this.getFirstPosition();
     const end = this.getSecondPosition();
-    return distanceToSegmentSquared(position, start, end) < maxDistanceSquared;
+    return Boolean(start && end && distanceToSegmentSquared(position, start, end) < maxDistanceSquared);
   }
 
-  public getFirstPosition(): Point {
+  public getFirstPosition(): Point | undefined {
     return this.graphRoot.findPin(this.first)?.getBoundsInGraph()
       .translated(this.graphRoot.viewport.getViewOffset())
       .center;
   }
 
-  public getSecondPosition(): Point {
+  public getSecondPosition(): Point | undefined {
     return this.graphRoot.findPin(this.second)?.getBoundsInGraph()
       .translated(this.graphRoot.viewport.getViewOffset())
       .center;
@@ -38,7 +38,8 @@ export class Connection {
   public draw(g: CanvasRenderingContext2D): void {
     const startPos = this.getFirstPosition();
     const endPos = this.getSecondPosition();
-    drawConnection(g, startPos, endPos, this.selected);
+    if (startPos && endPos)
+      drawConnection(g, startPos, endPos, this.selected);
   }
 }
 

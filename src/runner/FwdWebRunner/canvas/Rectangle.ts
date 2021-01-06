@@ -58,8 +58,8 @@ export class Rectangle implements IRectangle {
     this.height = height;
   }
 
-  public static fromIBounds(bounds: IRectangle): Rectangle {
-    if (! Boolean(bounds)) {
+  public static fromIBounds(bounds: IRectangle | null): Rectangle {
+    if (bounds == null) {
       return new Rectangle();
     }
 
@@ -71,7 +71,7 @@ export class Rectangle implements IRectangle {
       || (box2.y >= box1.y + box1.height) || (box2.y + box2.height <= box1.y));
   }
 
-  public static findOuterBounds(bounds: IRectangle[]): Rectangle {
+  public static findOuterBounds(bounds: IRectangle[]): Rectangle | null {
     return Rectangle.fromIBounds(findOuterBounds(bounds));
   }
 
@@ -207,7 +207,7 @@ export function isPointInRectangle(point: Point, rect: IRectangle | Rectangle): 
   return ! (point.y < rect.y || point.y > rect.y + rect.height);
 }
 
-function findOuterBounds(rectangles: IRectangle[]): IRectangle {
+function findOuterBounds(rectangles: IRectangle[]): IRectangle | null {
   if (rectangles.length === 0) {
     return null;
   } else if (rectangles.length === 1) {

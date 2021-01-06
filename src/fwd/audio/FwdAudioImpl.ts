@@ -12,7 +12,8 @@ import {
   FwdGainNode,
   FwdLFONode,
   FwdNoiseNode,
-  FwdOscillatorNode, FwdReverbNode,
+  FwdOscillatorNode,
+  FwdReverbNode,
   FwdSamplerNode,
   FwdStereoDelayNode,
 } from './nodes/StandardAudioNodes';
@@ -31,7 +32,7 @@ export class FwdAudioImpl implements FwdAudio {
 
   private _ctx: AudioContext | OfflineAudioContext;
 
-  private _masterGain: FwdGainNode;
+  private _masterGain?: FwdGainNode;
 
   private _startOffset: Time = 0;
 
@@ -48,7 +49,7 @@ export class FwdAudioImpl implements FwdAudio {
     return this._ctx;
   }
 
-  public get master(): GainNode {
+  public get master(): GainNode | undefined {
     return this._masterGain?.nativeNode;
   }
 
@@ -140,11 +141,13 @@ export class FwdAudioImpl implements FwdAudio {
 
     if (this._masterGain) {
       this._masterGain.tearDown();
-      this._masterGain = null;
+      this._masterGain = undefined;
     }
 
     this._masterGain = new FwdGainNode(this, 0.5);
-    this._masterGain.nativeNode.connect(this._ctx.destination);
+
+    if (this._masterGain.nativeNode)
+      this._masterGain.nativeNode.connect(this._ctx.destination);
 
     this._contextReady = true;
   }

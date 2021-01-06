@@ -21,15 +21,17 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
 
   private _running: boolean = false;
 
-  private _timeout: number = null;
+  private _timeout: number | null = null;
 
   private _startTime: Time = 0;
+
+  private _clockFunction: () => number;
 
   constructor(
       private _interval: number,
       private _lookAhead: number,
       private _eventQueue: EventQueue<EventType> = new EventQueueImpl<EventType>(),
-      private _clockFunction: () => number = null,
+      clockFunction?: () => number,
   ) {
     DBG.info('Build SchedulerImpl', this);
 
@@ -38,7 +40,7 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
     this.lookAhead = _lookAhead;
 
     // Using default time provider if none is specified
-    this._clockFunction = _clockFunction || systemNowInSeconds;
+    this._clockFunction = clockFunction || systemNowInSeconds;
     DBG.debug('Using time provider:', this._clockFunction);
   }
 
@@ -91,7 +93,9 @@ export class SchedulerImpl<EventType extends Action> implements Scheduler<EventT
   /** @inheritdoc */
   public stop(): void {
     if (this._running) {
-      clearTimeout(this._timeout);
+      if (this._timeout) {
+        clearTimeout(this._timeout);
+      }
       this._running = false;
     }
   }

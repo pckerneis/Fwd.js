@@ -62,23 +62,23 @@ class CommandManager {
     throw new Error('No handler found for command ' + command.id);
   }
 
-  public undo(): boolean {
+  public undo(): void {
     if (! this.canUndo()) {
       return;
     }
 
-    const {command, performer} = this._undoStack.pop();
+    const {command, performer} = this._undoStack.pop()!;
     performer.undo(command);
     this._redoStack.push({command, performer});
     this._historyChanged$.next();
   }
 
-  public redo(): boolean {
+  public redo(): void {
     if (! this.canRedo()) {
       return;
     }
 
-    const {command, performer} = this._redoStack.pop();
+    const {command, performer} = this._redoStack.pop()!;
     performer.redo(command);
     this._undoStack.push({command, performer});
     this._historyChanged$.next();

@@ -55,7 +55,7 @@ export class RunnerFooter {
     this.terminalDrawer.append(this._webConsole.htmlElement);
   }
 
-  public print(time: number, ...messages: any[]): void {
+  public print(time: number | null, ...messages: any[]): void {
     this._webConsole.print(time, ...messages);
 
     if (time === null) {
@@ -67,11 +67,14 @@ export class RunnerFooter {
   }
 
   public applyMasterValue(): void {
-    const masterSlider = this.masterSlider.slider;
-    const masterGain = this.runner.fwd.audio.master.gain;
-    const now = this.runner.fwd.audio.context.currentTime;
-    const value = parseNumber(masterSlider.value) / 100;
-    masterGain.linearRampToValueAtTime(value, now + 0.01);
+    const masterGain = this.runner.fwd.audio.master?.gain;
+
+    if (masterGain) {
+      const masterSlider = this.masterSlider.slider;
+      const now = this.runner.fwd.audio.context.currentTime;
+      const value = parseNumber(masterSlider.value) / 100;
+      masterGain.linearRampToValueAtTime(value, now + 0.01);
+    }
   }
 
   public setRunnerClientState(newState: RunnerClientState): void {

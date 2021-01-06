@@ -93,7 +93,7 @@ export abstract class GraphNode extends Component {
 
     this._boundsAtMouseDown = this.getBounds();
     this.toFront();
-    this.refreshParent();
+    this.repaintParent();
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
@@ -108,7 +108,7 @@ export abstract class GraphNode extends Component {
   public mouseDragged(event: ComponentMouseEvent): void {
     event.consumeNativeEvent();
     this.parentGraph.moveSelection(event);
-    this.refreshParent();
+    this.repaintParent();
   }
 
   protected render(g: CanvasRenderingContext2D): void {
@@ -164,13 +164,7 @@ export abstract class GraphNode extends Component {
       this.outlets.size() * this.pinHeight);
 
     this.resized();
-    this.refreshParent();
-  }
-
-  protected refreshParent(): void {
-    if (this.getParentComponent() != null) {
-      this.getParentComponent().repaint();
-    }
+    this.repaintParent();
   }
 
   private arePinsConnected(first: Pin, second: Pin): Boolean {

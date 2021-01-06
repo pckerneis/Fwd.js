@@ -20,7 +20,7 @@ export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioN
 
   public readonly params: AudioParamWrappers<T>;
 
-  protected constructor(private readonly _fwdAudio: FwdAudio, private _nativeNode: T) {
+  protected constructor(private readonly _fwdAudio: FwdAudio, private _nativeNode: T | undefined) {
     super();
 
     if (_nativeNode != null) {
@@ -29,11 +29,11 @@ export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioN
     }
   }
 
-  public abstract get inputNode(): AudioNode | AudioParam;
+  public abstract get inputNode(): AudioNode | AudioParam | undefined;
 
-  public abstract get outputNode(): AudioNode;
+  public abstract get outputNode(): AudioNode | undefined;
 
-  public get nativeNode(): T {
+  public get nativeNode(): T | undefined {
     return this._nativeNode;
   }
 
@@ -48,9 +48,11 @@ export abstract class FwdAudioNodeWrapper<T extends AudioNode> extends FwdAudioN
   }
 
   protected doTearDown(when: Time): void {
-    tearDownNativeNode(this._nativeNode, when).then(() => {
-      this._nativeNode = null;
-    });
+    if (this._nativeNode) {
+      tearDownNativeNode(this._nativeNode, when).then(() => {
+        this._nativeNode = undefined;
+      });
+    }
   }
 }
 

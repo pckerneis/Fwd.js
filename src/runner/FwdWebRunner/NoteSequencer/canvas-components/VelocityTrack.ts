@@ -52,7 +52,9 @@ export class VelocityTrack extends Component {
 
     this.grid.selectedSet.items.forEach((id) => {
       const note = this.grid.notes.find(n => n.id === id);
-      note.initialVelocity = note.velocity;
+      if (note != null) {
+        note.initialVelocity = note.velocity;
+      }
     });
 
     // handle is actually a reference to the note
@@ -61,7 +63,7 @@ export class VelocityTrack extends Component {
 
     this._mouseDownResult = this.grid.selectedSet.addToSelectionMouseDown(handle.id, event.modifiers.shift);
 
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   public mouseDragged(event: ComponentMouseEvent): void {
@@ -77,7 +79,7 @@ export class VelocityTrack extends Component {
       this.lasso.dragLasso(event);
     }
 
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   public mouseReleased(event: ComponentMouseEvent): void {
@@ -89,7 +91,7 @@ export class VelocityTrack extends Component {
       note.initialVelocity = note.velocity;
     });
 
-    this.getParentComponent().repaint();
+    this.repaintParent();
   }
 
   protected render(g: CanvasRenderingContext2D): void {
@@ -154,7 +156,7 @@ export class VelocityTrack extends Component {
     }
   }
 
-  private findHandleAt(pos: Point): Note {
+  private findHandleAt(pos: Point): Note | null {
     let vScale = this.height / MAX_PITCH;
     const squaredHitDistance = 64;
 

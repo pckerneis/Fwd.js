@@ -33,15 +33,15 @@ export class TextAreaElement {
     };
 
     this.editableDiv.oninput = (event: InputEvent) => {
-      this._textContent = this.editableDiv.firstChild.textContent;
+      this._textContent = this.editableDiv.firstChild?.textContent || '';
 
       if (event.inputType === 'insertText') {
         if (this._mode === 'overwrite') {
-          this.performOverwrite(event.data);
+          this.performOverwrite(event.data!);
           event.preventDefault();
           event.stopPropagation();
         } else {
-          this.performInsert(event.data);
+          this.performInsert(event.data!);
         }
       }
     };
@@ -58,7 +58,7 @@ export class TextAreaElement {
   }
 
   private static getSelectionRange(): {start: number, end: number} {
-    const selection = getSelection();
+    const selection = getSelection()!;
     return {
       start: selection.anchorOffset - 1,
       end: selection.focusOffset,
@@ -144,10 +144,10 @@ export class TextAreaElement {
   private setSelectionRange(start: number, end: number): void {
     const range = document.createRange();
     range.selectNode(this.editableDiv);
-    range.setStart(this.editableDiv.firstChild, start);
-    range.setEnd(this.editableDiv.firstChild, end);
+    range.setStart(this.editableDiv.firstChild!, start);
+    range.setEnd(this.editableDiv.firstChild!, end);
 
-    const selection = getSelection();
+    const selection = getSelection()!;
     selection.removeAllRanges();
     selection.addRange(range);
   }

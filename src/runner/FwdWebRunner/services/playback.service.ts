@@ -43,11 +43,11 @@ export class PlaybackService {
           return undefined;
         }
       })
-      .filter(n => Boolean(n));
+      .filter(n => Boolean(n)) as {targetNode: NodeState, targetPin: number}[];
 
     scheduler.scheduleAhead(when, () => {
       connectedClips.forEach(clipNodeAndPin => {
-        if (clipNodeAndPin.targetNode.kind === 'MidiClip') {
+        if (clipNodeAndPin.targetNode?.kind === 'MidiClip') {
           this.fireMidiClip(scheduler, clipNodeAndPin.targetNode, clipNodeAndPin.targetPin);
         }
       });
@@ -74,7 +74,7 @@ export class PlaybackService {
       .map(f => ({...f, time: f.time - startTime}))
       .filter(f => f.time > 0 && f.time < sliceDuration);
 
-    let foundJump: MidiFlagState = null;
+    let foundJump: MidiFlagState | null = null;
     let flagIdx = 0;
 
     while (flagIdx < flagsSlice.length) {
@@ -106,7 +106,7 @@ export class PlaybackService {
           break;
         case 'jump':
           scheduler.scheduleAhead(endOfNoteSlice, () => {
-            if (foundJump.jumpDestination != null) {
+            if (foundJump?.jumpDestination != null) {
               this.fireMidiClip(scheduler, clip, foundJump.jumpDestination);
             }
           });

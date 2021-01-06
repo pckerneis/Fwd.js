@@ -18,7 +18,7 @@ import {
 export interface FwdAudio {
   context: AudioContext | OfflineAudioContext;
   readonly isContextReady: boolean;
-  readonly master: GainNode;
+  readonly master?: GainNode;
   readonly fwdScheduler: FwdScheduler;
   readonly utils: FwdAudioUtils;
 

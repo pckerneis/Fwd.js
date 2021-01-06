@@ -30,10 +30,10 @@ export function getMidiOutputNames(): string[] {
   return WebMidi.outputs.map(output => output.name);
 }
 
-export function getOutputByName(name: string): Output {
+export function getOutputByName(name: string): Output | null {
   return WebMidi.getOutputByName(name) || null;
 }
 
-export function getOutputById(id: string): Output {
+export function getOutputById(id: string): Output | null {
   return WebMidi.getOutputById(id) || null;
 }

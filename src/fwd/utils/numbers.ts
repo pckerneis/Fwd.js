@@ -61,22 +61,22 @@ export function clamp(value: number, a: number, b: number): number {
  * @param b Upper bound.
  */
 export function random(a?: number, b?: number): number {
-  if (a == null && b == null) {
-    return Math.random();
+  if (a != null && b != null) {
+    return a + ((b - a) * Math.random());
   }
 
-  if (b == null) {
+  if (a != null) {
     return a * Math.random();
   }
 
-  return a + ((b - a) * Math.random());
+  return Math.random();
 }
 
 const simplexNoise = new SimplexNoise();
 
 export function simplex(x: number, y: number, z?: number, w?: number): number {
   if (w != null)
-    return simplexNoise.noise4D(x, y, z, w);
+    return simplexNoise.noise4D(x, y, z??0, w);
   else if (z != null)
     return simplexNoise.noise3D(x, y, z);
 
