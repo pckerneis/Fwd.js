@@ -1,9 +1,10 @@
-import { map, pluck, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, map, pluck, switchMap } from 'rxjs/operators';
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
-import { getMidiOutputNames } from '../../../fwd/midi/FwdMidi';
+import { getMidiOutputs } from '../../../fwd/midi/FwdMidi';
 import { defaultTheme } from '../../style.constants';
 import { commandManager } from '../commands/command-manager';
 import {
+  setMidiClipDestination,
   setMidiClipDuration,
   setMidiClipNotes,
   setMidiClipSignature,
@@ -12,9 +13,9 @@ import {
 import { NoteSequencerElement } from '../components/NoteSequencerElement';
 import { FlagDirection } from '../NoteSequencer/canvas-components/NoteGridComponent';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
-import { MidiFlagState, MidiNoteState } from '../state/project.state';
+import { ExternalMidiDestinationState, MidiFlagState, MidiNoteState } from '../state/project.state';
 import { injectStyle } from '../StyleInjector';
-import { PropertyPanel } from './PropertyPanel';
+import { Choice, PropertyPanel } from './PropertyPanel';
 
 class SettingsPanel implements EditorElement {
   public readonly htmlElement: HTMLElement;
@@ -59,7 +60,7 @@ class SettingsPanel implements EditorElement {
     const durationField = this.clipPropertyPanel.addNumberInput(0, 0);
     this.service.observeMidiClipNode(this.clipId).pipe(
       pluck('duration'))
-      .subscribe((newDuration: number) => durationField.value = newDuration.toString(10));
+      .subscribe((newDuration: number) => durationField.value = newDuration?.toString(10));
 
     durationField.onchange = () => commandManager.perform(setMidiClipDuration({
       id: this.clipId, value: durationField.valueAsNumber,
@@ -67,12 +68,33 @@ class SettingsPanel implements EditorElement {
   }
 
   private buildOutputField(): void {
-    const outputs = getMidiOutputNames();
-    const defaultValue = outputs[0];
+    const destinations: ExternalMidiDestinationState[] = getMidiOutputs().map(output => ({
+      kind: 'External', midiChannel: 'ALL', deviceId: output.id, deviceName: output.name,
+    }));
+    const choices: Choice<string>[] = destinations.map(dest => ({
+      label: dest.deviceName,
+      value: dest.deviceId,
+    }));
     this.clipPropertyPanel.addLabel('Output');
-    const outputField = this.clipPropertyPanel.createSelect(outputs, defaultValue, () => {
+    const choiceElement = this.clipPropertyPanel.addChoice(choices, choices[0]?.value);
+
+    choiceElement.valueChanged$
+      .pipe(distinctUntilChanged())
+      .subscribe((newValue) => {
+        commandManager.perform(setMidiClipDestination({
+          id: this.clipId,
+          value: destinations.find(d => d.deviceId === newValue),
+        }));
+      });
+
+    this.service.observeMidiClipNode(this.clipId).pipe(
+      pluck('destination'),
+      distinctUntilChanged(),
+    ).subscribe(newOutput => {
+      if (newOutput.kind === 'External') {
+        choiceElement.setValue(newOutput.deviceId);
+      }
     });
-    this.clipPropertyPanel.htmlElement.append(outputField);
   }
 
   private buildSignatureField(): void {

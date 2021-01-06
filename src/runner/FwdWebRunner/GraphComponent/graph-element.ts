@@ -57,7 +57,6 @@ export class GraphElement implements EditorElement {
 
     graphSequencerService.nodesMoved$.subscribe((nodes: GraphObjectBounds[]) => {
       this._graphRoot.setNodesBounds(nodes);
-      console.log('service => comp', nodes);
     });
 
     graphSequencerService.connectionAdded$.subscribe((c) => this.addConnection(c));

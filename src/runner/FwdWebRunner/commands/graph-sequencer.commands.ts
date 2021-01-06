@@ -8,6 +8,7 @@ import {
   GraphItemState,
   InitNodeState,
   MidiClipNodeState,
+  MidiDestinationState,
   MidiNoteState,
 } from '../state/project.state';
 import { CommandFactory, commandManager, CommandPerformer } from './command-manager';
@@ -22,6 +23,7 @@ export enum CommandIds {
   setMidiClipNotes = 'setMidiClipNotes',
   setMidiClipDuration = 'setMidiClipDuration',
   setMidiClipSignature = 'setMidiClipSignature',
+  setMidiClipDestination = 'setMidiClipDestination',
 }
 
 export const createAndAddInitNode: CommandFactory<Point> = (position) => {
@@ -176,7 +178,6 @@ function setMidiClipNotesPerformer(service: GraphSequencerService): CommandPerfo
     (id, v) => service.setMidiClipNotes(id, v));
 }
 
-
 type DurationUpdate = { id: number, value: number };
 
 export const setMidiClipDuration: CommandFactory<DurationUpdate> = (state) => {
@@ -203,6 +204,20 @@ export const setMidiClipSignature: CommandFactory<SignatureUpdate> = (state) => 
 function setMidiClipSignaturePerformer(service: GraphSequencerService): CommandPerformer<SignatureUpdate> {
   return midiClipUpdatePerformer(CommandIds.setMidiClipSignature, service, 'timeSignature',
     (id, v) => service.setMidiClipSignature(id, v));
+}
+
+type DestinationUpdate = { id: number, value: MidiDestinationState };
+
+export const setMidiClipDestination: CommandFactory<DestinationUpdate> = (state) => {
+  return {
+    id: CommandIds.setMidiClipDestination,
+    payload: state,
+  };
+};
+
+function setMidiClipDestinationPerformer(service: GraphSequencerService): CommandPerformer<DestinationUpdate> {
+  return midiClipUpdatePerformer(CommandIds.setMidiClipDestination, service, 'destination',
+    (id, v) => service.setMidiClipDestination(id, v));
 }
 
 export type MidiClipUpdate<K extends keyof MidiClipNodeState> = {
@@ -238,4 +253,5 @@ export function registerGraphSequencerCommands(service: GraphSequencerService): 
   commandManager.addPerformerFactory(() => setMidiClipNotesPerformer(service));
   commandManager.addPerformerFactory(() => setMidiClipDurationPerformer(service));
   commandManager.addPerformerFactory(() => setMidiClipSignaturePerformer(service));
+  commandManager.addPerformerFactory(() => setMidiClipDestinationPerformer(service));
 }

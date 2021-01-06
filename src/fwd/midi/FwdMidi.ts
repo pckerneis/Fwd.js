@@ -22,10 +22,18 @@ export function enableMidi(): void {
   })
 }
 
+export function getMidiOutputs(): Output[] {
+  return WebMidi.outputs;
+}
+
 export function getMidiOutputNames(): string[] {
   return WebMidi.outputs.map(output => output.name);
 }
 
 export function getOutputByName(name: string): Output {
   return WebMidi.getOutputByName(name) || null;
+}
+
+export function getOutputById(id: string): Output {
+  return WebMidi.getOutputById(id) || null;
 }

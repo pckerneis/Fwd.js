@@ -11,6 +11,7 @@ import {
   GraphSequencerState,
   InitNodeState,
   MidiClipNodeState,
+  MidiDestinationState,
   MidiFlagState,
   MidiNoteState,
   NodeState,
@@ -109,6 +110,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
       notes: [],
       duration: defaultDuration,
       timeSignature: {upper: 4, lower: 4},
+      destination: { kind: 'Internal', midiChannel: 'ALL' },
     }
 
     const updatedNodes = [...this.snapshot.nodes, midiClipNode];
@@ -287,6 +289,10 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
 
   public setMidiClipNotes(clipId: number, notes: MidiNoteState[]): Observable<MidiClipNodeState> {
     return this.updateMidiClipNode(clipId, 'notes', notes);
+  }
+
+  public setMidiClipDestination(clipId: number, destination: MidiDestinationState): Observable<MidiClipNodeState> {
+    return this.updateMidiClipNode(clipId, 'destination', destination);
   }
 
   public updateOneNode<K extends keyof NodeState>(id: number, key: K, value: NodeState[K]): Observable<NodeState> {

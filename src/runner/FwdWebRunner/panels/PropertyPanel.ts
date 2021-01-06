@@ -1,6 +1,59 @@
+import { BehaviorSubject, Observable } from 'rxjs';
+import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { darkTheme, defaultTheme } from '../../style.constants';
 import { injectStyle } from '../StyleInjector';
+
+export interface Choice<T> {
+  readonly value: T;
+  readonly label: string;
+  readonly element?: HTMLOptionElement;
+}
+
+export class ChoiceElement<T> implements EditorElement {
+  public readonly htmlElement: HTMLSelectElement;
+
+  public readonly valueChanged$: Observable<T>;
+
+  private _choices: Choice<T>[];
+  private readonly _valueChangedSubject: BehaviorSubject<T>;
+
+  constructor() {
+    this.htmlElement = document.createElement('select');
+    this._valueChangedSubject = new BehaviorSubject<T>(null);
+    this.valueChanged$ = this._valueChangedSubject.pipe(distinctUntilChanged(), filter(v => !!v));
+
+    this.htmlElement.onchange = () => {
+      const newValue = this._choices.find(c => c.element.value === this.htmlElement.value)?.value;
+      this._valueChangedSubject.next(newValue);
+    };
+  }
+
+  public setValue(value: T): void {
+    const c = this._choices.find(c => c.value === value);
+    if (c == null) {
+      throw new Error('Cannot find choice with value ' + value);
+    }
+    this.htmlElement.value = c.element.value;
+  }
+
+  public getValue(): T {
+    return this._valueChangedSubject.getValue();
+  }
+
+  public setChoices(choices: Choice<T>[]): void {
+    this.htmlElement.innerHTML = '';
+    this._choices = [];
+
+    choices.forEach((choice, idx) => {
+      const element = document.createElement('option');
+      element.value = idx.toString();
+      element.innerText = choice.label;
+      this.htmlElement.append(element);
+      this._choices.push({...choice, element});
+    });
+  }
+}
 
 export class PropertyPanel implements EditorElement {
   public readonly htmlElement: HTMLElement;
@@ -56,6 +109,14 @@ export class PropertyPanel implements EditorElement {
     const e = this.createSelect(options, defaultValue, changeHandler);
     this.htmlElement.append(e);
     return e;
+  }
+
+  public addChoice<T>(options?: Choice<T>[], defaultValue?: T): ChoiceElement<T> {
+    const choice = new ChoiceElement<T>();
+    if (options != null) choice.setChoices(options);
+    if (defaultValue != null) choice.setValue(defaultValue);
+    this.htmlElement.append(choice.htmlElement);
+    return choice;
   }
 
   public createSelect(options: string[], defaultValue: string, changeHandler: (value: string) => void): HTMLSelectElement {

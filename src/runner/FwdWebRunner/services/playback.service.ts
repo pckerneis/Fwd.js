@@ -1,6 +1,13 @@
-import { getMidiOutputNames, getOutputByName } from '../../../fwd/midi/FwdMidi';
+import { getOutputById, getOutputByName } from '../../../fwd/midi/FwdMidi';
 import { FwdScheduler } from '../../../fwd/scheduler/FwdScheduler';
-import { ConnectionState, InitNodeState, MidiClipNodeState, MidiFlagState, NodeState } from '../state/project.state';
+import {
+  ConnectionState,
+  InitNodeState,
+  MidiClipNodeState,
+  MidiFlagState,
+  MidiNoteState,
+  NodeState,
+} from '../state/project.state';
 import { GraphSequencerService } from './graph-sequencer.service';
 
 export class PlaybackService {
@@ -86,18 +93,9 @@ export class PlaybackService {
       .map(note => ({...note, time: note.time - startTime}))
       .filter(n => n.time >= 0 && n.time < endOfNoteSlice);
 
-    // TODO
-    const output = getOutputByName(getMidiOutputNames()[0]);
-    console.log({output})
-
-    notesSlice.forEach((note) => {
-      scheduler.scheduleAhead(note.time, () => {
-        output.playNote(note.pitch, 1, {
-          velocity: note.velocity,
-          duration: note.duration * 1000,
-        });
-      });
-    });
+    if (notesSlice.length > 0) {
+      this.playMidiClipNotes(clip, notesSlice, scheduler);
+    }
 
     if (foundJump != null) {
       switch (foundJump.kind) {
@@ -118,6 +116,28 @@ export class PlaybackService {
       scheduler.scheduleAhead(endOfNoteSlice, () => {
         this.playMidiClipSlice(scheduler, clip, startTime + endOfNoteSlice);
       });
+    }
+  }
+
+  private playMidiClipNotes(clip: MidiClipNodeState, notesSlice: MidiNoteState[], scheduler: FwdScheduler): void {
+    const destination = clip.destination;
+    if (destination.kind === 'Internal') {
+      // TODO
+    } else {
+      const output = getOutputByName(destination.deviceName)
+        || getOutputById(destination.deviceId);
+      console.log({output})
+
+      if (output != null) {
+        notesSlice.forEach((note) => {
+          scheduler.scheduleAhead(note.time, () => {
+            output.playNote(note.pitch, 1, {
+              velocity: note.velocity,
+              duration: note.duration * 1000,
+            });
+          });
+        });
+      }
     }
   }
 }

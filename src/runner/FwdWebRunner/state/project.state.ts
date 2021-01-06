@@ -35,6 +35,20 @@ export interface MidiFlagState {
   jumpDestination?: number;
 }
 
+export interface InternalMidiDestinationState {
+  midiChannel: 'ALL' | number;
+  kind: 'Internal';
+}
+
+export interface ExternalMidiDestinationState {
+  midiChannel: 'ALL' | number;
+  kind: 'External';
+  deviceName: string;
+  deviceId: string;
+}
+
+export type MidiDestinationState = InternalMidiDestinationState | ExternalMidiDestinationState;
+
 export interface MidiClipNodeState extends BaseNodeState {
   kind: 'MidiClip';
   label: string;
@@ -42,6 +56,7 @@ export interface MidiClipNodeState extends BaseNodeState {
   flags: MidiFlagState[];
   duration: number;
   timeSignature: TimeSignature;
+  destination: MidiDestinationState;
 }
 
 export type NodeState = MidiClipNodeState | InitNodeState;
