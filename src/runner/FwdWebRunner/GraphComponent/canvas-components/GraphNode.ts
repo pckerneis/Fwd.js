@@ -189,4 +189,20 @@ export class InitNode extends GraphNode {
   public doubleClicked(event: ComponentMouseEvent): void {
     this.panelManager.showCodeEditor(this);
   }
+
+  protected adaptSizeToPins(): void {
+    const previousHeight = this.height;
+
+    this.height = Math.max(this.defaultHeight,
+      this.inlets.size() * this.pinHeight,
+      this.outlets.size() * this.pinHeight);
+
+    if (this.height != previousHeight) {
+      this.graphSequencerService.setNodeBounds(this.id, this.getBounds())
+        .subscribe();
+    }
+
+    this.resized();
+    this.repaintParent();
+  }
 }

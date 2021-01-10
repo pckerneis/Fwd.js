@@ -1,4 +1,4 @@
-import { map, pluck } from 'rxjs/operators';
+import { distinctUntilChanged, map, pluck } from 'rxjs/operators';
 import { ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { Rectangle } from '../../canvas/Rectangle';
 import { PanelManager } from '../../panels/PanelManager';
@@ -42,7 +42,7 @@ export class MidiClipNode extends GraphNode {
     });
 
     nodeObserver
-      .pipe(pluck<NodeState, MidiFlagState[]>('flags'))
+      .pipe(pluck<NodeState, MidiFlagState[]>('flags'), distinctUntilChanged())
       .subscribe((flags: MidiFlagState[]) => this.updateFlags(flags));
 
     nodeObserver.pipe(
@@ -50,6 +50,7 @@ export class MidiClipNode extends GraphNode {
       map(flags => flags
         .filter(f => f.kind === 'inlet')
         .map(f => ({time: f.time, name: f.name, id: f.id}))),
+      distinctUntilChanged((a, b) => a.length === b.length),
     ).subscribe((newInlets: MidiInlet[]) => this.updateInlets(newInlets));
 
     nodeObserver.pipe(
@@ -57,6 +58,7 @@ export class MidiClipNode extends GraphNode {
       map(flags => flags
         .filter(f => f.kind === 'outlet')
         .map(f => ({time: f.time, name: f.name, id: f.id}))),
+      distinctUntilChanged((a, b) => a.length === b.length),
     ).subscribe((newOutlets: MidiOutlet[]) => this.updateOutlets(newOutlets));
   }
 
@@ -134,9 +136,16 @@ export class MidiClipNode extends GraphNode {
   }
 
   protected adaptSizeToPins(): void {
+    const previousHeight = this.height;
+
     this.height = Math.max(this.defaultHeight,
       this.inlets.size() * this.pinHeight + this.labelHeight,
       this.outlets.size() * this.pinHeight + this.labelHeight);
+
+    if (this.height != previousHeight) {
+      this.graphSequencerService.setNodeBounds(this.id, this.getBounds())
+        .subscribe();
+    }
 
     this.resized();
     this.repaintParent();
@@ -145,6 +154,7 @@ export class MidiClipNode extends GraphNode {
   private updateInlets(inlets: MidiInlet[]): void {
     this.clearInlets();
     inlets.forEach(inlet => {
+      console.log('add inlet ' + inlet.id)
       this.addInlet(inlet.id);
     });
   }
