@@ -1,8 +1,11 @@
 import { pluck, takeUntil } from 'rxjs/operators';
+import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { FlexPanel } from '../../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../../fwd/editor/elements/TabbedPanel/TabbedPanel';
 import { Logger } from '../../../fwd/utils/Logger';
 import parentLogger from '../../logger.runner';
+import { CodeEditorPanel } from '../components/CodeEditorPanel';
+import { InitNode } from '../GraphComponent/canvas-components/GraphNode';
 import { MidiClipNode } from '../GraphComponent/canvas-components/MidiClipNode';
 import { GraphElement } from '../GraphComponent/graph-element';
 import { GraphSequencerService } from '../services/graph-sequencer.service';
@@ -15,10 +18,10 @@ export class PanelManager {
   private _graphEditor: GraphElement;
   private _contextualTabbedPanel: TabbedPanel;
 
-  private readonly noteSequencerPanels: Map<number, MidiClipPanel>;
+  private readonly tabPanels: Map<number, EditorElement>;
 
   constructor() {
-    this.noteSequencerPanels = new Map();
+    this.tabPanels = new Map();
   }
 
   public get graphSequencerPanel(): GraphElement {
@@ -26,7 +29,7 @@ export class PanelManager {
   }
 
   public reset(): void {
-    this.noteSequencerPanels.clear();
+    this.tabPanels.clear();
   }
 
   public showMidiEditor(node: MidiClipNode): void {
@@ -42,7 +45,7 @@ export class PanelManager {
       });
 
       this._contextualTabbedPanel.setCurrentTab(node.id);
-      this.noteSequencerPanels.set(node.id, panel);
+      this.tabPanels.set(node.id, panel);
 
       node.graphSequencerService.observeNode(node.id).pipe(
         takeUntil(node.graphSequencerService.observeNodeRemoval(node.id)),
@@ -126,6 +129,38 @@ export class PanelManager {
       minHeight: 200,
       maxHeight: 5000,
     });
+  }
+
+  public showCodeEditor(node: InitNode): void {
+    if (this._contextualTabbedPanel.hasTab(node.id)) {
+      this._contextualTabbedPanel.setCurrentTab(node.id);
+    } else {
+      const panel = new CodeEditorPanel();
+      this._contextualTabbedPanel.addTab({
+        id: node.id,
+        tabName: node.label,
+        closeable: true,
+        tabContent: panel,
+      });
+
+      this._contextualTabbedPanel.setCurrentTab(node.id);
+      this.tabPanels.set(node.id, panel);
+
+      node.graphSequencerService.observeNode(node.id).pipe(
+        takeUntil(node.graphSequencerService.observeNodeRemoval(node.id)),
+        pluck('label'),
+      ).subscribe((newLabel) => {
+        if (this._contextualTabbedPanel.hasTab(node.id)) {
+          this._contextualTabbedPanel.renameTab(node.id, newLabel);
+        }
+      });
+
+      node.graphSequencerService.observeNodeRemoval(node.id).subscribe(() => {
+        if (this._contextualTabbedPanel.hasTab(node.id)) {
+          this._contextualTabbedPanel.removeTab(node.id);
+        }
+      });
+    }
   }
 }
 

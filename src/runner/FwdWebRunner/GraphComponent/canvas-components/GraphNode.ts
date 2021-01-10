@@ -1,6 +1,8 @@
 import { ArrayList } from '../../../../fwd/utils/arraylist';
 import { Component, ComponentMouseEvent } from '../../canvas/BaseComponent';
 import { IRectangle, Rectangle } from '../../canvas/Rectangle';
+import { PanelManager } from '../../panels/PanelManager';
+import { GraphSequencerService } from '../../services/graph-sequencer.service';
 import { InitNodeState, NodeState } from '../../state/project.state';
 import { GraphRoot } from './GraphRoot';
 import { InletPin, OutletPin, Pin } from './Pin';
@@ -173,11 +175,18 @@ export abstract class GraphNode extends Component {
 }
 
 export class InitNode extends GraphNode {
-  constructor(parentGraph: GraphRoot, state: InitNodeState) {
+  constructor(parentGraph: GraphRoot,
+              state: InitNodeState,
+              public readonly graphSequencerService: GraphSequencerService,
+              public readonly panelManager: PanelManager) {
     super(parentGraph, state);
 
     this.addOutlet(state.outletId);
     this.label = state.label;
     this.selected = state.selected;
+  }
+
+  public doubleClicked(event: ComponentMouseEvent): void {
+    this.panelManager.showCodeEditor(this);
   }
 }

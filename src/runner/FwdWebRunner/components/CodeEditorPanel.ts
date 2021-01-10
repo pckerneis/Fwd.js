@@ -19,11 +19,10 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/javascript/javascript';
 import { darkTheme, defaultTheme } from '../../style.constants';
 
-import FwdWebRunner from '../FwdWebRunner';
 import { injectStyle } from '../StyleInjector';
 import { IconButton } from './IconButton';
 
-export class RunnerCodeEditor {
+export class CodeEditorPanel {
   public readonly htmlElement: HTMLElement;
   
   public onchanges: (...args: any) => any;
@@ -32,7 +31,7 @@ export class RunnerCodeEditor {
   private _autoBuildInput: HTMLInputElement;
   private _saveButton: IconButton;
 
-  constructor(public readonly runner: FwdWebRunner) {
+  constructor() {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-code-editor-container');
 
@@ -42,7 +41,7 @@ export class RunnerCodeEditor {
       mode: 'javascript',
       tabSize: 2,
       foldGutter: true,
-      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       lint: {
         "esversion": 9,
         "globals": ['fwd'],
@@ -55,10 +54,6 @@ export class RunnerCodeEditor {
     // Add extra css class to CM root
     this.htmlElement.children[0].classList.add('fwd-code-editor-cm');
 
-    // Define 'save' command
-    // TODO
-    // CodeMirror.commands['save'] = () => this.submit();
-
     this.htmlElement.prepend(
       this.buildToolbar(),
     );
@@ -68,6 +63,9 @@ export class RunnerCodeEditor {
         this.onchanges();
       }
     });
+
+    this.setCode('', true);
+    this.refresh();
   }
 
   public get code(): string {
@@ -124,8 +122,8 @@ export class RunnerCodeEditor {
     const spacer = document.createElement('span');
     spacer.style.flexGrow = '1';
 
-    this._saveButton = new IconButton(this.runner.config.writeToFile ? 'save' : 'enter');
-    this._saveButton.htmlElement.title = this.runner.config.writeToFile ? 'Save' : 'Run';
+    this._saveButton = new IconButton('enter');
+    this._saveButton.htmlElement.title = 'Save';
 
     toolbar.append(
       spacer,
@@ -141,6 +139,12 @@ export class RunnerCodeEditor {
 }
 
 injectStyle('RunnerCodeEditor', `
+.fwd-code-editor-container {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .fwd-code-editor-toolbar {
   display: flex;
   width: 100%;
@@ -160,7 +164,6 @@ injectStyle('RunnerCodeEditor', `
 }
 
 .fwd-code-editor-cm {
-  width: 100%;
   flex-grow: 1;
 }
 
@@ -182,9 +185,5 @@ injectStyle('RunnerCodeEditor', `
 
 .CodeMirror-scrollbar-filler {
   background-color: transparent;
-}
-
-.CodeMirror-linenumber {
-  min-width: 30px;
 }
 `);

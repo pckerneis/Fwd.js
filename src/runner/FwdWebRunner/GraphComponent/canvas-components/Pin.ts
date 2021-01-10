@@ -9,6 +9,8 @@ export abstract class Pin extends Component {
               public readonly parentGraph: GraphRoot,
               public readonly id: number) {
     super();
+
+    this.mouseCursor = 'move';
   }
 
   public abstract canConnect(other: Pin): boolean;

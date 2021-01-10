@@ -101,7 +101,7 @@ export class GraphElement implements EditorElement {
   }
 
   private addInitNode(state: InitNodeState): InitNode {
-    const n = new InitNode(this._graphRoot, state);
+    const n = new InitNode(this._graphRoot, state, this.graphSequencerService, this.panelManager);
     this.addNode(n);
     n.setBounds(Rectangle.fromIBounds(state.bounds));
     return n;
