@@ -25,6 +25,8 @@ export class PlaybackService {
   public startPlayback(scheduler: FwdScheduler): void {
     const initNodes = this.nodes.filter(n => n.kind === 'Init') as InitNodeState[];
 
+    initNodes.forEach(initNode => executeScript(initNode));
+
     initNodes.forEach(initNode => {
       this.fireNextNodes(scheduler, initNode, initNode.outletId, 0);
     });
@@ -139,5 +141,13 @@ export class PlaybackService {
         });
       }
     }
+  }
+}
+
+
+
+function executeScript(initNode: InitNodeState): void {
+  if (Boolean(initNode.script)) {
+    eval(initNode.script);
   }
 }

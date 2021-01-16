@@ -12,6 +12,7 @@ export interface BaseNodeState extends BaseGraphItemState {
 }
 
 export interface InitNodeState extends BaseNodeState {
+  script: string;
   kind: 'Init';
   label: string;
   outletId: number;

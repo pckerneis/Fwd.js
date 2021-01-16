@@ -17,6 +17,7 @@ import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/javascript/javascript';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { darkTheme, defaultTheme } from '../../style.constants';
 
 import { injectStyle } from '../StyleInjector';
@@ -24,8 +25,13 @@ import { IconButton } from './IconButton';
 
 export class CodeEditorPanel {
   public readonly htmlElement: HTMLElement;
-  
-  public onchanges: (...args: any) => any;
+
+  public readonly submitted$: Observable<string>;
+  public readonly code$: Observable<string>;
+
+  private readonly _submitted$: Subject<string> = new Subject<string>();
+  private readonly _code$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+
   private readonly codeMirror: CodeMirror.Editor;
 
   private _autoBuildInput: HTMLInputElement;
@@ -59,13 +65,18 @@ export class CodeEditorPanel {
     );
 
     this.codeMirror.on('changes', () => {
-      if (typeof this.onchanges === 'function') {
-        this.onchanges();
+      this._code$.next(this.code);
+
+      if (this.autoSaves) {
+        this._submitted$.next(this.code);
       }
     });
 
     this.setCode('', true);
     this.refresh();
+
+    this.submitted$ = this._submitted$.asObservable();
+    this.code$ = this._code$.asObservable();
   }
 
   public get code(): string {
@@ -116,7 +127,7 @@ export class CodeEditorPanel {
 
     const autoBuildLabel = document.createElement('label');
     autoBuildLabel.classList.add('fwd-runner-auto-build-label');
-    autoBuildLabel.innerText = 'Auto-run';
+    autoBuildLabel.innerText = 'Auto-submit';
     autoBuildLabel.append(this._autoBuildInput);
 
     const spacer = document.createElement('span');
@@ -131,8 +142,7 @@ export class CodeEditorPanel {
       this._saveButton.htmlElement,
     );
 
-    // TODO
-    // this._saveButton.htmlElement.onclick = () => this.submit();
+    this._saveButton.htmlElement.onclick = () => this._submitted$.next(this.code);
 
     return toolbar;
   }

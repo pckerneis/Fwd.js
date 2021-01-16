@@ -1,4 +1,5 @@
-import { pluck, takeUntil } from 'rxjs/operators';
+import { pluck, switchMap, takeUntil } from 'rxjs/operators';
+import { AudioMixerElement } from '../../../fwd/editor/elements/AudioMixerPanel/AudioMixerElement';
 import { EditorElement } from '../../../fwd/editor/elements/EditorElement';
 import { FlexPanel } from '../../../fwd/editor/elements/FlexPanel/FlexPanel';
 import { TabbedPanel } from '../../../fwd/editor/elements/TabbedPanel/TabbedPanel';
@@ -19,6 +20,7 @@ export class PanelManager {
   private _contextualTabbedPanel: TabbedPanel;
 
   private readonly tabPanels: Map<number, EditorElement>;
+  private AUDIO_MIXER_ID: number = -50;
 
   constructor() {
     this.tabPanels = new Map();
@@ -160,6 +162,15 @@ export class PanelManager {
           this._contextualTabbedPanel.removeTab(node.id);
         }
       });
+
+      panel.setCode(
+        node.graphSequencerService.snapshot.nodes.find(n => n.id === node.id)?.['script'] || '',
+        true,
+      );
+
+      panel.submitted$
+        .pipe(switchMap((newCode) => node.graphSequencerService.setInitNodeScript(node.id, newCode)))
+        .subscribe();
     }
   }
 }

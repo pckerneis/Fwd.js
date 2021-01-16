@@ -25,11 +25,16 @@ export class TabbedPanel implements EditorElement {
   }
 
   public addTab(tabOptions: TabItemOptions): void {
-    if (this._tabItems.map(item => item.tabOptions.id).includes(tabOptions.id)) {
-      throw new Error('Cannot add tab with same ID');
+    console.log('addTab', tabOptions)
+    if (tabOptions.id == null) {
+      throw new Error('Cannot add tab with invalid ID ' + tabOptions.id);
     }
 
-    const button = new TabButtonElement(this, tabOptions, tabOptions.closeable);
+    if (this.hasTab(tabOptions.id)) {
+      throw new Error('Cannot add tab with same ID ' + tabOptions.id);
+    }
+
+    const button = new TabButtonElement(this, tabOptions);
     this._buttonsContainer.append(button.htmlElement);
 
     this._tabItems.push({
@@ -37,7 +42,7 @@ export class TabbedPanel implements EditorElement {
       button,
     });
 
-    if (this._viewport.innerHTML === '') {
+    if (this._currentTab == null) {
       this.setCurrentTab(tabOptions.id);
     }
   }
@@ -133,8 +138,7 @@ export class TabButtonElement implements EditorElement {
   private readonly label: HTMLElement;
 
   constructor(public readonly tabbedPanel: TabbedPanel,
-              public readonly tabOptions: TabItemOptions,
-              public readonly closeable: boolean) {
+              public readonly tabOptions: TabItemOptions) {
     this.htmlElement = document.createElement('div');
     this.htmlElement.classList.add('fwd-tabbed-panel-button');
 
@@ -147,14 +151,18 @@ export class TabButtonElement implements EditorElement {
       this.tabbedPanel.setCurrentTab(tabOptions.id);
     };
 
-    const closeButton = document.createElement('div');
-    closeButton.innerText = '✕';
-    this.htmlElement.append(closeButton);
-    closeButton.onclick = (evt) => {
-      evt.preventDefault();
-      evt.stopPropagation();
-      this.tabbedPanel.removeTab(tabOptions.id);
-    };
+    if (tabOptions.closeable) {
+      const closeButton = document.createElement('div');
+      closeButton.innerText = '✕';
+      this.htmlElement.append(closeButton);
+      closeButton.onclick = (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        this.tabbedPanel.removeTab(tabOptions.id);
+      };
+    }
+
+    this.refresh();
   }
 
   public refresh(): void {

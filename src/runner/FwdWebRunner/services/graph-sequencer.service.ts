@@ -28,6 +28,10 @@ function isMidiClipNode(node: NodeState): node is MidiClipNodeState {
   return node.kind === 'MidiClip';
 }
 
+function isInitNode(node: NodeState): node is InitNodeState {
+  return node.kind === 'Init';
+}
+
 export class GraphSequencerService extends StoreBasedService<GraphSequencerState> {
   public readonly nodeAdded$: Observable<NodeState>;
   public readonly connectionAdded$: Observable<ConnectionState>;
@@ -74,6 +78,7 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
       label: 'Init',
       selected: false,
       bounds: {...position, width: 120, height: 24},
+      script: DEFAULT_INIT_SCRIPT,
     }
 
     const updatedNodes = [...this.snapshot.nodes, initNode];
@@ -251,6 +256,10 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     );
   }
 
+  public setInitNodeScript(id: number, newCode: string): Observable<any> {
+    return this.updateInitNode(id, 'script', newCode);
+  }
+
   public removeMidiClipFlag(clipId: number, id: number): Observable<any> {
     const flags = this.getMidiClipFlags(clipId) || [];
     return this.updateMidiClipNode(clipId, 'flags', flags.filter(f => f.id !== id));
@@ -307,6 +316,16 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
       map((updatedState) => updatedState.nodes.find(n => n.id === id) || null));
   }
 
+  public updateInitNode<K extends keyof InitNodeState>(id: number,
+                                                       key: K,
+                                                       value: InitNodeState[K]): Observable<InitNodeState> {
+    const updatedNodes = this.snapshot.nodes.map(n => n.id === id ? ({...n, [key]: value}) : n);
+    return this.update('nodes', updatedNodes).pipe(
+      map((updatedState) => updatedState.nodes.find(n => n.id === id)),
+      filter((newState) => !! newState && isInitNode(newState)),
+      map(n => n as InitNodeState)); // sigh
+  }
+
   public updateMidiClipNode<K extends keyof MidiClipNodeState>(id: number,
                                                                key: K,
                                                                value: MidiClipNodeState[K]): Observable<MidiClipNodeState> {
@@ -343,3 +362,13 @@ export class GraphSequencerService extends StoreBasedService<GraphSequencerState
     return this.nodeRemoved$.pipe(filter(nodeId => nodeId === id));
   }
 }
+
+const DEFAULT_INIT_SCRIPT = `
+export default function(ctx) {
+  console.log('Init...');
+  
+  ctx.on.start.do(() => {
+    ctx.currentNode.fire(0);
+  });
+}
+`;
