@@ -20,13 +20,18 @@ export class RootComponentHolder<T extends Component> {
   private documentMouseUpListener: (event: MouseEvent) => void;
   private documentMouseMoveListener: (event: MouseEvent) => void;
   private _resizeObserver?: ResizeObserver;
+  private readonly dpr: number;
 
-  constructor(public readonly width: number, public readonly height: number, public readonly rootComponent: T) {
+  constructor(public readonly width: number,
+              public readonly height: number,
+              public readonly rootComponent: T) {
     rootComponent.rootHolder = this;
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = width;
-    this.canvas.height = height;
+    this.dpr = window.devicePixelRatio || 1;
+    this.renderingContext.scale(this.dpr, this.dpr);
+    this.canvas.width = width * this.dpr;
+    this.canvas.height = height * this.dpr;
 
     this.initMouseEventListeners();
   }
@@ -62,8 +67,8 @@ export class RootComponentHolder<T extends Component> {
 
     const mousePositionRelativeToCanvas = (event: MouseEvent) => {
       const canvasBounds = this.canvas.getBoundingClientRect();
-      const x = event.clientX - canvasBounds.x;
-      const y = event.clientY - canvasBounds.y;
+      const x = (event.clientX - canvasBounds.x) * this.dpr;
+      const y = (event.clientY - canvasBounds.y) * this.dpr;
       return {x, y};
     };
 
@@ -263,7 +268,7 @@ export class RootComponentHolder<T extends Component> {
 
   private resizeAndDraw(containerElement: HTMLElement): void {
     const boundingClientRect = containerElement.getBoundingClientRect();
-    this.resize(Math.ceil(boundingClientRect.width), Math.ceil(boundingClientRect.height));
+    this.resize(Math.ceil(boundingClientRect.width * this.dpr), Math.ceil(boundingClientRect.height * this.dpr));
     this.repaint();
   }
 }

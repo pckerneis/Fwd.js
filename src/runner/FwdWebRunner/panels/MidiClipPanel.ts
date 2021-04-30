@@ -376,5 +376,6 @@ injectStyle('MidiClipPanel', `
   flex-grow: 1;
   flex-shrink: 1;
   overflow: hidden;
+  display: flex;
 }
 `);

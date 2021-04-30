@@ -238,7 +238,7 @@ ${CONTAINER_CLASS} {
   min-height: 200px;
   width: 100%;
   height: 100%;
-  display: inline-block;
+  display: flex;
 }
 
 ${CONTAINER_CLASS} canvas {

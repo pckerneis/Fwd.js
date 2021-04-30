@@ -160,5 +160,6 @@ injectStyle('GraphElement', `
 .${CONTAINER_CLASS} {
   overflow: hidden;
   position: relative;
+  display: flex;
 }
 `);
